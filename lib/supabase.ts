@@ -1,12 +1,24 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
-const supabaseKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  "placeholder-publishable-key";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey);
+
+export const supabase: ReturnType<typeof createClient> | null =
+  typeof supabaseUrl === "string" && typeof supabaseKey === "string"
+    ? createClient(supabaseUrl, supabaseKey)
+    : null;
+
+export function getSupabaseClient() {
+  if (!supabase) {
+    throw new Error(
+      "Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY di Vercel.",
+    );
+  }
+
+  return supabase;
+}
 
 export type MapLocationCategory =
   "trash_dump" | "waste_bank" | "community_action";

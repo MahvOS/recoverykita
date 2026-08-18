@@ -6,6 +6,7 @@ import Link from "next/link";
 import { RemoteImage } from "@/components/remote-image";
 import {
   supabase,
+  getSupabaseClient,
   Article,
   CarbonFactor,
   WasteLookupGuide,
@@ -187,6 +188,7 @@ export default function EdukasiPage() {
   const [activeTopic, setActiveTopic] = useState("Semua Topik");
   const [weight, setWeight] = useState("");
   const [selectedWaste, setSelectedWaste] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState<WasteLookupGuide | null>(
     null,
   );
@@ -194,24 +196,36 @@ export default function EdukasiPage() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+
+      if (!supabase) {
+        setArticles([]);
+        setPopularArticles([]);
+        setCarbonFactors([]);
+        setWasteGuides([]);
+        setAssets([]);
+        setLoading(false);
+        return;
+      }
+
       try {
+        const client = getSupabaseClient() as any;
         const [articlesRes, popularRes, carbonRes, guidesRes, assetsRes] =
           await Promise.all([
-            supabase
+            client
               .from("articles")
               .select("*")
               .order("published_at", { ascending: false }),
-            supabase
+            client
               .from("articles")
               .select("*")
               .order("views_count", { ascending: false })
               .limit(3),
-            supabase.from("carbon_factors").select("*").order("waste_type"),
-            supabase
+            client.from("carbon_factors").select("*").order("waste_type"),
+            client
               .from("waste_lookup_guides")
               .select("*")
               .order("category_name"),
-            supabase
+            client
               .from("downloadable_assets")
               .select("*")
               .order("created_at", { ascending: false }),
@@ -255,8 +269,13 @@ export default function EdukasiPage() {
   }, [weight, selectedWaste, carbonFactors]);
 
   const handleDownload = async (asset: DownloadableAsset) => {
+    if (!supabase) {
+      return;
+    }
+
+    const client = getSupabaseClient() as any;
     window.open(asset.file_url, "_blank", "noopener,noreferrer");
-    await supabase
+    await client
       .from("downloadable_assets")
       .update({ download_count: (asset.download_count ?? 0) + 1 })
       .eq("id", asset.id);
@@ -273,71 +292,125 @@ export default function EdukasiPage() {
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
       {/* Navbar */}
       <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/85 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3 w-1/3">
-            <Link href="/" className="relative w-37 h-37 block">
-              <div className="relative w-37 h-37">
-                <Image
-                  src="/logo.ico"
-                  alt="RecoveryKita Logo"
-                  fill
-                  className="object-contain"
-                  priority
+        <div className="max-w-7xl mx-auto px-6 flex flex-col">
+          <div className="h-20 flex items-center justify-between">
+            <div className="flex items-center gap-3 w-1/3">
+              <Link href="/" className="relative w-37 h-37 block">
+                <div className="relative w-37 h-37">
+                  <Image
+                    src="/logo.ico"
+                    alt="RecoveryKita Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              </Link>
+            </div>
+
+            <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
+              <Link
+                href="/"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Beranda
+              </Link>
+              <Link
+                href="/marketplace"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Marketplace
+              </Link>
+              <Link
+                href="/peta"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Peta
+              </Link>
+              <Link
+                href="/lapor"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Lapor
+              </Link>
+              <Link
+                href="/edukasi"
+                className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
+              >
+                Edukasi
+              </Link>
+            </nav>
+
+            <div className="w-1/3 hidden md:block" />
+
+            <button
+              type="button"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100 transition-colors"
+            >
+              <svg
+                className="w-6 h-6 text-zinc-700"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d={
+                    mobileMenuOpen
+                      ? "M6 18L18 6M6 6l12 12"
+                      : "M4 6h16M4 12h16m-7 6h7"
+                  }
                 />
-              </div>
-            </Link>
+              </svg>
+            </button>
           </div>
 
-          <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
-            <Link
-              href="/"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Beranda
-            </Link>
-            <Link
-              href="/marketplace"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Marketplace
-            </Link>
-            <Link
-              href="/peta"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Peta
-            </Link>
-            <Link
-              href="/lapor"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Lapor
-            </Link>
-            <Link
-              href="/edukasi"
-              className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
-            >
-              Edukasi
-            </Link>
-          </nav>
-
-          <div className="w-1/3 hidden md:block" />
-
-          <button className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100 transition-colors">
-            <svg
-              className="w-6 h-6 text-zinc-700"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16m-7 6h7"
-              />
-            </svg>
-          </button>
+          {mobileMenuOpen && (
+            <div className="md:hidden border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Beranda
+                </Link>
+                <Link
+                  href="/marketplace"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Marketplace
+                </Link>
+                <Link
+                  href="/peta"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Peta
+                </Link>
+                <Link
+                  href="/lapor"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Lapor
+                </Link>
+                <Link
+                  href="/edukasi"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0f5132] hover:bg-[#edf7ef]"
+                >
+                  Edukasi
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 

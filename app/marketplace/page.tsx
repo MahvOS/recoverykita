@@ -3,7 +3,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { supabase, MarketplaceProduct } from "@/lib/supabase";
+import {
+  supabase,
+  getSupabaseClient,
+  MarketplaceProduct,
+} from "@/lib/supabase";
 
 const sortOptions = ["Terbaru", "Harga Terendah", "Harga Tertinggi"];
 
@@ -40,6 +44,7 @@ export default function MarketplacePage() {
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -52,8 +57,18 @@ export default function MarketplacePage() {
       setLoading(true);
       setError(null);
 
+      if (!supabase) {
+        setError(
+          "Supabase belum dikonfigurasi. Silakan tambahkan variabel environment di Vercel.",
+        );
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const { data, error: fetchError } = await supabase
+        const client = getSupabaseClient();
+        const { data, error: fetchError } = await client
           .from("products")
           .select("*, seller:sellers(*)")
           .order("created_at", { ascending: false });
@@ -131,71 +146,125 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
       <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/85 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3 w-1/3">
-            <Link href="/" className="relative w-37 h-37 block">
-              <div className="relative w-37 h-37">
-                <Image
-                  src="/logo.ico"
-                  alt="RecoveryKita Logo"
-                  fill
-                  className="object-contain"
-                  priority
+        <div className="max-w-7xl mx-auto px-6 flex flex-col">
+          <div className="h-20 flex items-center justify-between">
+            <div className="flex items-center gap-3 w-1/3">
+              <Link href="/" className="relative w-37 h-37 block">
+                <div className="relative w-37 h-37">
+                  <Image
+                    src="/logo.ico"
+                    alt="RecoveryKita Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              </Link>
+            </div>
+
+            <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
+              <Link
+                href="/"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Beranda
+              </Link>
+              <Link
+                href="/marketplace"
+                className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
+              >
+                Marketplace
+              </Link>
+              <Link
+                href="/peta"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Peta
+              </Link>
+              <Link
+                href="/lapor"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Lapor
+              </Link>
+              <Link
+                href="/edukasi"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Edukasi
+              </Link>
+            </nav>
+
+            <div className="w-1/3 hidden md:block" />
+
+            <button
+              type="button"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100 transition-colors"
+            >
+              <svg
+                className="w-6 h-6 text-zinc-700"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d={
+                    mobileMenuOpen
+                      ? "M6 18L18 6M6 6l12 12"
+                      : "M4 6h16M4 12h16m-7 6h7"
+                  }
                 />
-              </div>
-            </Link>
+              </svg>
+            </button>
           </div>
 
-          <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
-            <Link
-              href="/"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Beranda
-            </Link>
-            <Link
-              href="/marketplace"
-              className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
-            >
-              Marketplace
-            </Link>
-            <Link
-              href="/peta"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Peta
-            </Link>
-            <Link
-              href="/lapor"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Lapor
-            </Link>
-            <Link
-              href="/edukasi"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Edukasi
-            </Link>
-          </nav>
-
-          <div className="w-1/3 hidden md:block" />
-
-          <button className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100 transition-colors">
-            <svg
-              className="w-6 h-6 text-zinc-700"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16m-7 6h7"
-              />
-            </svg>
-          </button>
+          {mobileMenuOpen && (
+            <div className="md:hidden border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Beranda
+                </Link>
+                <Link
+                  href="/marketplace"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0f5132] hover:bg-[#edf7ef]"
+                >
+                  Marketplace
+                </Link>
+                <Link
+                  href="/peta"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Peta
+                </Link>
+                <Link
+                  href="/lapor"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Lapor
+                </Link>
+                <Link
+                  href="/edukasi"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Edukasi
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 

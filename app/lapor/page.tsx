@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { supabase, getSupabaseClient } from "@/lib/supabase";
 
 type WasteCategory = "plastik" | "organik" | "b3" | "elektronik";
 type Priority = "rendah" | "sedang" | "tinggi";
@@ -39,6 +39,7 @@ export default function LaporPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mapInstanceRef = useRef<any>(null);
 
   // Initialize map
@@ -186,6 +187,12 @@ export default function LaporPage() {
     setError("");
 
     try {
+      if (!supabase) {
+        throw new Error(
+          "Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY di Vercel.",
+        );
+      }
+
       if (!formData.location) {
         throw new Error("Lokasi harus diisi");
       }
@@ -199,11 +206,12 @@ export default function LaporPage() {
         throw new Error("Minimal 1 foto harus diupload");
       }
 
+      const client = getSupabaseClient() as any;
       const photoUrls: string[] = [];
       for (let i = 0; i < formData.photos.length; i++) {
         const file = formData.photos[i];
         const fileName = `${Date.now()}_${i}_${file.name}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { data: uploadData, error: uploadError } = await client.storage
           .from("report-photos")
           .upload(`photos/${fileName}`, file);
 
@@ -213,14 +221,14 @@ export default function LaporPage() {
 
         const {
           data: { publicUrl },
-        } = supabase.storage
+        } = client.storage
           .from("report-photos")
           .getPublicUrl(`photos/${fileName}`);
 
         photoUrls.push(publicUrl);
       }
 
-      const { error: insertError } = await supabase.from("report_logs").insert({
+      const { error: insertError } = await client.from("report_logs").insert({
         location_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         previous_status: "pending",
         new_status: "pending",
@@ -274,71 +282,125 @@ export default function LaporPage() {
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/90 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3 w-1/3">
-            <Link href="/" className="block">
-              <div className="relative w-37 h-37">
-                <Image
-                  src="/logo.ico"
-                  alt="RecoveryKita Logo"
-                  fill
-                  sizes="148px"
-                  className="object-contain"
-                  priority
+        <div className="max-w-7xl mx-auto px-6 flex flex-col">
+          <div className="h-20 flex items-center justify-between">
+            <div className="flex items-center gap-3 w-1/3">
+              <Link href="/" className="block">
+                <div className="relative w-37 h-37">
+                  <Image
+                    src="/logo.ico"
+                    alt="RecoveryKita Logo"
+                    fill
+                    sizes="148px"
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              </Link>
+            </div>
+
+            <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
+              <Link
+                href="/"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Beranda
+              </Link>
+              <Link
+                href="/marketplace"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Marketplace
+              </Link>
+              <Link
+                href="/peta"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Peta
+              </Link>
+              <Link
+                href="/lapor"
+                className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
+              >
+                Lapor
+              </Link>
+              <Link
+                href="/edukasi"
+                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
+              >
+                Edukasi
+              </Link>
+            </nav>
+
+            <div className="w-1/3 hidden md:block" />
+            <button
+              type="button"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100"
+            >
+              <svg
+                className="w-6 h-6 text-zinc-700"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d={
+                    mobileMenuOpen
+                      ? "M6 18L18 6M6 6l12 12"
+                      : "M4 6h16M4 12h16m-7 6h7"
+                  }
                 />
-              </div>
-            </Link>
+              </svg>
+            </button>
           </div>
 
-          <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
-            <Link
-              href="/"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Beranda
-            </Link>
-            <Link
-              href="/marketplace"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Marketplace
-            </Link>
-            <Link
-              href="/peta"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Peta
-            </Link>
-            <Link
-              href="/lapor"
-              className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
-            >
-              Lapor
-            </Link>
-            <Link
-              href="/edukasi"
-              className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Edukasi
-            </Link>
-          </nav>
-
-          <div className="w-1/3 hidden md:block" />
-          <button className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100">
-            <svg
-              className="w-6 h-6 text-zinc-700"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16m-7 6h7"
-              />
-            </svg>
-          </button>
+          {mobileMenuOpen && (
+            <div className="md:hidden border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Beranda
+                </Link>
+                <Link
+                  href="/marketplace"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Marketplace
+                </Link>
+                <Link
+                  href="/peta"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Peta
+                </Link>
+                <Link
+                  href="/lapor"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0f5132] hover:bg-[#edf7ef]"
+                >
+                  Lapor
+                </Link>
+                <Link
+                  href="/edukasi"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                >
+                  Edukasi
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 

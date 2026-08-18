@@ -3,7 +3,12 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { supabase, Location, MapLocationCategory } from "@/lib/supabase";
+import {
+  supabase,
+  getSupabaseClient,
+  Location,
+  MapLocationCategory,
+} from "@/lib/supabase";
 
 // ─── Category Config ─────────────────────────────────────────────────────────
 const CATEGORY_CONFIG: Record<
@@ -211,9 +216,21 @@ export default function PetaPage() {
   useEffect(() => {
     const fetchLocations = async () => {
       setLoading(true);
+
+      if (!supabase) {
+        setError(
+          "Supabase belum dikonfigurasi. Tambahkan variabel environment di Vercel.",
+        );
+        setLocations([]);
+        setLoading(false);
+        return;
+      }
+
       try {
+        const client = getSupabaseClient();
+
         // Fetch locations (verified)
-        const { data: locData, error: locError } = await supabase
+        const { data: locData, error: locError } = await client
           .from("locations")
           .select("*");
 
@@ -227,7 +244,7 @@ export default function PetaPage() {
         const locations = (locData as Location[]) || [];
 
         // Try to fetch report_logs (pending reports)
-        const { data: reportData, error: reportError } = await supabase
+        const { data: reportData, error: reportError } = await client
           .from("report_logs")
           .select(
             "id, location_name, description, category, latitude, longitude, status",
