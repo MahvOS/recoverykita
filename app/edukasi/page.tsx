@@ -425,138 +425,6 @@ export default function EdukasiPage() {
         </p>
       </section>
 
-      <section className="bg-[#f0f7ff] py-12 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Carbon Impact Calculator */}
-          <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm p-6 md:p-8">
-            <h2 className="text-lg font-extrabold text-[#0f5132] mb-1">
-              Cek Dampak Sampahmu
-            </h2>
-            <p className="text-xs text-zinc-500 mb-6">
-              Hitung potensi reduksi emisi karbon dari sampah yang kamu kelola.
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-zinc-600 mb-1.5 block">
-                  Berat (kg)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  placeholder="Contoh: 2.5"
-                  className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-zinc-600 mb-1.5 block">
-                  Jenis Sampah
-                </label>
-                <select
-                  value={selectedWaste}
-                  onChange={(e) => setSelectedWaste(e.target.value)}
-                  className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white text-zinc-800"
-                >
-                  {carbonFactors.map((f) => (
-                    <option key={f.id} value={f.waste_type}>
-                      {f.waste_type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="bg-[#eaf6ee] border border-[#c3e6cb] rounded-xl p-4 text-center">
-                <p className="text-xs text-zinc-500 mb-1">
-                  Potensi Reduksi CO₂
-                </p>
-                <p className="text-2xl font-black text-[#0f5132]">
-                  {co2Result !== null ? `${co2Result} kg` : "— kg"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Waste Lookup */}
-          <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm p-6 md:p-8">
-            <h2 className="text-lg font-extrabold text-[#0f5132] mb-1">
-              Interactive Waste Lookup
-            </h2>
-            <p className="text-xs text-zinc-500 mb-6">
-              Pilih kategori untuk melihat instruksi pembuangan.
-            </p>
-
-            <div className="grid grid-cols-3 gap-2.5 sm:gap-3 md:gap-4 mb-6">
-              {wasteGuides.map((guide) => {
-                const isActive = selectedGuide?.id === guide.id;
-                const isB3 = guide.category_name.toLowerCase().includes("b3");
-                const isOrganik = guide.category_name
-                  .toLowerCase()
-                  .includes("organik");
-                const isAnorganik = guide.category_name
-                  .toLowerCase()
-                  .includes("anorganik");
-
-                return (
-                  <button
-                    key={guide.id}
-                    onClick={() => setSelectedGuide(guide)}
-                    className={`flex min-h-[120px] sm:min-h-[140px] flex-col items-center justify-center gap-2 rounded-2xl border-2 p-2.5 text-center transition-all ${
-                      isActive
-                        ? isB3
-                          ? "border-red-400 bg-red-50 text-red-600"
-                          : isOrganik
-                            ? "border-blue-400 bg-blue-50 text-blue-600"
-                            : isAnorganik
-                              ? "border-amber-400 bg-amber-50 text-amber-700"
-                              : "border-indigo-400 bg-indigo-50 text-indigo-600"
-                        : "border-zinc-100 bg-zinc-50 text-zinc-500 hover:border-zinc-200"
-                    }`}
-                  >
-                    <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-white/80 shadow-sm">
-                      <WasteIcon
-                        name={guide.icon_name ?? guide.category_name}
-                      />
-                    </div>
-                    <span className="text-[10px] font-bold leading-tight sm:text-xs">
-                      {guide.category_name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {selectedGuide && (
-              <div className="bg-[#f8fafb] border border-zinc-100 rounded-xl p-4 space-y-3">
-                <div>
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">
-                    Contoh
-                  </p>
-                  <p className="text-sm text-zinc-700 leading-relaxed">
-                    {selectedGuide.examples}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">
-                    Cara Buang
-                  </p>
-                  <p className="text-sm text-zinc-700 leading-relaxed">
-                    {selectedGuide.disposal_instruction}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <p className="text-[11px] text-zinc-400 mt-4 italic">
-              * Pilih kategori untuk melihat instruksi pembuangan.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-wrap gap-2 mb-8">
@@ -746,6 +614,138 @@ export default function EdukasiPage() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="bg-[#f0f7ff] py-12 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Carbon Impact Calculator */}
+          <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm p-6 md:p-8">
+            <h2 className="text-lg font-extrabold text-[#0f5132] mb-1">
+              Cek Dampak Sampahmu
+            </h2>
+            <p className="text-xs text-zinc-500 mb-6">
+              Hitung potensi reduksi emisi karbon dari sampah yang kamu kelola.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-zinc-600 mb-1.5 block">
+                  Berat (kg)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="Contoh: 2.5"
+                  className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-zinc-600 mb-1.5 block">
+                  Jenis Sampah
+                </label>
+                <select
+                  value={selectedWaste}
+                  onChange={(e) => setSelectedWaste(e.target.value)}
+                  className="w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white text-zinc-800"
+                >
+                  {carbonFactors.map((f) => (
+                    <option key={f.id} value={f.waste_type}>
+                      {f.waste_type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="bg-[#eaf6ee] border border-[#c3e6cb] rounded-xl p-4 text-center">
+                <p className="text-xs text-zinc-500 mb-1">
+                  Potensi Reduksi CO₂
+                </p>
+                <p className="text-2xl font-black text-[#0f5132]">
+                  {co2Result !== null ? `${co2Result} kg` : "— kg"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Waste Lookup */}
+          <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm p-6 md:p-8">
+            <h2 className="text-lg font-extrabold text-[#0f5132] mb-1">
+              Interactive Waste Lookup
+            </h2>
+            <p className="text-xs text-zinc-500 mb-6">
+              Pilih kategori untuk melihat instruksi pembuangan.
+            </p>
+
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-3 md:gap-4 mb-6">
+              {wasteGuides.map((guide) => {
+                const isActive = selectedGuide?.id === guide.id;
+                const isB3 = guide.category_name.toLowerCase().includes("b3");
+                const isOrganik = guide.category_name
+                  .toLowerCase()
+                  .includes("organik");
+                const isAnorganik = guide.category_name
+                  .toLowerCase()
+                  .includes("anorganik");
+
+                return (
+                  <button
+                    key={guide.id}
+                    onClick={() => setSelectedGuide(guide)}
+                    className={`flex min-h-[120px] sm:min-h-[140px] flex-col items-center justify-center gap-2 rounded-2xl border-2 p-2.5 text-center transition-all ${
+                      isActive
+                        ? isB3
+                          ? "border-red-400 bg-red-50 text-red-600"
+                          : isOrganik
+                            ? "border-blue-400 bg-blue-50 text-blue-600"
+                            : isAnorganik
+                              ? "border-amber-400 bg-amber-50 text-amber-700"
+                              : "border-indigo-400 bg-indigo-50 text-indigo-600"
+                        : "border-zinc-100 bg-zinc-50 text-zinc-500 hover:border-zinc-200"
+                    }`}
+                  >
+                    <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-white/80 shadow-sm">
+                      <WasteIcon
+                        name={guide.icon_name ?? guide.category_name}
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold leading-tight sm:text-xs">
+                      {guide.category_name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedGuide && (
+              <div className="bg-[#f8fafb] border border-zinc-100 rounded-xl p-4 space-y-3">
+                <div>
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">
+                    Contoh
+                  </p>
+                  <p className="text-sm text-zinc-700 leading-relaxed">
+                    {selectedGuide.examples}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">
+                    Cara Buang
+                  </p>
+                  <p className="text-sm text-zinc-700 leading-relaxed">
+                    {selectedGuide.disposal_instruction}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <p className="text-[11px] text-zinc-400 mt-4 italic">
+              * Pilih kategori untuk melihat instruksi pembuangan.
+            </p>
+          </div>
         </div>
       </section>
 

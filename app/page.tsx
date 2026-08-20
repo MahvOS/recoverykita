@@ -1,13 +1,106 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { RemoteImage } from "@/components/remote-image";
+import {
+  getSupabaseClient,
+  MarketplaceProduct,
+  supabase,
+} from "@/lib/supabase";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [featuredProducts, setFeaturedProducts] = useState<
+    MarketplaceProduct[]
+  >([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [mapStats, setMapStats] = useState({
+    trashDump: 0,
+    wasteBank: 0,
+    communityAction: 0,
+    total: 0,
+  });
+  const [mapStatsLoading, setMapStatsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      if (!supabase) {
+        setProductsLoading(false);
+        return;
+      }
+
+      try {
+        const client = getSupabaseClient() as any;
+        const { data, error } = await client
+          .from("products")
+          .select("*, seller:sellers(*)")
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+        if (error) throw error;
+        setFeaturedProducts((data as MarketplaceProduct[]) ?? []);
+      } catch (error) {
+        console.error("Fetch home products error:", error);
+        setFeaturedProducts([]);
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
+
+  useEffect(() => {
+    const fetchMapStats = async () => {
+      if (!supabase) {
+        setMapStatsLoading(false);
+        return;
+      }
+
+      try {
+        const client = getSupabaseClient() as any;
+        const [{ data: locations }, { data: reports }] = await Promise.all([
+          client.from("locations").select("category"),
+          client
+            .from("report_logs")
+            .select("category, status")
+            .eq("status", "pending"),
+        ]);
+
+        const categories = [
+          ...((locations ?? []) as { category: string }[]),
+          ...((reports ?? []) as { category: string }[]),
+        ];
+
+        const trashDump = categories.filter(
+          (item) => item.category === "trash_dump",
+        ).length;
+        const wasteBank = categories.filter(
+          (item) => item.category === "waste_bank",
+        ).length;
+        const communityAction = categories.filter(
+          (item) => item.category === "community_action",
+        ).length;
+
+        setMapStats({
+          trashDump,
+          wasteBank,
+          communityAction,
+          total: categories.length,
+        });
+      } catch (error) {
+        console.error("Fetch home map stats error:", error);
+      } finally {
+        setMapStatsLoading(false);
+      }
+    };
+
+    fetchMapStats();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -595,7 +688,9 @@ export default function Home() {
               yang terkumpul, dan ikuti gerakan minimalisasi sampah di kotamu.
             </p>
             <button className="bg-[#20c997] text-[#052617] rounded-full px-6 py-3.5 text-sm font-bold hover:bg-[#1bb285] transition-all transform hover:scale-[1.03] inline-flex items-center gap-2 shadow-lg shadow-[#20c997]/25">
-              <span>Lihat Peta Lengkap</span>
+              <a href="/peta" className="text-inherit no-underline">
+                Lihat Peta Lengkap
+              </a>
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -626,66 +721,62 @@ export default function Home() {
                     Live Map Feed
                   </span>
                 </div>
-                <span className="text-[10px] text-emerald-500 font-mono">
-                  192.168.18.63
-                </span>
               </div>
 
-              {/* Fake UI details simulating Waste Points */}
+              {/* Live category summary from the map data */}
               <div className="space-y-3.5 py-4">
-                {/* waste point 1 */}
                 <div className="flex items-center justify-between bg-[#072416]/80 backdrop-blur-md rounded-xl p-3 border border-emerald-900/50 hover:border-emerald-500/30 transition-all duration-300">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full" />
                     <div>
-                      <h4 className="text-xs font-bold">WASTE POINT 05</h4>
+                      <h4 className="text-xs font-bold">SAMPAH LIAR AKTIF</h4>
                       <p className="text-[10px] text-emerald-500/80">
-                        Kec. Setiabudi, Jakarta Selatan
+                        Laporan pending dan titik terdata
                       </p>
                     </div>
                   </div>
                   <span className="text-xs font-bold text-emerald-400">
-                    82% Penuh
+                    {mapStatsLoading ? "..." : mapStats.trashDump}
                   </span>
                 </div>
 
-                {/* waste point 2 */}
                 <div className="flex items-center justify-between bg-[#072416]/80 backdrop-blur-md rounded-xl p-3 border border-emerald-900/50 hover:border-emerald-500/30 transition-all duration-300">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full" />
                     <div>
-                      <h4 className="text-xs font-bold">ECO-CENTER 01</h4>
+                      <h4 className="text-xs font-bold">BANK SAMPAH</h4>
                       <p className="text-[10px] text-emerald-500/80">
-                        Kec. Menteng, Jakarta Pusat
+                        Lokasi pengumpulan terdata
                       </p>
                     </div>
                   </div>
                   <span className="text-xs font-bold text-emerald-400">
-                    34% Penuh
+                    {mapStatsLoading ? "..." : mapStats.wasteBank}
                   </span>
                 </div>
 
-                {/* waste point 3 */}
                 <div className="flex items-center justify-between bg-[#072416]/80 backdrop-blur-md rounded-xl p-3 border border-emerald-900/50 hover:border-emerald-500/30 transition-all duration-300">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full" />
                     <div>
-                      <h4 className="text-xs font-bold">WASTE POINT 08</h4>
+                      <h4 className="text-xs font-bold">KOMUNITAS AKSI</h4>
                       <p className="text-[10px] text-emerald-500/80">
-                        Kec. Kebayoran Baru, Jaksel
+                        Gerakan lingkungan terdata
                       </p>
                     </div>
                   </div>
                   <span className="text-xs font-bold text-emerald-400">
-                    51% Penuh
+                    {mapStatsLoading ? "..." : mapStats.communityAction}
                   </span>
                 </div>
               </div>
 
               {/* Visual Footer */}
               <div className="text-[10px] text-emerald-500/50 flex justify-between">
-                <span>Updated 1m ago</span>
-                <span>Active Nodes: 124</span>
+                <span>Data peta terbaru</span>
+                <span>
+                  Active Nodes: {mapStatsLoading ? "..." : mapStats.total}
+                </span>
               </div>
             </div>
           </div>
@@ -702,8 +793,8 @@ export default function Home() {
                 Dukung ekonomi lokal dengan membeli karya kreatif daur ulang.
               </p>
             </div>
-            <a
-              href="#"
+            <Link
+              href="/marketplace"
               className="text-sm font-semibold text-[#198754] hover:text-[#0f5132] transition-colors inline-flex items-center gap-1 group"
             >
               <span>Lihat Semua</span>
@@ -720,143 +811,224 @@ export default function Home() {
                   d="M9 5l7 7-7 7"
                 />
               </svg>
-            </a>
+            </Link>
           </div>
 
           {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Card 1: Tas Anyaman */}
-            <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300">
-              <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
-                {/* 100% Recycled Badge */}
-                <span className="absolute top-3 left-3 z-10 bg-[#fff3e0] text-[#e65100] text-[9px] font-bold px-2 py-1 rounded-md shadow-sm">
-                  ♻️ 100% Daur Ulang
-                </span>
-                <Image
-                  src="/product_tas.png"
-                  alt="Tas Anyaman Bungkus Kopi"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+            {productsLoading ? (
+              Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={`product-loading-${index}`}
+                  className="aspect-square rounded-2xl bg-zinc-100 animate-pulse"
                 />
-              </div>
-              <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-1">
-                  <h3 className="font-bold text-zinc-900 group-hover:text-[#198754] text-sm md:text-base transition-colors leading-tight">
-                    Tas Anyaman Bungkus Kopi
-                  </h3>
-                  <p className="text-xs text-zinc-400 font-medium">
-                    PT Rezeki Banten
-                  </p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm md:text-base font-bold text-zinc-900">
-                    Rp 85.000
-                  </span>
-                  <button className="bg-[#0f5132] text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#0c4028] transition-colors">
-                    Beli / WA
-                  </button>
-                </div>
-              </div>
-            </div>
+              ))
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => {
+                const imageUrl = product.thumbnail_url || "/logo.ico";
+                const sellerName = product.seller?.name || "UMKM Lokal";
+                const whatsapp = product.seller?.phone_whatsapp;
 
-            {/* Card 2: Lampu Hias */}
-            <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300">
-              <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
-                <span className="absolute top-3 left-3 z-10 bg-[#fff3e0] text-[#e65100] text-[9px] font-bold px-2 py-1 rounded-md shadow-sm">
-                  ♻️ 100% Daur Ulang
-                </span>
-                <Image
-                  src="/product_lampu.png"
-                  alt="Lampu Hias Botol Upcycle"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-1">
-                  <h3 className="font-bold text-zinc-900 group-hover:text-[#198754] text-sm md:text-base transition-colors leading-tight">
-                    Lampu Hias Botol Upcycle
-                  </h3>
-                  <p className="text-xs text-zinc-400 font-medium">
-                    PT Cahaya Lestari
-                  </p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm md:text-base font-bold text-zinc-900">
-                    Rp 150.000
-                  </span>
-                  <button className="bg-[#0f5132] text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#0c4028] transition-colors">
-                    Beli / WA
-                  </button>
-                </div>
-              </div>
-            </div>
+                return (
+                  <div
+                    key={product.id}
+                    className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300"
+                  >
+                    <Link
+                      href={`/marketplace/${product.slug}`}
+                      className="relative aspect-square w-full bg-zinc-100 overflow-hidden"
+                    >
+                      <span className="absolute top-3 left-3 z-10 bg-[#fff3e0] text-[#e65100] text-[9px] font-bold px-2 py-1 rounded-md shadow-sm">
+                        {product.waste_impact_badge || "Daur Ulang"}
+                      </span>
+                      <RemoteImage
+                        src={imageUrl}
+                        alt={product.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </Link>
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                      <div className="space-y-1">
+                        <Link
+                          href={`/marketplace/${product.slug}`}
+                          className="font-bold text-zinc-900 group-hover:text-[#198754] text-sm md:text-base transition-colors leading-tight line-clamp-2"
+                        >
+                          {product.title}
+                        </Link>
+                        <p className="text-xs text-zinc-400 font-medium">
+                          {sellerName}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm md:text-base font-bold text-zinc-900">
+                          Rp {Number(product.price).toLocaleString("id-ID")}
+                        </span>
+                        {whatsapp ? (
+                          <a
+                            href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-[#0f5132] text-white text-xs font-semibold px-3 py-2 rounded-xl hover:bg-[#0c4028] transition-colors"
+                          >
+                            Beli / WA
+                          </a>
+                        ) : (
+                          <Link
+                            href={`/marketplace/${product.slug}`}
+                            className="bg-[#0f5132] text-white text-xs font-semibold px-3 py-2 rounded-xl hover:bg-[#0c4028] transition-colors"
+                          >
+                            Lihat
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="sm:col-span-2 lg:col-span-4 text-sm text-zinc-500">
+                Produk UMKM belum tersedia.
+              </p>
+            )}
 
-            {/* Card 3: Set Jurnal */}
-            <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300">
-              <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
-                <span className="absolute top-3 left-3 z-10 bg-[#fff3e0] text-[#e65100] text-[9px] font-bold px-2 py-1 rounded-md shadow-sm">
-                  ♻️ 100% Daur Ulang
-                </span>
-                <Image
-                  src="/product_jurnal.png"
-                  alt="Set Jurnal Kertas Daur Ulang"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-1">
-                  <h3 className="font-bold text-zinc-900 group-hover:text-[#198754] text-sm md:text-base transition-colors leading-tight">
-                    Set Jurnal Kertas Daur Ulang
-                  </h3>
-                  <p className="text-xs text-zinc-400 font-medium">
-                    PT Serat Lestari
-                  </p>
+            {false && (
+              <>
+                {/* Card 1: Tas Anyaman */}
+                <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300">
+                  <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
+                    {/* 100% Recycled Badge */}
+                    <span className="absolute top-3 left-3 z-10 bg-[#fff3e0] text-[#e65100] text-[9px] font-bold px-2 py-1 rounded-md shadow-sm">
+                      ♻️ 100% Daur Ulang
+                    </span>
+                    <Image
+                      src="/product_tas.png"
+                      alt="Tas Anyaman Bungkus Kopi"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-zinc-900 group-hover:text-[#198754] text-sm md:text-base transition-colors leading-tight">
+                        Tas Anyaman Bungkus Kopi
+                      </h3>
+                      <p className="text-xs text-zinc-400 font-medium">
+                        PT Rezeki Banten
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm md:text-base font-bold text-zinc-900">
+                        Rp 85.000
+                      </span>
+                      <button className="bg-[#0f5132] text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#0c4028] transition-colors">
+                        Beli / WA
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm md:text-base font-bold text-zinc-900">
-                    Rp 45.000
-                  </span>
-                  <button className="bg-[#0f5132] text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#0c4028] transition-colors">
-                    Beli / WA
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            {/* Card 4: Pot Tanaman */}
-            <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300">
-              <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
-                <span className="absolute top-3 left-3 z-10 bg-[#fff3e0] text-[#e65100] text-[9px] font-bold px-2 py-1 rounded-md shadow-sm">
-                  ♻️ 100% Daur Ulang
-                </span>
-                <Image
-                  src="/product_pot.png"
-                  alt="Pot Tanaman Motif Terrazzo"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-1">
-                  <h3 className="font-bold text-zinc-900 group-hover:text-[#198754] text-sm md:text-base transition-colors leading-tight">
-                    Pot Tanaman Motif Terrazzo
-                  </h3>
-                  <p className="text-xs text-zinc-400 font-medium">
-                    PT Plastik Lestari
-                  </p>
+                {/* Card 2: Lampu Hias */}
+                <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300">
+                  <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
+                    <span className="absolute top-3 left-3 z-10 bg-[#fff3e0] text-[#e65100] text-[9px] font-bold px-2 py-1 rounded-md shadow-sm">
+                      ♻️ 100% Daur Ulang
+                    </span>
+                    <Image
+                      src="/product_lampu.png"
+                      alt="Lampu Hias Botol Upcycle"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-zinc-900 group-hover:text-[#198754] text-sm md:text-base transition-colors leading-tight">
+                        Lampu Hias Botol Upcycle
+                      </h3>
+                      <p className="text-xs text-zinc-400 font-medium">
+                        PT Cahaya Lestari
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm md:text-base font-bold text-zinc-900">
+                        Rp 150.000
+                      </span>
+                      <button className="bg-[#0f5132] text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#0c4028] transition-colors">
+                        Beli / WA
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm md:text-base font-bold text-zinc-900">
-                    Rp 65.000
-                  </span>
-                  <button className="bg-[#0f5132] text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#0c4028] transition-colors">
-                    Beli / WA
-                  </button>
+
+                {/* Card 3: Set Jurnal */}
+                <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300">
+                  <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
+                    <span className="absolute top-3 left-3 z-10 bg-[#fff3e0] text-[#e65100] text-[9px] font-bold px-2 py-1 rounded-md shadow-sm">
+                      ♻️ 100% Daur Ulang
+                    </span>
+                    <Image
+                      src="/product_jurnal.png"
+                      alt="Set Jurnal Kertas Daur Ulang"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-zinc-900 group-hover:text-[#198754] text-sm md:text-base transition-colors leading-tight">
+                        Set Jurnal Kertas Daur Ulang
+                      </h3>
+                      <p className="text-xs text-zinc-400 font-medium">
+                        PT Serat Lestari
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm md:text-base font-bold text-zinc-900">
+                        Rp 45.000
+                      </span>
+                      <button className="bg-[#0f5132] text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#0c4028] transition-colors">
+                        Beli / WA
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+
+                {/* Card 4: Pot Tanaman */}
+                <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all duration-300">
+                  <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
+                    <span className="absolute top-3 left-3 z-10 bg-[#fff3e0] text-[#e65100] text-[9px] font-bold px-2 py-1 rounded-md shadow-sm">
+                      ♻️ 100% Daur Ulang
+                    </span>
+                    <Image
+                      src="/product_pot.png"
+                      alt="Pot Tanaman Motif Terrazzo"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-zinc-900 group-hover:text-[#198754] text-sm md:text-base transition-colors leading-tight">
+                        Pot Tanaman Motif Terrazzo
+                      </h3>
+                      <p className="text-xs text-zinc-400 font-medium">
+                        PT Plastik Lestari
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm md:text-base font-bold text-zinc-900">
+                        Rp 65.000
+                      </span>
+                      <button className="bg-[#0f5132] text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#0c4028] transition-colors">
+                        Beli / WA
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
@@ -908,9 +1080,6 @@ export default function Home() {
                     <h3 className="text-lg font-bold text-zinc-900 group-hover:text-[#198754] transition-colors leading-tight">
                       Zero Waste Week
                     </h3>
-                    <span className="bg-[#e6f7f0] text-[#0d9488] text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
-                      +500 Poin
-                    </span>
                   </div>
                   <p className="text-xs md:text-sm text-zinc-500 leading-relaxed">
                     Kumpulkan minimal 5kg sampah plastik bersih dalam seminggu
@@ -974,9 +1143,6 @@ export default function Home() {
                     <h3 className="text-lg font-bold text-zinc-900 group-hover:text-[#198754] transition-colors leading-tight">
                       Plastic-Free July
                     </h3>
-                    <span className="bg-[#e6f7f0] text-[#0d9488] text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
-                      +1000 Poin
-                    </span>
                   </div>
                   <p className="text-xs md:text-sm text-zinc-500 leading-relaxed">
                     Hindari penggunaan kantong plastik sekali pakai selama

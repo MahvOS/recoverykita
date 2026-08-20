@@ -4,9 +4,25 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase, getSupabaseClient } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 type WasteCategory = "plastik" | "organik" | "b3" | "elektronik";
 type Priority = "rendah" | "sedang" | "tinggi";
+
+function normalizePhoneNumber(value: string): string {
+  const compact = value.replace(/[\s()-]/g, "");
+  if (compact.startsWith("08")) return `+62${compact.slice(1)}`;
+  if (compact.startsWith("62")) return `+${compact}`;
+  return compact;
+}
+
+function normalizeUsername(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function getInternalAuthEmail(username: string): string {
+  return `${normalizeUsername(username)}@accounts.recoverykita.local`;
+}
 
 interface FormData {
   location: string;
@@ -40,11 +56,123 @@ export default function LaporPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authUsername, setAuthUsername] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authPhoneNumber, setAuthPhoneNumber] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authMessage, setAuthMessage] = useState("");
   const mapInstanceRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!supabase) {
+      setAuthChecked(true);
+      return;
+    }
+
+    let mounted = true;
+    const client = getSupabaseClient();
+
+    client.auth.getUser().then(({ data }) => {
+      if (mounted) {
+        setUser(data.user);
+        setAuthChecked(true);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = client.auth.onAuthStateChange((_event, session) => {
+      if (mounted) setUser(session?.user ?? null);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleAuthSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthMessage("");
+    setError("");
+
+    try {
+      const client = getSupabaseClient() as any;
+      const username = normalizeUsername(authUsername);
+
+      if (!/^[a-z0-9_]{3,30}$/.test(username)) {
+        throw new Error(
+          "Username harus 3-30 karakter dan hanya boleh berisi huruf kecil, angka, atau underscore.",
+        );
+      }
+
+      if (authMode === "login") {
+        const { error: loginError } = await client.auth.signInWithPassword({
+          email: getInternalAuthEmail(username),
+          password: authPassword,
+        });
+        if (loginError) throw loginError;
+        setAuthMessage("Login berhasil. Form laporan sudah dapat digunakan.");
+      } else {
+        const phoneNumber = normalizePhoneNumber(authPhoneNumber);
+
+        if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
+          throw new Error(
+            "Nomor telepon tidak valid. Gunakan format +628123456789 atau 08123456789.",
+          );
+        }
+
+        const { data, error: registerError } = await client.auth.signUp({
+          email: getInternalAuthEmail(username),
+          password: authPassword,
+          options: {
+            data: {
+              username,
+              full_name: username,
+              phone_number: phoneNumber,
+            },
+          },
+        });
+        if (registerError) throw registerError;
+
+        if (data.user && data.session) {
+          await client.from("profiles").upsert({
+            id: data.user.id,
+            full_name: username,
+            phone_number: phoneNumber,
+          });
+          setAuthMessage(
+            "Akun berhasil dibuat. Form laporan sudah dapat digunakan.",
+          );
+        } else {
+          setAuthMessage(
+            "Akun berhasil dibuat. Silakan login dengan username Anda.",
+          );
+          setAuthMode("login");
+        }
+      }
+    } catch (authError) {
+      const message = authError instanceof Error ? authError.message : "";
+      setAuthMessage(message || "Autentikasi gagal. Silakan coba lagi.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (!supabase) return;
+    await getSupabaseClient().auth.signOut();
+    setUser(null);
+    setAuthMessage("Anda sudah logout.");
+  };
 
   // Initialize map
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    if (!user || !mapRef.current || mapInstanceRef.current) return;
 
     const init = async () => {
       const L = (await import("leaflet")).default;
@@ -104,7 +232,7 @@ export default function LaporPage() {
         mapInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [user]);
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -193,6 +321,17 @@ export default function LaporPage() {
         );
       }
 
+      const client = getSupabaseClient() as any;
+      const {
+        data: { user: currentUser },
+      } = await client.auth.getUser();
+
+      if (!currentUser) {
+        throw new Error(
+          "Anda harus login terlebih dahulu untuk mengirim laporan.",
+        );
+      }
+
       if (!formData.location) {
         throw new Error("Lokasi harus diisi");
       }
@@ -206,7 +345,12 @@ export default function LaporPage() {
         throw new Error("Minimal 1 foto harus diupload");
       }
 
-      const client = getSupabaseClient() as any;
+      const { data: profile } = await client
+        .from("profiles")
+        .select("full_name, phone_number")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
       const photoUrls: string[] = [];
       for (let i = 0; i < formData.photos.length; i++) {
         const file = formData.photos[i];
@@ -229,9 +373,25 @@ export default function LaporPage() {
       }
 
       const { error: insertError } = await client.from("report_logs").insert({
-        location_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        user_id: currentUser.id,
         previous_status: "pending",
         new_status: "pending",
+        category: formData.category,
+        location_name: formData.location,
+        description: formData.description,
+        priority: formData.priority,
+        photo_urls: photoUrls,
+        reporter_name:
+          profile?.full_name ??
+          currentUser.user_metadata?.full_name ??
+          "Pengguna RecoveryKita",
+        reporter_phone:
+          profile?.phone_number ??
+          currentUser.user_metadata?.phone_number ??
+          null,
+        status: "pending",
+        latitude: formData.latitude,
+        longitude: formData.longitude,
         notes: `${formData.category} - ${formData.description} - Priority: ${formData.priority} - Location: ${formData.location} (${formData.latitude}, ${formData.longitude}) - Photos: ${photoUrls.join(", ")}`,
       });
 
@@ -424,215 +584,332 @@ export default function LaporPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form Section */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-zinc-200">
-              <h1 className="text-3xl font-bold text-[#0f5132] mb-2">
-                Lapor Titik Sampah
-              </h1>
-              <p className="text-zinc-600 mb-6">
-                Partisipasi Anda sangat berharga! Laporkan titik sampah liar di
-                sekitar Anda agar segera ditindaklanjuti oleh komunitas dan
-                pihak terkait demi lingkungan yang lebih bersih.
-              </p>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Lokasi Sampah */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-900 mb-3">
-                    Lokasi Sampah
-                  </label>
-                  <div
-                    ref={mapRef}
-                    className="w-full h-72 rounded-xl border-2 border-zinc-300 mb-4 bg-zinc-100"
-                    style={{ zIndex: 1 }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Cari alamat atau nama tempat..."
-                    value={formData.location}
-                    onChange={handleLocationChange}
-                    className="w-full px-4 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-[#198754] focus:border-transparent bg-white"
-                  />
-                  {selectedLocation && (
-                    <p className="mt-2 text-sm text-[#198754]">
-                      ✓ Lokasi dipilih: {formData.location}
-                    </p>
-                  )}
-                </div>
-
-                {/* Foto Bukti */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-900 mb-3">
-                    Foto Bukti (Maks. 3 Foto)
-                  </label>
-                  <div className="border-2 border-dashed border-zinc-300 rounded-xl p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition cursor-pointer">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept="image/jpeg,image/png"
-                      onChange={handlePhotoSelect}
-                      className="hidden"
-                    />
+            {!authChecked ? (
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-zinc-200 text-center">
+                <p className="text-zinc-600">Memuat Data..</p>
+              </div>
+            ) : !user ? (
+              <div className="overflow-hidden bg-white rounded-3xl shadow-sm border border-zinc-200">
+                <div className="bg-[#0f5132] px-8 py-8 text-white">
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
                     <svg
-                      className="mx-auto h-12 w-12 text-zinc-400 mb-2"
-                      stroke="currentColor"
+                      className="h-6 w-6"
                       fill="none"
-                      viewBox="0 0 48 48"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      viewBox="0 0 24 24"
                     >
                       <path
-                        d="M28 8H12a4 4 0 00-4 4v20a4 4 0 004 4h24a4 4 0 004-4V20m-8-12l-4-4h-8m20 24l-8-8m-6 0l-8 8m16-8v10"
-                        strokeWidth={2}
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        d="M15 7a3 3 0 11-6 0 3 3 0 016 0zM4 21a8 8 0 0116 0M19 8v6m3-3h-6"
                       />
                     </svg>
-                    <p className="text-zinc-600">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="text-[#198754] font-medium hover:text-[#0f5132]"
-                      >
-                        Pilih File
-                      </button>
-                      {" atau drag & drop"}
-                    </p>
-                    <p className="text-xs text-zinc-500 mt-2">
-                      Format diizinkan: JPG, PNG (Maks 5MB)
-                    </p>
+                  </div>
+                  <h1 className="text-2xl font-bold mb-2">
+                    Masuk untuk Melaporkan
+                  </h1>
+                  <p className="text-sm leading-relaxed text-emerald-50/80">
+                    Login dengan username dan password untuk membuka form
+                    laporan titik sampah. Nomor telepon hanya disimpan sebagai
+                    data profil.
+                  </p>
+                </div>
+
+                <div className="p-8">
+                  <div className="mb-6 grid grid-cols-2 rounded-xl bg-zinc-100 p-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode("login");
+                        setAuthMessage("");
+                      }}
+                      className={`rounded-lg py-2.5 text-sm font-semibold transition ${authMode === "login" ? "bg-white text-[#0f5132] shadow-sm" : "text-zinc-500"}`}
+                    >
+                      Login
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode("register");
+                        setAuthMessage("");
+                      }}
+                      className={`rounded-lg py-2.5 text-sm font-semibold transition ${authMode === "register" ? "bg-white text-[#0f5132] shadow-sm" : "text-zinc-500"}`}
+                    >
+                      Buat Akun
+                    </button>
                   </div>
 
-                  {/* Photo Preview */}
-                  {preview.length > 0 && (
-                    <div className="grid grid-cols-3 gap-4 mt-4">
-                      {preview.map((src, idx) => (
-                        <div
-                          key={idx}
-                          className="relative aspect-square rounded-lg overflow-hidden border border-gray-200"
-                        >
-                          <Image
-                            src={src}
-                            alt={`Preview ${idx + 1}`}
-                            fill
-                            className="object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removePhoto(idx)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                  <form onSubmit={handleAuthSubmit} className="space-y-4">
+                    {authMode === "register" && (
+                      <input
+                        type="tel"
+                        value={authPhoneNumber}
+                        onChange={(e) => setAuthPhoneNumber(e.target.value)}
+                        placeholder="Nomor telepon profil, contoh +628123456789"
+                        required
+                        className="w-full px-4 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-[#198754] focus:border-transparent"
+                      />
+                    )}
+                    <input
+                      type="text"
+                      value={authUsername}
+                      onChange={(e) => setAuthUsername(e.target.value)}
+                      placeholder="Username"
+                      required
+                      className="w-full px-4 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-[#198754] focus:border-transparent"
+                    />
+                    <input
+                      type="password"
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      placeholder="Password minimal 6 karakter"
+                      minLength={6}
+                      required
+                      className="w-full px-4 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-[#198754] focus:border-transparent"
+                    />
+                    <button
+                      type="submit"
+                      disabled={authLoading || !supabase}
+                      className="w-full bg-[#198754] hover:bg-[#0f5132] disabled:bg-zinc-300 text-white font-semibold py-3 rounded-xl transition"
+                    >
+                      {authLoading
+                        ? "Memproses..."
+                        : authMode === "login"
+                          ? "Login"
+                          : "Buat Akun"}
+                    </button>
+                  </form>
+
+                  {authMessage && (
+                    <p className="mt-4 text-sm text-[#0f5132]">{authMessage}</p>
                   )}
                 </div>
-
-                {/* Kategori Sampah Utama */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-900 mb-3">
-                    Kategori Sampah Utama
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {categoryOptions.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => handleCategoryChange(cat.id)}
-                        className={`py-3 px-4 rounded-xl font-medium transition ${
-                          formData.category === cat.id
-                            ? "bg-[#198754] text-white"
-                            : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-                        }`}
-                      >
-                        {cat.label}
-                      </button>
-                    ))}
-                  </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-zinc-200">
+                <h1 className="text-3xl font-bold text-[#0f5132] mb-2">
+                  Lapor Titik Sampah
+                </h1>
+                <div className="flex items-center justify-between gap-3 mb-6 p-3 rounded-xl bg-[#e8f5e9] text-sm">
+                  <span className="text-[#0f5132]">
+                    Login sebagai{" "}
+                    {user.user_metadata?.full_name ?? user.phone ?? "Pengguna"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="text-red-700 font-semibold hover:underline"
+                  >
+                    Logout
+                  </button>
                 </div>
+                <p className="text-zinc-600 mb-6">
+                  Partisipasi Anda sangat berharga! Laporkan titik sampah liar
+                  di sekitar Anda agar segera ditindaklanjuti oleh komunitas dan
+                  pihak terkait demi lingkungan yang lebih bersih.
+                </p>
 
-                {/* Keterangan Tambahan */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-900 mb-3">
-                    Keterangan Tambahan
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={handleDescriptionChange}
-                    placeholder="Jelaskan kondisi secara singkat, misalnya: 'Tumpukan sampah plastik di pinggir sungai, sudah mulai bau.'"
-                    rows={4}
-                    className="w-full px-4 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-[#198754] focus:border-transparent resize-none bg-white"
-                  />
-                </div>
-
-                {/* Tingkat Prioritas */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-900 mb-3">
-                    Tingkat Prioritas
-                  </label>
-                  <div className="flex gap-3">
-                    {(["rendah", "sedang", "tinggi"] as Priority[]).map(
-                      (priority) => {
-                        const labels: Record<Priority, string> = {
-                          rendah: "Rendah",
-                          sedang: "Sedang",
-                          tinggi: "Tinggi",
-                        };
-
-                        const colors: Record<Priority, string> = {
-                          rendah:
-                            "bg-green-100 text-green-800 border-green-300",
-                          sedang:
-                            "bg-yellow-100 text-yellow-800 border-yellow-300",
-                          tinggi: "bg-red-100 text-red-800 border-red-300",
-                        };
-
-                        return (
-                          <button
-                            key={priority}
-                            type="button"
-                            onClick={() => handlePriorityChange(priority)}
-                            className={`px-4 py-2 rounded-xl font-medium border-2 transition ${
-                              formData.priority === priority
-                                ? colors[priority]
-                                : `border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50`
-                            }`}
-                          >
-                            ● {labels[priority]}
-                          </button>
-                        );
-                      },
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Lokasi Sampah */}
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 mb-3">
+                      Lokasi Sampah
+                    </label>
+                    <div
+                      ref={mapRef}
+                      className="w-full h-72 rounded-xl border-2 border-zinc-300 mb-4 bg-zinc-100"
+                      style={{ zIndex: 1 }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Cari alamat atau nama tempat..."
+                      value={formData.location}
+                      onChange={handleLocationChange}
+                      className="w-full px-4 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-[#198754] focus:border-transparent bg-white"
+                    />
+                    {selectedLocation && (
+                      <p className="mt-2 text-sm text-[#198754]">
+                        ✓ Lokasi dipilih: {formData.location}
+                      </p>
                     )}
                   </div>
-                </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-[#198754] hover:bg-[#0f5132] disabled:bg-[#a3d9b5] text-white font-semibold py-3 px-6 rounded-xl transition flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    "Mengirim..."
-                  ) : (
-                    <>
+                  {/* Foto Bukti */}
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 mb-3">
+                      Foto Bukti (Maks. 3 Foto)
+                    </label>
+                    <div className="border-2 border-dashed border-zinc-300 rounded-xl p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition cursor-pointer">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        accept="image/jpeg,image/png"
+                        onChange={handlePhotoSelect}
+                        className="hidden"
+                      />
                       <svg
-                        className="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
+                        className="mx-auto h-12 w-12 text-zinc-400 mb-2"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 48 48"
                       >
                         <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                          clipRule="evenodd"
+                          d="M28 8H12a4 4 0 00-4 4v20a4 4 0 004 4h24a4 4 0 004-4V20m-8-12l-4-4h-8m20 24l-8-8m-6 0l-8 8m16-8v10"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         />
                       </svg>
-                      Kirim Laporan
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
+                      <p className="text-zinc-600">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-[#198754] font-medium hover:text-[#0f5132]"
+                        >
+                          Pilih File
+                        </button>
+                        {" atau drag & drop"}
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-2">
+                        Format diizinkan: JPG, PNG (Maks 5MB)
+                      </p>
+                    </div>
+
+                    {/* Photo Preview */}
+                    {preview.length > 0 && (
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        {preview.map((src, idx) => (
+                          <div
+                            key={idx}
+                            className="relative aspect-square rounded-lg overflow-hidden border border-gray-200"
+                          >
+                            <Image
+                              src={src}
+                              alt={`Preview ${idx + 1}`}
+                              fill
+                              className="object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removePhoto(idx)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Kategori Sampah Utama */}
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 mb-3">
+                      Kategori Sampah Utama
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {categoryOptions.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => handleCategoryChange(cat.id)}
+                          className={`py-3 px-4 rounded-xl font-medium transition ${
+                            formData.category === cat.id
+                              ? "bg-[#198754] text-white"
+                              : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Keterangan Tambahan */}
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 mb-3">
+                      Keterangan Tambahan
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={handleDescriptionChange}
+                      placeholder="Jelaskan kondisi secara singkat, misalnya: 'Tumpukan sampah plastik di pinggir sungai, sudah mulai bau.'"
+                      rows={4}
+                      className="w-full px-4 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-[#198754] focus:border-transparent resize-none bg-white"
+                    />
+                  </div>
+
+                  {/* Tingkat Prioritas */}
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 mb-3">
+                      Tingkat Prioritas
+                    </label>
+                    <div className="flex gap-3">
+                      {(["rendah", "sedang", "tinggi"] as Priority[]).map(
+                        (priority) => {
+                          const labels: Record<Priority, string> = {
+                            rendah: "Rendah",
+                            sedang: "Sedang",
+                            tinggi: "Tinggi",
+                          };
+
+                          const colors: Record<Priority, string> = {
+                            rendah:
+                              "bg-green-100 text-green-800 border-green-300",
+                            sedang:
+                              "bg-yellow-100 text-yellow-800 border-yellow-300",
+                            tinggi: "bg-red-100 text-red-800 border-red-300",
+                          };
+
+                          return (
+                            <button
+                              key={priority}
+                              type="button"
+                              onClick={() => handlePriorityChange(priority)}
+                              className={`px-4 py-2 rounded-xl font-medium border-2 transition ${
+                                formData.priority === priority
+                                  ? colors[priority]
+                                  : `border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50`
+                              }`}
+                            >
+                              ● {labels[priority]}
+                            </button>
+                          );
+                        },
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#198754] hover:bg-[#0f5132] disabled:bg-[#a3d9b5] text-white font-semibold py-3 px-6 rounded-xl transition flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      "Mengirim..."
+                    ) : (
+                      <>
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        Kirim Laporan
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
 
           {/* Guide Section */}
