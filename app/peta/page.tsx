@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Navbar } from "@/components/navbar";
 import {
   supabase,
   getSupabaseClient,
@@ -269,6 +270,18 @@ export default function PetaPage() {
                 : "trash_dump",
             latitude: Number(r.latitude),
             longitude: Number(r.longitude),
+            address_notes: null,
+            photo_url: null,
+            cleaned_photo_url: null,
+            estimated_volume_kg: null,
+            status: "Pending",
+            reporter_name: null,
+            reporter_phone: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            priority: null,
+            waste_type: null,
+            photo_urls: null,
           }));
 
           allLocations = [...locations, ...mappedReports];
@@ -305,7 +318,9 @@ export default function PetaPage() {
     ? locations.filter(
         (l) =>
           l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          l.description.toLowerCase().includes(searchQuery.toLowerCase()),
+          (l.description || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()),
       )
     : [];
 
@@ -313,7 +328,6 @@ export default function PetaPage() {
     activeFilters.has(l.category),
   ).length;
 
-  // Coverage: % of categories that have at least 1 item
   const coveragePct =
     locations.length === 0
       ? 0
@@ -322,87 +336,14 @@ export default function PetaPage() {
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800 flex flex-col">
       {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/90 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3 w-1/3">
-            <Link href="/" className="block">
-              <div className="relative w-8 h-8 sm:w-30 sm:h-30">
-                <Image
-                  src="/logo.ico"
-                  alt="RecoveryKita Logo"
-                  fill
-                  sizes="36px"
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </Link>
-          </div>
-
-          <nav className="hidden md:flex items-center justify-center gap-6 sm:gap-8 w-1/3">
-            <Link
-              href="/"
-              className="text-xs sm:text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Beranda
-            </Link>
-            <Link
-              href="/marketplace"
-              className="text-xs sm:text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Marketplace
-            </Link>
-            <Link
-              href="/peta"
-              className="text-xs sm:text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
-            >
-              Peta
-            </Link>
-            <Link
-              href="/lapor"
-              className="text-xs sm:text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Lapor
-            </Link>
-            <Link
-              href="/edukasi"
-              className="text-xs sm:text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-            >
-              Edukasi
-            </Link>
-          </nav>
-
-          <div className="w-1/3 hidden md:block" />
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100"
-          >
-            <svg
-              className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-700"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16m-7 6h7"
-              />
-            </svg>
-          </button>
-        </div>
-      </header>
+      <Navbar />
 
       {/* ── Map Layout ── */}
-      <div
-        className="flex flex-1 relative"
-        style={{ height: "calc(100vh - 64px)" }}
-      >
+      <div className="flex flex-1 relative min-h-0 pt-16 sm:pt-20 h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-5rem)]">
         {/* ── Mobile Sidebar Overlay ── */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-x-0 top-16 sm:top-20 bottom-0 bg-black/50 z-30 md:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -410,15 +351,17 @@ export default function PetaPage() {
         {/* ── Sidebar ── */}
         <aside
           className={`
-          fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-zinc-100 flex flex-col overflow-hidden
+          fixed inset-y-0 left-0 top-16 sm:top-20 z-40 w-[min(20rem,calc(100vw-2rem))] bg-white border-r border-zinc-100 flex flex-col overflow-hidden
           transform transition-transform duration-300 ease-in-out
-          md:relative md:transform-none md:w-72 md:z-auto
+          md:relative md:inset-auto md:transform-none md:w-72 md:z-auto lg:w-80
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
         >
           {/* Mobile close button */}
           <div className="md:hidden flex items-center justify-between p-4 border-b border-zinc-100">
-            <span className="text-sm font-semibold text-zinc-700">Menu</span>
+            <span className="text-sm font-semibold text-zinc-700">
+              Filter & Pencarian
+            </span>
             <button
               onClick={() => setSidebarOpen(false)}
               className="p-2 rounded-lg hover:bg-zinc-100"
@@ -437,6 +380,13 @@ export default function PetaPage() {
                 />
               </svg>
             </button>
+          </div>
+
+          {/* Desktop header */}
+          <div className="hidden md:block p-4 border-b border-zinc-100">
+            <span className="text-sm font-semibold text-zinc-700">
+              Filter & Pencarian
+            </span>
           </div>
 
           {/* Search */}
@@ -691,7 +641,8 @@ export default function PetaPage() {
           {/* Mobile filter button */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="absolute top-4 left-4 z-10 md:hidden bg-white/90 backdrop-blur-sm border border-zinc-200 rounded-full p-3 shadow-md hover:bg-white transition-colors"
+            className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10 md:hidden bg-white/90 backdrop-blur-sm border border-zinc-200 rounded-full p-2.5 sm:p-3 shadow-md hover:bg-white transition-colors"
+            aria-label="Buka filter peta"
           >
             <svg
               className="w-5 h-5 text-zinc-700"
@@ -773,7 +724,7 @@ export default function PetaPage() {
           </div>
 
           {/* Mobile legend - simplified */}
-          <div className="absolute bottom-4 left-4 right-4 z-10 bg-white/90 backdrop-blur-sm border border-zinc-200 rounded-xl shadow-md p-3 text-xs space-y-1.5 sm:hidden">
+          <div className="absolute bottom-3 left-3 right-16 z-10 bg-white/90 backdrop-blur-sm border border-zinc-200 rounded-xl shadow-md p-2.5 sm:p-3 text-xs space-y-1.5 sm:hidden max-w-[calc(100%-5rem)]">
             <p className="font-bold text-zinc-500 text-[10px] uppercase tracking-wide mb-2">
               Legenda
             </p>
@@ -811,13 +762,13 @@ export default function PetaPage() {
       </div>
 
       {/* ── Footer ── */}
-      <footer className="bg-white border-t border-zinc-200/60 py-6 px-4 sm:px-6 flex-shrink-0">
+      <footer className="hidden sm:block bg-white border-t border-zinc-200/60 py-4 sm:py-6 px-4 sm:px-6 flex-shrink-0">
         <div className="max-w-7xl mx-auto flex flex-col items-center justify-center gap-4 sm:gap-6">
           <div className="space-y-1 text-center">
             <div className="flex items-center justify-center gap-2">
               <div className="relative w-5 h-5 sm:w-6 sm:h-6">
                 <Image
-                  src="/logo.ico"
+                  src="/favicon.ico"
                   alt="RecoveryKita Logo"
                   fill
                   sizes="24px"

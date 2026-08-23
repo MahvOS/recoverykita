@@ -1,4 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  Location,
+  CarbonFactor,
+  Profile,
+  ReportLog,
+  MetricStats,
+  RecentReport,
+  MapLocation,
+  LocationWithCarbon,
+  ReportLogWithLocation,
+  MapLocationCategory,
+  WasteCategory,
+  Priority,
+  ReportStatus,
+  LocationStatus,
+  LocationCategory,
+} from "@/types/admin";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -20,44 +37,23 @@ export function getSupabaseClient() {
   return supabase;
 }
 
-export type MapLocationCategory =
-  "trash_dump" | "waste_bank" | "community_action";
-export type WasteCategory = "trash_dump" | "waste_bank" | "community_action";
-export type Priority = "rendah" | "sedang" | "tinggi";
-export type ReportStatus = "pending" | "in_progress" | "completed" | "rejected";
-
-export interface Location {
-  id: string;
-  title: string;
-  description: string;
-  category: MapLocationCategory;
-  latitude: number;
-  longitude: number;
-}
-
-export interface ReportLog {
-  id: string;
-  location_id: string;
-  previous_status: ReportStatus;
-  new_status: ReportStatus;
-  notes: string;
-  created_at: string;
-}
-
-export interface Report {
-  id: string;
-  location_name: string;
-  latitude: number;
-  longitude: number;
-  category: string;
-  description: string;
-  priority: Priority;
-  photo_urls: string[];
-  status: ReportStatus;
-  created_at: string;
-}
-
-export type ContentFormat = "Artikel" | "Video" | "Infografis";
+export type {
+  MapLocationCategory,
+  WasteCategory,
+  Priority,
+  ReportStatus,
+  LocationStatus,
+  LocationCategory,
+  Location,
+  CarbonFactor,
+  Profile,
+  ReportLog,
+  MetricStats,
+  RecentReport,
+  MapLocation,
+  LocationWithCarbon,
+  ReportLogWithLocation,
+};
 
 export interface Seller {
   id: string;
@@ -74,14 +70,19 @@ export interface MarketplaceProduct {
   slug: string;
   price: number;
   category: string;
+  stock: number | null;
+  is_active: boolean | null;
   waste_impact_badge: string | null;
   description: string | null;
   thumbnail_url: string | null;
   gallery_urls: string | string[] | null;
   is_featured: boolean | null;
   created_at: string | null;
+  updated_at: string | null;
   seller?: Seller | null;
 }
+
+export type ContentFormat = "Artikel" | "Video" | "Infografis";
 
 export interface Article {
   id: string;
@@ -98,12 +99,6 @@ export interface Article {
   is_featured: boolean | null;
   published_at: string | null;
   created_at: string | null;
-}
-
-export interface CarbonFactor {
-  id: string;
-  waste_type: string;
-  co2_factor_per_kg: number;
 }
 
 export interface WasteLookupGuide {

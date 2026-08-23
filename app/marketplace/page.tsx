@@ -145,16 +145,17 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
-      <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/85 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col">
-          <div className="h-20 flex items-center justify-between">
-            <div className="flex items-center gap-3 w-1/3">
-              <Link href="/" className="relative w-37 h-37 block">
-                <div className="relative w-37 h-37">
+      <header className="fixed top-0 z-50 w-full bg-[#fbfcfa]/95 backdrop-blur-md border-b border-[#e2e8f0]/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col">
+          <div className="h-16 sm:h-20 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 w-20">
+              <Link href="/" className="block">
+                <div className="relative w-30 h-30 sm:w-35 sm:h-35">
                   <Image
                     src="/logo.ico"
                     alt="RecoveryKita Logo"
                     fill
+                    sizes="80px"
                     className="object-contain"
                     priority
                   />
@@ -162,7 +163,7 @@ export default function MarketplacePage() {
               </Link>
             </div>
 
-            <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
+            <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-8 flex-1">
               <Link
                 href="/"
                 className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
@@ -195,37 +196,37 @@ export default function MarketplacePage() {
               </Link>
             </nav>
 
-            <div className="w-1/3 hidden md:block" />
-
-            <button
-              type="button"
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100 transition-colors"
-            >
-              <svg
-                className="w-6 h-6 text-zinc-700"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
+            <div className="w-20 flex justify-end">
+              <button
+                type="button"
+                aria-label="Toggle navigation menu"
+                aria-expanded={mobileMenuOpen}
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100 transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d={
-                    mobileMenuOpen
-                      ? "M6 18L18 6M6 6l12 12"
-                      : "M4 6h16M4 12h16m-7 6h7"
-                  }
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-6 h-6 text-zinc-700"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d={
+                      mobileMenuOpen
+                        ? "M6 18L18 6M6 6l12 12"
+                        : "M4 6h16M4 12h16m-7 6h7"
+                    }
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {mobileMenuOpen && (
-            <div className="md:hidden border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+            <div className="md:hidden absolute top-full left-0 right-0 border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-2">
                 <Link
                   href="/"
@@ -268,17 +269,17 @@ export default function MarketplacePage() {
         </div>
       </header>
 
-      <section className="bg-gradient-to-b from-[#eaf6ee] to-[#fbfcfa] py-14 px-6 text-center">
-        <h1 className="text-3xl md:text-4xl font-black text-[#0f5132] mb-3 tracking-tight">
+      <section className="bg-gradient-to-b from-[#eaf6ee] to-[#fbfcfa] mt-10 pt-20 sm:pt-24 py-10 sm:py-14 px-4 sm:px-6 text-center">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0f5132] tracking-tight">
           Marketplace RecoveryKita
         </h1>
-        <p className="text-zinc-500 text-sm md:text-base max-w-md mx-auto leading-relaxed mb-8">
+        <p className="text-zinc-500 text-sm md:text-base max-w-md mx-auto leading-relaxed mb-6 sm:mb-8 px-2">
           Dukung pengrajin lokal dan selamatkan lingkungan dengan setiap
           pembelian. Temukan produk daur ulang berkualitas.
         </p>
 
         <div className="max-w-xl mx-auto relative">
-          <div className="flex items-center bg-white border border-zinc-200 rounded-full px-5 py-3 shadow-sm focus-within:ring-2 focus-within:ring-[#198754]/25 focus-within:border-[#198754] transition-all">
+          <div className="flex items-center bg-white border border-zinc-200 rounded-2xl sm:rounded-full px-4 sm:px-5 py-3 shadow-sm focus-within:ring-2 focus-within:ring-[#198754]/25 focus-within:border-[#198754] transition-all">
             <svg
               className="w-5 h-5 text-zinc-400 mr-3 flex-shrink-0"
               fill="none"
@@ -303,7 +304,41 @@ export default function MarketplacePage() {
         </div>
       </section>
 
-      <main className="max-w-7xl mx-auto px-6 py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 py-8 sm:py-10">
+        {/* Mobile filters */}
+        <div className="md:hidden mb-6 space-y-4">
+          <div className="overflow-x-auto -mx-4 px-4 pb-1">
+            <div className="flex gap-2 w-max min-w-full">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`whitespace-nowrap px-3.5 py-2 rounded-full text-xs font-semibold transition-all flex-shrink-0 ${activeCategory === cat.id ? "bg-[#0f5132] text-white" : "bg-white border border-zinc-200 text-zinc-600"}`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Harga min"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              className="flex-1 min-w-0 border border-zinc-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white text-zinc-700"
+            />
+            <span className="text-zinc-400 text-xs">-</span>
+            <input
+              type="text"
+              placeholder="Harga max"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="flex-1 min-w-0 border border-zinc-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white text-zinc-700"
+            />
+          </div>
+        </div>
+
         <div className="flex gap-8">
           <aside className="w-52 flex-shrink-0 hidden md:block">
             <div className="mb-8">
@@ -349,7 +384,7 @@ export default function MarketplacePage() {
           </aside>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <p className="text-sm text-zinc-500">
                 Menampilkan{" "}
                 <span className="font-semibold text-zinc-800">
@@ -357,7 +392,7 @@ export default function MarketplacePage() {
                 </span>
               </p>
 
-              <div className="relative">
+              <div className="relative self-start sm:self-auto">
                 <button
                   onClick={() => setSortOpen(!sortOpen)}
                   className="flex items-center gap-2 text-sm font-semibold text-[#0f5132] border border-zinc-200 rounded-xl px-4 py-2 bg-white hover:border-[#198754] transition-colors"
@@ -404,7 +439,7 @@ export default function MarketplacePage() {
             )}
 
             {loading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <div
                     key={index}
@@ -417,7 +452,7 @@ export default function MarketplacePage() {
                 Tidak ada produk yang cocok dengan filter Anda.
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-4">
                 {sorted.map((product) => {
                   const images = normalizeGalleryUrls(
                     product.gallery_urls,
@@ -496,13 +531,13 @@ export default function MarketplacePage() {
         </div>
       </main>
 
-      <footer className="bg-white border-t border-zinc-200/60 mt-16 py-12 px-6">
+      <footer className="bg-white border-t border-zinc-200/60 mt-12 sm:mt-16 py-8 sm:py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2">
-              <div className="relative w-7 h-7">
+              <div className="relative w-12 h-12 sm:w-8 sm:h-8">
                 <Image
-                  src="/logo.ico"
+                  src="/favicon.ico"
                   alt="RecoveryKita Logo"
                   fill
                   className="object-contain"

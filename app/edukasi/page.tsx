@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Navbar } from "@/components/navbar";
 import { RemoteImage } from "@/components/remote-image";
 import {
   supabase,
@@ -188,7 +189,6 @@ export default function EdukasiPage() {
   const [activeTopic, setActiveTopic] = useState("Semua Topik");
   const [weight, setWeight] = useState("");
   const [selectedWaste, setSelectedWaste] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState<WasteLookupGuide | null>(
     null,
   );
@@ -291,143 +291,22 @@ export default function EdukasiPage() {
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
       {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/85 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col">
-          <div className="h-20 flex items-center justify-between">
-            <div className="flex items-center gap-3 w-1/3">
-              <Link href="/" className="relative w-37 h-37 block">
-                <div className="relative w-37 h-37">
-                  <Image
-                    src="/logo.ico"
-                    alt="RecoveryKita Logo"
-                    fill
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-              </Link>
-            </div>
-
-            <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
-              <Link
-                href="/"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Beranda
-              </Link>
-              <Link
-                href="/marketplace"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Marketplace
-              </Link>
-              <Link
-                href="/peta"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Peta
-              </Link>
-              <Link
-                href="/lapor"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Lapor
-              </Link>
-              <Link
-                href="/edukasi"
-                className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
-              >
-                Edukasi
-              </Link>
-            </nav>
-
-            <div className="w-1/3 hidden md:block" />
-
-            <button
-              type="button"
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100 transition-colors"
-            >
-              <svg
-                className="w-6 h-6 text-zinc-700"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d={
-                    mobileMenuOpen
-                      ? "M6 18L18 6M6 6l12 12"
-                      : "M4 6h16M4 12h16m-7 6h7"
-                  }
-                />
-              </svg>
-            </button>
-          </div>
-
-          {mobileMenuOpen && (
-            <div className="md:hidden border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-              <div className="flex flex-col gap-2">
-                <Link
-                  href="/"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Beranda
-                </Link>
-                <Link
-                  href="/marketplace"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Marketplace
-                </Link>
-                <Link
-                  href="/peta"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Peta
-                </Link>
-                <Link
-                  href="/lapor"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Lapor
-                </Link>
-                <Link
-                  href="/edukasi"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0f5132] hover:bg-[#edf7ef]"
-                >
-                  Edukasi
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero */}
-      <section className="py-14 px-6 text-center">
-        <h1 className="text-3xl md:text-4xl font-black text-[#0f5132] mb-3 tracking-tight">
+      <section className="pt-20 sm:pt-24 py-10 sm:py-14 px-4 sm:px-6 text-center">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0f5132] mb-3 tracking-tight">
           Pusat Edukasi RecoveryKita
         </h1>
-        <p className="text-zinc-500 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+        <p className="text-zinc-500 text-sm md:text-base max-w-2xl mx-auto leading-relaxed px-2">
           Pelajari cara mengelola sampah secara berkelanjutan dan gaya hidup
           sirkular. Semua materi edukasi tersedia gratis untuk semua.
         </p>
       </section>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        <div className="flex flex-wrap gap-2 mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 py-8 sm:py-12">
+        <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
           {TOPIC_FILTERS.map((topic) => (
             <button
               key={topic}
@@ -554,7 +433,7 @@ export default function EdukasiPage() {
       </main>
 
       {/* Downloadable Assets */}
-      <section className="bg-white border-t border-zinc-100 py-14 px-6">
+      <section className="bg-white border-t border-zinc-100 py-10 sm:py-14 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-extrabold text-[#0a3622] mb-2">
@@ -617,7 +496,7 @@ export default function EdukasiPage() {
         </div>
       </section>
 
-      <section className="bg-[#f0f7ff] py-12 px-6">
+      <section className="bg-[#f0f7ff] py-10 sm:py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Carbon Impact Calculator */}
           <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm p-6 md:p-8">
@@ -750,13 +629,13 @@ export default function EdukasiPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-zinc-200/60 py-12 px-6">
+      <footer className="bg-white border-t border-zinc-200/60 py-8 sm:py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2">
               <div className="relative w-7 h-7">
                 <Image
-                  src="/logo.ico"
+                  src="/favicon.ico"
                   alt="RecoveryKita Logo"
                   fill
                   className="object-contain"
@@ -767,9 +646,8 @@ export default function EdukasiPage() {
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              © {new Date().getFullYear()} RecoveryKita. All rights reserved.{" "}
-              <br className="md:hidden" />
-              Menuju Ekonomi Sirkular Indonesia.
+              © {new Date().getFullYear()} RecoveryKita. All rights
+              reserved.{" "}
             </p>
           </div>
           <nav className="flex flex-wrap justify-center gap-6 text-xs font-medium text-zinc-500">

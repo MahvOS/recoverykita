@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Navbar } from "@/components/navbar";
 import { useParams } from "next/navigation";
 import {
   supabase,
@@ -47,7 +48,6 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -127,16 +127,18 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
-      <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/85 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col">
-          <div className="h-20 flex items-center justify-between">
-            <div className="flex items-center gap-3 w-1/3">
+      <Navbar />
+      {/*
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col">
+          <div className="h-16 sm:h-20 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 w-20">
               <Link href="/" className="block">
-                <div className="relative w-36 h-14">
+                <div className="relative w-30 h-30 sm:w-35 sm:h-35">
                   <Image
                     src="/logo.ico"
                     alt="RecoveryKita Logo"
                     fill
+                    sizes="80px"
                     className="object-contain"
                     priority
                   />
@@ -144,7 +146,7 @@ export default function ProductDetailPage() {
               </Link>
             </div>
 
-            <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
+            <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-8 flex-1">
               <Link
                 href="/"
                 className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
@@ -177,9 +179,8 @@ export default function ProductDetailPage() {
               </Link>
             </nav>
 
-            <div className="w-1/3 hidden md:block" />
-
-            <button
+            <div className="w-20 flex justify-end">
+              <button
               type="button"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}
@@ -203,11 +204,12 @@ export default function ProductDetailPage() {
                   }
                 />
               </svg>
-            </button>
+              </button>
+            </div>
           </div>
 
           {mobileMenuOpen && (
-            <div className="md:hidden border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+            <div className="md:hidden absolute top-full left-0 right-0 border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-2">
                 <Link
                   href="/"
@@ -248,10 +250,10 @@ export default function ProductDetailPage() {
             </div>
           )}
         </div>
-      </header>
+      </header> */}
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <nav className="flex items-center gap-2 text-xs text-zinc-400 mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 pb-6 sm:pb-8">
+        <nav className="flex items-center gap-2 text-xs text-zinc-400 mb-6 sm:mb-8 overflow-x-auto whitespace-nowrap pb-1">
           <Link
             href="/marketplace"
             className="hover:text-[#198754] transition-colors"
@@ -285,10 +287,12 @@ export default function ProductDetailPage() {
               d="M9 5l7 7-7 7"
             />
           </svg>
-          <span className="text-zinc-700 font-medium">{product.title}</span>
+          <span className="text-zinc-700 font-medium truncate max-w-[40vw] sm:max-w-none">
+            {product.title}
+          </span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 mb-12 sm:mb-16">
           <div>
             <div className="relative rounded-2xl overflow-hidden bg-zinc-100 aspect-square w-full mb-4">
               <span className="absolute top-4 left-4 z-10 bg-[#e8f5e9]/95 text-[#0f5132] text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-sm shadow-sm">
@@ -316,12 +320,12 @@ export default function ProductDetailPage() {
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1">
               {images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
-                  className={`relative w-24 h-24 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${activeImage === i ? "border-[#198754] shadow-md" : "border-transparent hover:border-zinc-300"}`}
+                  className={`relative w-16 h-16 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${activeImage === i ? "border-[#198754] shadow-md" : "border-transparent hover:border-zinc-300"}`}
                 >
                   <Image
                     src={img}
@@ -338,7 +342,7 @@ export default function ProductDetailPage() {
             <p className="text-xs uppercase tracking-[0.2em] text-[#0f5132] font-bold mb-3">
               {product.category}
             </p>
-            <h1 className="text-3xl md:text-4xl font-black text-zinc-900 leading-tight mb-3">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-zinc-900 leading-tight mb-3">
               {product.title}
             </h1>
             <p className="text-sm text-zinc-500 mb-6">
@@ -355,10 +359,10 @@ export default function ProductDetailPage() {
               </span>
             </div>
 
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-8">
               <button
                 onClick={() => setIsWishlisted(!isWishlisted)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${isWishlisted ? "bg-[#0f5132] text-white border-[#0f5132]" : "border-zinc-200 text-zinc-700 hover:border-[#198754] hover:text-[#198754]"}`}
+                className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${isWishlisted ? "bg-[#0f5132] text-white border-[#0f5132]" : "border-zinc-200 text-zinc-700 hover:border-[#198754] hover:text-[#198754]"}`}
               >
                 <svg
                   className="w-4 h-4"
@@ -401,7 +405,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-zinc-200 p-6">
+        <div className="bg-white rounded-2xl border border-zinc-200 p-4 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-2">
@@ -431,13 +435,13 @@ export default function ProductDetailPage() {
         </div>
       </main>
 
-      <footer className="bg-white border-t border-zinc-200/60 mt-16 py-12 px-6">
+      <footer className="bg-white border-t border-zinc-200/60 mt-12 sm:mt-16 py-8 sm:py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2">
               <div className="relative w-7 h-7">
                 <Image
-                  src="/logo.ico"
+                  src="/favicon.ico"
                   alt="RecoveryKita Logo"
                   fill
                   className="object-contain"

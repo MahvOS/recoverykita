@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Navbar } from "@/components/navbar";
 import { useParams } from "next/navigation";
 import { RemoteImage } from "@/components/remote-image";
 import { supabase, getSupabaseClient, Article } from "@/lib/supabase";
@@ -30,7 +31,6 @@ export default function ArticleDetailPage() {
   const [related, setRelated] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -115,16 +115,18 @@ export default function ArticleDetailPage() {
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
       {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/85 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col">
-          <div className="h-20 flex items-center justify-between">
-            <div className="flex items-center gap-3 w-1/3">
-              <Link href="/" className="relative w-37 h-37 block">
-                <div className="relative w-37 h-37">
+      <Navbar />
+      {/*
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col">
+          <div className="h-16 sm:h-20 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 w-20">
+              <Link href="/" className="block">
+                <div className="relative w-30 h-30 sm:w-35 sm:h-35">
                   <Image
                     src="/logo.ico"
                     alt="RecoveryKita Logo"
                     fill
+                    sizes="80px"
                     className="object-contain"
                     priority
                   />
@@ -132,7 +134,7 @@ export default function ArticleDetailPage() {
               </Link>
             </div>
 
-            <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
+            <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-8 flex-1">
               <Link
                 href="/"
                 className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
@@ -165,9 +167,8 @@ export default function ArticleDetailPage() {
               </Link>
             </nav>
 
-            <div className="w-1/3 hidden md:block" />
-
-            <button
+            <div className="w-20 flex justify-end">
+              <button
               type="button"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}
@@ -191,11 +192,12 @@ export default function ArticleDetailPage() {
                   }
                 />
               </svg>
-            </button>
+              </button>
+            </div>
           </div>
 
           {mobileMenuOpen && (
-            <div className="md:hidden border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+            <div className="md:hidden absolute top-full left-0 right-0 border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-2">
                 <Link
                   href="/"
@@ -236,10 +238,10 @@ export default function ArticleDetailPage() {
             </div>
           )}
         </div>
-      </header>
+      </header> */}
 
       {/* Breadcrumbs */}
-      <div className="max-w-7xl mx-auto px-6 pt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24">
         <nav className="text-xs text-zinc-400 flex items-center gap-1.5 flex-wrap">
           <Link href="/" className="hover:text-[#198754] transition-colors">
             Beranda
@@ -257,8 +259,8 @@ export default function ArticleDetailPage() {
       </div>
 
       {/* Hero Image + Title Overlay */}
-      <div className="max-w-7xl mx-auto px-6 pt-4 pb-8">
-        <div className="relative rounded-2xl overflow-hidden aspect-[21/9] min-h-[220px] md:min-h-[320px]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-6 sm:pb-8">
+        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden aspect-[16/9] sm:aspect-[21/9] min-h-[200px] md:min-h-[320px]">
           <RemoteImage
             src={article.thumbnail_url}
             alt={article.title}
@@ -269,9 +271,9 @@ export default function ArticleDetailPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 md:p-8 max-w-3xl shadow-lg">
-              <h1 className="text-xl md:text-3xl font-black text-[#0f5132] leading-tight mb-4">
+          <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 md:p-8">
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-8 max-w-3xl shadow-lg">
+              <h1 className="text-lg sm:text-xl md:text-3xl font-black text-[#0f5132] leading-tight mb-3 sm:mb-4">
                 {article.title}
               </h1>
               <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
@@ -330,8 +332,8 @@ export default function ArticleDetailPage() {
       </div>
 
       {/* Content + Sidebar */}
-      <main className="max-w-7xl mx-auto px-6 pb-16">
-        <div className="flex flex-col lg:flex-row gap-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16">
+        <div className="flex flex-col lg:flex-row gap-8 sm:gap-10">
           <article className="flex-1 min-w-0">
             {isHtml ? (
               <div
@@ -413,7 +415,7 @@ export default function ArticleDetailPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-zinc-200/60 py-12 px-6">
+      <footer className="bg-white border-t border-zinc-200/60 py-8 sm:py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2">

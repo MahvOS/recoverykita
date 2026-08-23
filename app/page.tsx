@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Navbar } from "@/components/navbar";
 import { RemoteImage } from "@/components/remote-image";
 import {
   getSupabaseClient,
@@ -13,7 +14,6 @@ import {
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [featuredProducts, setFeaturedProducts] = useState<
     MarketplaceProduct[]
   >([]);
@@ -152,134 +152,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
-      <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/85 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col">
-          <div className="h-20 flex items-center justify-between">
-            <div className="flex items-center gap-3 w-1/3">
-              <div className="relative w-37 h-37">
-                <Image
-                  src="/logo.ico"
-                  alt="RecoveryKita Logo"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </div>
+      <Navbar />
 
-            <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
-              <a
-                href="#"
-                className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
-              >
-                Beranda
-              </a>
-              <a
-                href="/marketplace"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Marketplace
-              </a>
-              <a
-                href="/peta"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Peta
-              </a>
-              <a
-                href="/lapor"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors text-nowrap"
-              >
-                Lapor
-              </a>
-              <a
-                href="/edukasi"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors text-nowrap"
-              >
-                Edukasi
-              </a>
-            </nav>
-
-            <div className="w-1/3 hidden md:block" />
-
-            <button
-              type="button"
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100 transition-colors"
-            >
-              <svg
-                className="w-6 h-6 text-zinc-700"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d={
-                    mobileMenuOpen
-                      ? "M6 18L18 6M6 6l12 12"
-                      : "M4 6h16M4 12h16m-7 6h7"
-                  }
-                />
-              </svg>
-            </button>
-          </div>
-
-          {mobileMenuOpen && (
-            <div className="md:hidden border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-              <div className="flex flex-col gap-2">
-                <Link
-                  href="/"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0f5132] hover:bg-[#edf7ef]"
-                >
-                  Beranda
-                </Link>
-                <Link
-                  href="/marketplace"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Marketplace
-                </Link>
-                <Link
-                  href="/peta"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Peta
-                </Link>
-                <Link
-                  href="/lapor"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Lapor
-                </Link>
-                <Link
-                  href="/edukasi"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Edukasi
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-6 space-y-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 py-6 space-y-10 sm:space-y-16">
         {/* 2. Centered Hero Section with Floating Illustrations */}
-        <section className="relative rounded-[2.5rem] bg-gradient-to-br from-[#eaf6ee] via-[#f1f8f4] to-[#fcfefe] border border-[#e2f0e7] overflow-hidden px-6 py-16 md:py-24 flex flex-col items-center justify-center text-center gap-10">
+        <section className="relative rounded-2xl sm:rounded-[2.5rem] bg-gradient-to-br from-[#eaf6ee] via-[#f1f8f4] to-[#fcfefe] border border-[#e2f0e7] overflow-hidden px-4 sm:px-6 py-12 sm:py-16 md:py-24 flex flex-col items-center justify-center text-center gap-8 sm:gap-10">
           {/* Floating Illustrations in the Background matching the mockup positions exactly */}
 
           {/* Top Left: Cardboard Box (4.png) */}
-          <div className="absolute top-10 left-10 w-40 h-40 md:w-70 md:h-70 opacity-25 sm:opacity-85 pointer-events-none select-none -rotate-[15deg] animate-float">
+          <div className="absolute top-6 left-4 sm:top-10 sm:left-10 w-12 h-12 sm:w-24 sm:h-24 lg:w-48 lg:h-48 xl:w-56 xl:h-56 opacity-20 sm:opacity-85 pointer-events-none select-none -rotate-[15deg] animate-float">
             <Image
               src="/4.png"
               alt="Cardboard Box outline"
@@ -290,7 +171,7 @@ export default function Home() {
 
           {/* Top Right: Burger (burger.png) */}
           <div
-            className="absolute top-6 right-10 w-24 h-24 md:w-57 md:h-57 opacity-25 sm:opacity-85 pointer-events-none select-none rotate-[25deg] animate-float-slow"
+            className="absolute top-4 right-4 sm:top-6 sm:right-10 w-10 h-10 sm:w-20 sm:h-20 lg:w-40 lg:h-40 xl:w-48 xl:h-48 opacity-20 sm:opacity-85 pointer-events-none select-none rotate-[25deg] animate-float-slow"
             style={{ animationDelay: "1.5s" }}
           >
             <Image
@@ -303,7 +184,7 @@ export default function Home() {
 
           {/* Middle Left: Plastic Bottle (7.png) - positioned behind left of search bar */}
           <div
-            className="absolute top-[22%] left-[28%] w-24 h-24 md:w-60 md:h-60 opacity-20 sm:opacity-60 pointer-events-none select-none rotate-[35deg] animate-float-slow"
+            className="hidden lg:block absolute top-[22%] left-[28%] w-32 h-32 lg:w-52 lg:h-52 xl:w-64 xl:h-64 opacity-60 pointer-events-none select-none rotate-[35deg] animate-float-slow"
             style={{ animationDelay: "0.8s" }}
           >
             <Image
@@ -316,7 +197,7 @@ export default function Home() {
 
           {/* Middle Right: Cup with Straw (1.png) - positioned behind right of search bar */}
           <div
-            className="absolute top-[18%] right-[26%] w-24 h-24 md:w-57 md:h-57 opacity-20 sm:opacity-60 pointer-events-none select-none rotate-[15deg] animate-float"
+            className="hidden lg:block absolute top-[18%] right-[26%] w-24 h-24 lg:w-44 lg:h-44 xl:w-52 xl:h-52 opacity-60 pointer-events-none select-none rotate-[15deg] animate-float"
             style={{ animationDelay: "2.2s" }}
           >
             <Image
@@ -329,7 +210,7 @@ export default function Home() {
 
           {/* Bottom Left: Crumpled Bag (plastic.png) */}
           <div
-            className="absolute bottom-12 left-6 w-28 h-28 md:w-54 md:h-54 opacity-25 sm:opacity-85 pointer-events-none select-none -rotate-[10deg] animate-float"
+            className="absolute bottom-8 left-3 sm:bottom-12 sm:left-6 w-12 h-12 sm:w-20 sm:h-20 lg:w-40 lg:h-40 xl:w-48 xl:h-48 opacity-20 sm:opacity-85 pointer-events-none select-none -rotate-[10deg] animate-float"
             style={{ animationDelay: "3s" }}
           >
             <Image
@@ -342,7 +223,7 @@ export default function Home() {
 
           {/* Bottom Right: Fish Bone (2.png) */}
           <div
-            className="absolute bottom-10 right-8 w-24 h-24 md:w-56 md:h-56 opacity-25 sm:opacity-85 pointer-events-none select-none rotate-[-15deg] animate-float-slow"
+            className="absolute bottom-6 right-3 sm:bottom-10 sm:right-8 w-10 h-10 sm:w-16 sm:h-16 lg:w-32 lg:h-32 xl:w-40 xl:h-40 opacity-20 sm:opacity-85 pointer-events-none select-none rotate-[-15deg] animate-float-slow"
             style={{ animationDelay: "0.5s" }}
           >
             <Image
@@ -355,8 +236,8 @@ export default function Home() {
 
           {/* Hero Content Centered */}
           <div className="z-10 flex flex-col items-center gap-6 max-w-3xl">
-            <h1 className="text-3xl md:text-5xl font-black text-[#0f5132] leading-tight tracking-tight max-w-3xl">
-              Belajar Pilah Sampah Jadi Berkah
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#0f5132] leading-tight tracking-tight w-full max-w-3xl text-center">
+              Langkah Kecil Kita untuk <br></br> Bumi yang Bersih
             </h1>
             <p className="text-zinc-600 text-sm md:text-base leading-relaxed max-w-xl">
               Mulai langkah kecilmu untuk lingkungan. Cari tahu cara mengelola
@@ -533,11 +414,11 @@ export default function Home() {
               </div>
               <div className="space-y-1">
                 <p className="text-3xl font-black text-[#0f5132] tracking-tight">
-                  12.450{" "}
-                  <span className="text-lg font-bold text-zinc-500">Kg</span>
+                  12.4{" "}
+                  <span className="text-lg font-bold text-zinc-500">Tons</span>
                 </p>
                 <p className="text-sm font-semibold text-zinc-400">
-                  Total Sampah Terkumpul
+                  Total Sampah Terkelola
                 </p>
               </div>
             </div>
@@ -561,11 +442,11 @@ export default function Home() {
               </div>
               <div className="space-y-1">
                 <p className="text-3xl font-black text-[#0f5132] tracking-tight">
-                  4.2{" "}
+                  6.5{" "}
                   <span className="text-lg font-bold text-zinc-500">Tons</span>
                 </p>
                 <p className="text-sm font-semibold text-zinc-400">
-                  Pengurangan CO₂
+                  Pengurangan Emisi CO₂
                 </p>
               </div>
             </div>
@@ -589,11 +470,11 @@ export default function Home() {
               </div>
               <div className="space-y-1">
                 <p className="text-3xl font-black text-[#0f5132] tracking-tight">
-                  2.450{" "}
-                  <span className="text-lg font-bold text-zinc-500">Orang</span>
+                  50{" "}
+                  <span className="text-lg font-bold text-zinc-500">Titik</span>
                 </p>
                 <p className="text-sm font-semibold text-zinc-400">
-                  Relawan Berpartisipasi
+                  Laporan Sampah Selesai
                 </p>
               </div>
             </div>
@@ -603,13 +484,13 @@ export default function Home() {
         {/* 4. Real-time Map Preview Section */}
         <section
           id="peta"
-          className="relative rounded-[2rem] bg-[#052617] text-white overflow-hidden py-12 px-8 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 border border-emerald-950"
+          className="relative rounded-xl sm:rounded-[2rem] bg-[#052617] text-white overflow-hidden py-10 px-4 sm:py-12 sm:px-8 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-12 border border-emerald-950"
         >
           {/* Map Vector Lines Overlay */}
-          <div className="absolute inset-0 opacity-15 pointer-events-none mix-blend-screen bg-cover bg-center">
+          <div className="absolute inset-0 opacity-15 pointer-events-none mix-blend-screen overflow-hidden">
             {/* Styled dynamic SVG representing local map road meshes */}
             <svg
-              className="w-full h-full min-w-[800px]"
+              className="w-full h-full"
               viewBox="0 0 1000 600"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -709,7 +590,7 @@ export default function Home() {
 
           {/* Interactive Map Visual Elements */}
           <div className="flex-1 w-full z-10 flex items-center justify-center">
-            <div className="w-full max-w-[450px] aspect-[16/10] bg-[#0c3822] rounded-2xl p-5 border border-emerald-800 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+            <div className="w-full max-w-[450px] aspect-[4/3] sm:aspect-[16/10] bg-[#0c3822] rounded-2xl p-4 sm:p-5 border border-emerald-800 shadow-2xl relative overflow-hidden flex flex-col justify-between">
               {/* Glow effects */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -1102,7 +983,13 @@ export default function Home() {
                 </div>
 
                 <button className="w-full bg-[#0f5132] text-white text-xs font-semibold py-3 rounded-xl hover:bg-[#0c4028] transition-colors">
-                  Ikuti Tantangan
+                  <a
+                    href="https://www.instagram.com/worldcleanupdayindonesia/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Ikuti Tantangan
+                  </a>
                 </button>
               </div>
             </div>
@@ -1165,7 +1052,13 @@ export default function Home() {
                 </div>
 
                 <button className="w-full bg-[#0f5132] text-white text-xs font-semibold py-3 rounded-xl hover:bg-[#0c4028] transition-colors">
-                  Ikuti Tantangan
+                  <a
+                    href="https://www.instagram.com/worldcleanupdayindonesia/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Ikuti Tantangan
+                  </a>
                 </button>
               </div>
             </div>
@@ -1174,13 +1067,13 @@ export default function Home() {
       </main>
 
       {/* 7. Footer */}
-      <footer className="bg-white border-t border-zinc-200/60 mt-20 py-12 px-6">
+      <footer className="bg-white border-t border-zinc-200/60 mt-12 sm:mt-20 py-8 sm:py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2">
               <div className="relative w-7 h-7">
                 <Image
-                  src="/logo.ico"
+                  src="/favicon.ico"
                   alt="RecoveryKita Logo"
                   fill
                   className="object-contain"
@@ -1191,9 +1084,8 @@ export default function Home() {
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              © {new Date().getFullYear()} RecoveryKita. All rights reserved.{" "}
-              <br className="md:hidden" />
-              Ekonomi Sirkular Indonesia.
+              © {new Date().getFullYear()} RecoveryKita. All rights
+              reserved.{" "}
             </p>
           </div>
 

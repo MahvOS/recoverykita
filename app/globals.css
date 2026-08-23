@@ -44,9 +44,16 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background: #fcfefe;
   color: var(--foreground);
+  overflow-x: hidden;
+  min-width: 320px;
 }
 
 /* Fix Leaflet map z-index issue with sticky headers */
@@ -61,6 +68,36 @@ body {
 /* Ensure navbar stays on top */
 header {
   z-index: 1000 !important;
+}
+
+/* Fix Leaflet _leaflet_pos error in React Strict Mode */
+.leaflet-container {
+  position: relative !important;
+}
+
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  will-change: auto !important;
+}
+
+.leaflet-tile {
+  will-change: auto !important;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+  transition: none !important;
+}
+
+/* Prevent Leaflet animation glitches during SSR/CSR hydration */
+.leaflet-fade-anim .leaflet-tile,
+.leaflet-fade-anim .leaflet-marker-icon,
+.leaflet-fade-anim .leaflet-marker-shadow,
+.leaflet-fade-anim .leaflet-popup {
+  transition: opacity 0.2s linear !important;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+  transition: transform 0.25s cubic-bezier(0, 0, 0.25, 1) !important;
 }
 
 /* Text truncation utilities */

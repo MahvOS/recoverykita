@@ -3,10 +3,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Navbar } from "@/components/navbar";
 import { supabase, getSupabaseClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
-type WasteCategory = "plastik" | "organik" | "b3" | "elektronik";
 type Priority = "rendah" | "sedang" | "tinggi";
 
 function normalizePhoneNumber(value: string): string {
@@ -28,7 +28,7 @@ interface FormData {
   location: string;
   latitude: number | null;
   longitude: number | null;
-  category: WasteCategory;
+  selectedWasteTypes: string[];
   description: string;
   priority: Priority;
   photos: File[];
@@ -41,7 +41,7 @@ export default function LaporPage() {
     location: "",
     latitude: null,
     longitude: null,
-    category: "plastik",
+    selectedWasteTypes: [],
     description: "",
     priority: "sedang",
     photos: [],
@@ -55,7 +55,6 @@ export default function LaporPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -241,10 +240,12 @@ export default function LaporPage() {
     }));
   };
 
-  const handleCategoryChange = (category: WasteCategory) => {
+  const toggleWasteType = (type: string) => {
     setFormData((prev) => ({
       ...prev,
-      category,
+      selectedWasteTypes: prev.selectedWasteTypes.includes(type)
+        ? prev.selectedWasteTypes.filter((t) => t !== type)
+        : [...prev.selectedWasteTypes, type],
     }));
   };
 
@@ -335,8 +336,8 @@ export default function LaporPage() {
       if (!formData.location) {
         throw new Error("Lokasi harus diisi");
       }
-      if (!formData.category) {
-        throw new Error("Kategori sampah harus dipilih");
+      if (formData.selectedWasteTypes.length === 0) {
+        throw new Error("Pilih minimal satu jenis sampah");
       }
       if (!formData.description) {
         throw new Error("Keterangan tambahan harus diisi");
@@ -372,14 +373,12 @@ export default function LaporPage() {
         photoUrls.push(publicUrl);
       }
 
-      const { error: insertError } = await client.from("report_logs").insert({
-        user_id: currentUser.id,
-        previous_status: "pending",
-        new_status: "pending",
-        category: formData.category,
-        location_name: formData.location,
+      const { error: insertError } = await client.from("locations").insert({
+        title: formData.location,
         description: formData.description,
-        priority: formData.priority,
+        category: "trash_dump",
+        latitude: formData.latitude,
+        longitude: formData.longitude,
         photo_urls: photoUrls,
         reporter_name:
           profile?.full_name ??
@@ -389,10 +388,10 @@ export default function LaporPage() {
           profile?.phone_number ??
           currentUser.user_metadata?.phone_number ??
           null,
+        priority: formData.priority,
         status: "pending",
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        notes: `${formData.category} - ${formData.description} - Priority: ${formData.priority} - Location: ${formData.location} (${formData.latitude}, ${formData.longitude}) - Photos: ${photoUrls.join(", ")}`,
+        address_notes: formData.location,
+        waste_type: formData.selectedWasteTypes,
       });
 
       if (insertError) {
@@ -404,7 +403,7 @@ export default function LaporPage() {
         location: "",
         latitude: null,
         longitude: null,
-        category: "plastik",
+        selectedWasteTypes: [],
         description: "",
         priority: "sedang",
         photos: [],
@@ -428,30 +427,34 @@ export default function LaporPage() {
     }
   };
 
-  const categoryOptions: {
-    id: WasteCategory;
+  const wasteTypeOptions: {
+    id: string;
     label: string;
   }[] = [
-    { id: "plastik", label: "Plastik" },
     { id: "organik", label: "Organik" },
-    { id: "b3", label: "B3 / Berbahaya" },
+    { id: "plastik", label: "Plastik" },
+    { id: "kertas", label: "Kertas" },
+    { id: "logam", label: "Logam" },
+    { id: "kaca", label: "Kaca" },
+    { id: "b3", label: "B3" },
     { id: "elektronik", label: "Elektronik" },
   ];
 
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-[#fbfcfa]/90 backdrop-blur-md border-b border-[#e2e8f0]/40">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col">
-          <div className="h-20 flex items-center justify-between">
-            <div className="flex items-center gap-3 w-1/3">
+      <Navbar />
+      {/*
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col">
+          <div className="h-16 sm:h-20 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 w-20">
               <Link href="/" className="block">
-                <div className="relative w-37 h-37">
+                <div className="relative w-30 h-30 sm:w-35 sm:h-35">
                   <Image
                     src="/logo.ico"
                     alt="RecoveryKita Logo"
                     fill
-                    sizes="148px"
+                    sizes="80px"
                     className="object-contain"
                     priority
                   />
@@ -459,7 +462,7 @@ export default function LaporPage() {
               </Link>
             </div>
 
-            <nav className="hidden md:flex items-center justify-center gap-8 w-1/3">
+            <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-8 flex-1">
               <Link
                 href="/"
                 className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
@@ -492,36 +495,37 @@ export default function LaporPage() {
               </Link>
             </nav>
 
-            <div className="w-1/3 hidden md:block" />
-            <button
-              type="button"
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100"
-            >
-              <svg
-                className="w-6 h-6 text-zinc-700"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
+            <div className="w-20 flex justify-end">
+              <button
+                type="button"
+                aria-label="Toggle navigation menu"
+                aria-expanded={mobileMenuOpen}
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d={
-                    mobileMenuOpen
-                      ? "M6 18L18 6M6 6l12 12"
-                      : "M4 6h16M4 12h16m-7 6h7"
-                  }
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-6 h-6 text-zinc-700"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d={
+                      mobileMenuOpen
+                        ? "M6 18L18 6M6 6l12 12"
+                        : "M4 6h16M4 12h16m-7 6h7"
+                    }
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {mobileMenuOpen && (
-            <div className="md:hidden border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+            <div className="md:hidden absolute top-full left-0 right-0 border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-2">
                 <Link
                   href="/"
@@ -562,10 +566,10 @@ export default function LaporPage() {
             </div>
           )}
         </div>
-      </header>
+      </header> */}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 py-6 sm:py-8">
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-green-800">
@@ -581,16 +585,16 @@ export default function LaporPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Form Section */}
           <div className="lg:col-span-2">
             {!authChecked ? (
-              <div className="bg-white rounded-2xl p-8 shadow-sm border border-zinc-200 text-center">
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-zinc-200 text-center">
                 <p className="text-zinc-600">Memuat Data..</p>
               </div>
             ) : !user ? (
               <div className="overflow-hidden bg-white rounded-3xl shadow-sm border border-zinc-200">
-                <div className="bg-[#0f5132] px-8 py-8 text-white">
+                <div className="bg-[#0f5132] px-5 sm:px-8 py-6 sm:py-8 text-white">
                   <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
                     <svg
                       className="h-6 w-6"
@@ -606,7 +610,7 @@ export default function LaporPage() {
                       />
                     </svg>
                   </div>
-                  <h1 className="text-2xl font-bold mb-2">
+                  <h1 className="text-xl sm:text-2xl font-bold mb-2">
                     Masuk untuk Melaporkan
                   </h1>
                   <p className="text-sm leading-relaxed text-emerald-50/80">
@@ -616,7 +620,7 @@ export default function LaporPage() {
                   </p>
                 </div>
 
-                <div className="p-8">
+                <div className="p-5 sm:p-8">
                   <div className="mb-6 grid grid-cols-2 rounded-xl bg-zinc-100 p-1">
                     <button
                       type="button"
@@ -687,11 +691,11 @@ export default function LaporPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl p-8 shadow-sm border border-zinc-200">
-                <h1 className="text-3xl font-bold text-[#0f5132] mb-2">
+              <div className="bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-zinc-200">
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#0f5132] mb-2">
                   Lapor Titik Sampah
                 </h1>
-                <div className="flex items-center justify-between gap-3 mb-6 p-3 rounded-xl bg-[#e8f5e9] text-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6 p-3 rounded-xl bg-[#e8f5e9] text-sm">
                   <span className="text-[#0f5132]">
                     Login sebagai{" "}
                     {user.user_metadata?.full_name ?? user.phone ?? "Pengguna"}
@@ -723,7 +727,8 @@ export default function LaporPage() {
                     />
                     <input
                       type="text"
-                      placeholder="Cari alamat atau nama tempat..."
+                      readOnly
+                      placeholder="Klik di peta untuk memilih lokasi sampah"
                       value={formData.location}
                       onChange={handleLocationChange}
                       className="w-full px-4 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-[#198754] focus:border-transparent bg-white"
@@ -740,7 +745,7 @@ export default function LaporPage() {
                     <label className="block text-sm font-medium text-zinc-900 mb-3">
                       Foto Bukti (Maks. 3 Foto)
                     </label>
-                    <div className="border-2 border-dashed border-zinc-300 rounded-xl p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition cursor-pointer">
+                    <div className="border-2 border-dashed border-zinc-300 rounded-xl p-5 sm:p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition cursor-pointer">
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -779,7 +784,7 @@ export default function LaporPage() {
 
                     {/* Photo Preview */}
                     {preview.length > 0 && (
-                      <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-4">
                         {preview.map((src, idx) => (
                           <div
                             key={idx}
@@ -804,26 +809,31 @@ export default function LaporPage() {
                     )}
                   </div>
 
-                  {/* Kategori Sampah Utama */}
+                  {/* Jenis Sampah */}
                   <div>
                     <label className="block text-sm font-medium text-zinc-900 mb-3">
-                      Kategori Sampah Utama
+                      Jenis Sampah
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {categoryOptions.map((cat) => (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => handleCategoryChange(cat.id)}
-                          className={`py-3 px-4 rounded-xl font-medium transition ${
-                            formData.category === cat.id
-                              ? "bg-[#198754] text-white"
-                              : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-                          }`}
-                        >
-                          {cat.label}
-                        </button>
-                      ))}
+                      {wasteTypeOptions.map((opt) => {
+                        const active = formData.selectedWasteTypes.includes(
+                          opt.id,
+                        );
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => toggleWasteType(opt.id)}
+                            className={`py-3 px-4 rounded-xl font-medium transition ${
+                              active
+                                ? "bg-[#198754] text-white"
+                                : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -846,7 +856,7 @@ export default function LaporPage() {
                     <label className="block text-sm font-medium text-zinc-900 mb-3">
                       Tingkat Prioritas
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
                       {(["rendah", "sedang", "tinggi"] as Priority[]).map(
                         (priority) => {
                           const labels: Record<Priority, string> = {
@@ -868,7 +878,7 @@ export default function LaporPage() {
                               key={priority}
                               type="button"
                               onClick={() => handlePriorityChange(priority)}
-                              className={`px-4 py-2 rounded-xl font-medium border-2 transition ${
+                              className={`flex-1 min-w-[calc(50%-0.25rem)] sm:min-w-0 sm:flex-none px-4 py-2 rounded-xl font-medium border-2 transition text-sm ${
                                 formData.priority === priority
                                   ? colors[priority]
                                   : `border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50`
@@ -914,7 +924,7 @@ export default function LaporPage() {
 
           {/* Guide Section */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-zinc-200 sticky top-24">
+            <div className="bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-zinc-200 lg:sticky lg:top-24">
               <div className="flex items-center gap-2 mb-6">
                 <div className="text-[#198754]">
                   <svg
@@ -974,44 +984,57 @@ export default function LaporPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-zinc-900 text-zinc-400 mt-16">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="border-t border-zinc-800 pt-8">
-            <div className="flex flex-col sm:flex-row justify-between items-center">
-              <div className="flex items-center gap-2 mb-4 sm:mb-0">
-                <div className="relative w-8 h-8">
-                  <Image
-                    src="/logo.ico"
-                    alt="RecoveryKita Logo"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-                <div className="text-white font-semibold">RecoveryKita</div>
+      <footer className="bg-white border-t border-zinc-200/60 mt-12 sm:mt-16 py-8 sm:py-12 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2">
+              <div className="relative w-7 h-7">
+                <Image
+                  src="/favicon.ico"
+                  alt="RecoveryKita Logo"
+                  fill
+                  className="object-contain"
+                />
               </div>
-              <p className="text-sm">
-                © 2026 RecoveryKita. All rights reserved. Menuju Ekonomi
-                Sirkular Indonesia.
-              </p>
-              <div className="flex gap-6 mt-4 sm:mt-0">
-                <Link href="/" className="hover:text-white">
-                  Beranda
-                </Link>
-                <Link href="/marketplace" className="hover:text-white">
-                  Marketplace
-                </Link>
-                <Link href="/peta" className="hover:text-white">
-                  Peta
-                </Link>
-                <Link href="/lapor" className="hover:text-white">
-                  Lapor
-                </Link>
-                <Link href="/edukasi" className="hover:text-white">
-                  Edukasi
-                </Link>
-              </div>
+              <span className="text-lg font-bold text-[#0f5132] tracking-tight">
+                RecoveryKita
+              </span>
             </div>
+            <p className="text-xs text-zinc-400">
+              © {new Date().getFullYear()} RecoveryKita. All rights reserved.{" "}
+              <br className="md:hidden" />
+              Menuju Ekonomi Sirkular Indonesia.
+            </p>
           </div>
+          <nav className="flex flex-wrap justify-center gap-6 text-xs font-medium text-zinc-500">
+            <Link href="/" className="hover:text-[#198754] transition-colors">
+              Beranda
+            </Link>
+            <Link
+              href="/marketplace"
+              className="hover:text-[#198754] transition-colors"
+            >
+              Marketplace
+            </Link>
+            <Link
+              href="/peta"
+              className="hover:text-[#198754] transition-colors"
+            >
+              Peta
+            </Link>
+            <Link
+              href="/lapor"
+              className="hover:text-[#198754] transition-colors"
+            >
+              Lapor
+            </Link>
+            <Link
+              href="/edukasi"
+              className="hover:text-[#198754] transition-colors"
+            >
+              Edukasi
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>
