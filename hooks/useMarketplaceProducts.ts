@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase, getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase";
 import type { MarketplaceProduct, Seller } from "@/lib/supabase";
 
+export type { MarketplaceProduct } from "@/lib/supabase";
+export type { Seller } from "@/lib/supabase";
+
 export interface ProductPayload {
   title: string;
   slug: string;
@@ -106,7 +109,7 @@ export function useMarketplaceProducts() {
           throw new Error("Supabase belum dikonfigurasi.");
         }
 
-        const client = getSupabaseClient();
+        const client = getSupabaseClient() as any;
         let thumbnail_url: string | null = null;
 
         if (thumbnailFile) {
@@ -171,7 +174,7 @@ export function useMarketplaceProducts() {
           throw new Error("Supabase belum dikonfigurasi.");
         }
 
-        const client = getSupabaseClient();
+        const client = getSupabaseClient() as any;
         const {
           title,
           slug,
@@ -236,7 +239,7 @@ export function useMarketplaceProducts() {
         throw new Error("Supabase belum dikonfigurasi.");
       }
 
-      const client = getSupabaseClient();
+      const client = getSupabaseClient() as any;
       const { error: deleteError } = await client
         .from("products")
         .delete()
@@ -261,7 +264,7 @@ export function useMarketplaceProducts() {
         throw new Error("Supabase belum dikonfigurasi.");
       }
 
-      const client = getSupabaseClient();
+      const client = getSupabaseClient() as any;
       const { error: updateError } = await client
         .from("products")
         .update({ stock: newStock, updated_at: new Date().toISOString() })
@@ -289,7 +292,7 @@ export function useMarketplaceProducts() {
         throw new Error("Supabase belum dikonfigurasi.");
       }
 
-      const client = getSupabaseClient();
+      const client = getSupabaseClient() as any;
       const { error: updateError } = await client
         .from("products")
         .update({

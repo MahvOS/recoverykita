@@ -29,6 +29,7 @@ import type {
   MarketplaceProduct,
   ProductPayload,
 } from "@/hooks/useMarketplaceProducts";
+import type { Seller as SellerType } from "@/lib/supabase";
 
 function generateSlug(title: string): string {
   return title
@@ -782,7 +783,7 @@ interface ProductFormModalProps {
   setForm: React.Dispatch<React.SetStateAction<ProductForm>>;
   setSlugTouched: (v: boolean) => void;
   slugTouched: boolean;
-  sellers: MarketplaceProduct["seller"] extends never ? never : SellerType[];
+  sellers: SellerType[];
   categories: string[];
   saving: boolean;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
@@ -790,7 +791,210 @@ interface ProductFormModalProps {
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onThumbnailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   clearThumbnail: () => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
-import type { Seller as SellerType } from "@/lib/supabase";
+function ProductFormModal({
+  open,
+  isEditMode,
+  editingProduct,
+  form,
+  setForm,
+  setSlugTouched,
+  slugTouched,
+  sellers,
+  categories,
+  saving,
+  onSubmit,
+  onCancel,
+  onTitleChange,
+  onThumbnailChange,
+  clearThumbnail,
+  fileInputRef,
+}: ProductFormModalProps) {
+  if (!open) return null;
+
+  const preview = form.thumbnail_preview ?? form.thumbnail_existing;
+  const updateField = (field: keyof ProductForm, value: string | boolean) =>
+    setForm((previous) => ({ ...previous, [field]: value }));
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-extrabold text-zinc-900">
+              {isEditMode ? "Edit Produk" : "Tambah Produk"}
+            </h2>
+            <p className="text-sm text-zinc-500">
+              Lengkapi informasi produk marketplace.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100"
+            aria-label="Tutup"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="text-sm font-semibold text-zinc-700">
+              Judul Produk
+              <input
+                required
+                value={form.title}
+                onChange={onTitleChange}
+                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
+              />
+            </label>
+            <label className="text-sm font-semibold text-zinc-700">
+              Slug
+              <input
+                required
+                value={form.slug}
+                onChange={(e) => {
+                  setSlugTouched(true);
+                  updateField("slug", e.target.value);
+                }}
+                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
+              />
+            </label>
+            <label className="text-sm font-semibold text-zinc-700">
+              Penjual
+              <select
+                required
+                value={form.seller_id}
+                onChange={(e) => updateField("seller_id", e.target.value)}
+                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 font-normal outline-none focus:border-[#198754]"
+              >
+                <option value="">Pilih penjual</option>
+                {sellers.map((seller) => (
+                  <option key={seller.id} value={seller.id}>
+                    {seller.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm font-semibold text-zinc-700">
+              Kategori
+              <input
+                required
+                list="product-categories"
+                value={form.category}
+                onChange={(e) => updateField("category", e.target.value)}
+                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
+              />
+              <datalist id="product-categories">
+                {categories.map((category) => (
+                  <option key={category} value={category} />
+                ))}
+              </datalist>
+            </label>
+            <label className="text-sm font-semibold text-zinc-700">
+              Harga
+              <input
+                required
+                min="0"
+                type="number"
+                value={form.price}
+                onChange={(e) => updateField("price", e.target.value)}
+                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
+              />
+            </label>
+            <label className="text-sm font-semibold text-zinc-700">
+              Stok
+              <input
+                required
+                min="0"
+                type="number"
+                value={form.stock}
+                onChange={(e) => updateField("stock", e.target.value)}
+                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
+              />
+            </label>
+          </div>
+          <label className="block text-sm font-semibold text-zinc-700">
+            Badge Dampak
+            <input
+              value={form.waste_impact_badge}
+              onChange={(e) =>
+                updateField("waste_impact_badge", e.target.value)
+              }
+              className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
+            />
+          </label>
+          <label className="block text-sm font-semibold text-zinc-700">
+            Deskripsi
+            <textarea
+              required
+              value={form.description}
+              onChange={(e) => updateField("description", e.target.value)}
+              rows={4}
+              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 font-normal outline-none focus:border-[#198754]"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
+            <input
+              type="checkbox"
+              checked={form.is_active}
+              onChange={(e) => updateField("is_active", e.target.checked)}
+            />{" "}
+            Produk aktif
+          </label>
+          <div className="space-y-2 text-sm font-semibold text-zinc-700">
+            Thumbnail
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={onThumbnailChange}
+              className="block w-full text-sm font-normal"
+            />
+            {preview && (
+              <div className="relative h-32 w-32 overflow-hidden rounded-lg border border-zinc-200">
+                <Image
+                  src={preview}
+                  alt="Preview thumbnail"
+                  fill
+                  className="object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={clearThumbnail}
+                  className="absolute right-1 top-1 rounded-full bg-white p-1 text-rose-600 shadow"
+                  aria-label="Hapus thumbnail"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 border-t border-zinc-100 pt-4">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="h-10 rounded-lg border border-zinc-300 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0f5132] px-5 text-sm font-bold text-white hover:bg-[#198754] disabled:opacity-50"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}Simpan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
