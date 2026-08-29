@@ -1,7 +1,9 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, Circle, Path } from "leaflet";
 import type { HotspotArea } from "@/types/admin";
+import "leaflet/dist/leaflet.css";
 
 const isLeafletElement = (el: HTMLDivElement | null): boolean => {
   if (!el) return false;
@@ -180,7 +182,8 @@ export default function HotspotMap({
           return;
 
         const intensity = maxCount > 0 ? area.count / maxCount : 0;
-        const radius = Math.max(20, 20 + intensity * 60);
+        // Skala radius dalam meter (300m s/d 1500m) agar pas di level zoom kota
+        const radius = Math.max(300, 300 + intensity * 1200);
         const isRedZone = area.count >= 3;
         const color = isRedZone
           ? `rgba(220, 38, 38, ${0.3 + intensity * 0.5})`

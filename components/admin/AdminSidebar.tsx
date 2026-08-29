@@ -6,16 +6,15 @@ import {
   LayoutDashboard,
   Map as MapIcon,
   Store,
-  Trophy,
+  Users,
   GraduationCap,
-  Settings,
 } from "lucide-react";
 
 const menuItems = [
   { name: "Dasbor", icon: LayoutDashboard, view: "dashboard" },
   { name: "Laporan Peta", icon: MapIcon, view: "map-reports" },
   { name: "Pasar", icon: Store, view: "marketplace" },
-  { name: "Komunitas", icon: Trophy, view: "community" },
+  { name: "User Management", icon: Users, view: "user-management" },
   { name: "Edukasi", icon: GraduationCap, view: "education" },
 ];
 

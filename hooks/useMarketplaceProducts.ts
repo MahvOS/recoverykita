@@ -1,346 +1,345 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { supabase, getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase";
-import type { MarketplaceProduct, Seller } from "@/lib/supabase";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  supabase,
+  getSupabaseClient,
+  MarketplaceProduct,
+  Seller,
+} from "@/lib/supabase";
 
-export type { MarketplaceProduct } from "@/lib/supabase";
-export type { Seller } from "@/lib/supabase";
+export type { MarketplaceProduct };
 
 export interface ProductPayload {
   title: string;
   slug: string;
-  seller_id: string;
+  seller_name: string;
   price: number;
   category: string;
   stock: number;
   is_active: boolean;
-  waste_impact_badge: string;
-  description: string;
-}
-
-const selectQuery = "*, seller:sellers(*)";
-
-async function uploadThumbnail(file: File): Promise<string> {
-  const client = getSupabaseClient();
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const fileName = `thumbnails/${Date.now()}_${Math.random().toString(36).slice(2, 10)}.${ext}`;
-
-  const { error: uploadError } = await client.storage
-    .from("products")
-    .upload(fileName, file);
-
-  if (uploadError) throw uploadError;
-
-  const { data: urlData } = client.storage
-    .from("products")
-    .getPublicUrl(fileName);
-
-  return urlData?.publicUrl ?? "";
+  waste_impact_badge?: string;
+  description?: string;
+  thumbnail_url?: string | null;
 }
 
 export function useMarketplaceProducts() {
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [stockUpdatingId, setStockUpdatingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    if (!supabase || !hasSupabaseConfig) {
-      setProducts([]);
+  const fetchData = useCallback(async () => {
+    if (!supabase) {
       setLoading(false);
-      setError("Supabase belum dikonfigurasi.");
       return;
     }
 
+    setLoading(true);
+    setError(null);
+
     try {
-      const client = getSupabaseClient();
-      const { data, error: fetchError } = await client
-        .from("products")
-        .select(selectQuery)
-        .order("created_at", { ascending: false });
+      const [productsRes, sellersRes] = await Promise.all([
+        supabase
+          .from("products")
+          .select("*, seller:sellers(*)")
+          .order("created_at", { ascending: false }),
+        supabase.from("sellers").select("*").order("name", { ascending: true }),
+      ]);
 
-      if (fetchError) throw fetchError;
+      if (productsRes.error) throw productsRes.error;
+      if (sellersRes.error) throw sellersRes.error;
 
-      setProducts((data as MarketplaceProduct[]) || []);
-    } catch (err) {
-      console.error("Fetch products error:", err);
-      setError(err instanceof Error ? err.message : "Gagal memuat produk.");
-      setProducts([]);
+      setProducts((productsRes.data as MarketplaceProduct[]) || []);
+      setSellers((sellersRes.data as Seller[]) || []);
+    } catch (err: any) {
+      console.error("Error fetching marketplace data:", err);
+      setError(err.message || "Gagal mengambil data produk.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const fetchSellers = useCallback(async () => {
-    if (!supabase || !hasSupabaseConfig) {
-      setSellers([]);
-      return;
-    }
+  useEffect(() => {
+    void fetchData();
+  }, [fetchData]);
 
-    try {
-      const client = getSupabaseClient();
-      const { data, error: fetchError } = await client
-        .from("sellers")
-        .select("*")
-        .order("name", { ascending: true });
-
-      if (fetchError) throw fetchError;
-
-      setSellers((data as Seller[]) || []);
-    } catch (err) {
-      console.error("Fetch sellers error:", err);
-      setSellers([]);
-    }
-  }, []);
-
-  const createProduct = useCallback(
-    async (payload: ProductPayload, thumbnailFile?: File) => {
-      setSaving(true);
-      setError(null);
-
-      try {
-        if (!supabase || !hasSupabaseConfig) {
-          throw new Error("Supabase belum dikonfigurasi.");
-        }
-
-        const client = getSupabaseClient() as any;
-        let thumbnail_url: string | null = null;
-
-        if (thumbnailFile) {
-          thumbnail_url = await uploadThumbnail(thumbnailFile);
-        }
-
-        const {
-          title,
-          slug,
-          seller_id,
-          price,
-          category,
-          stock,
-          is_active,
-          waste_impact_badge,
-          description,
-        } = payload;
-
-        const { data, error: insertError } = await client
-          .from("products")
-          .insert({
-            title,
-            slug,
-            seller_id,
-            price,
-            category,
-            stock,
-            is_active,
-            waste_impact_badge,
-            description,
-            thumbnail_url,
-          })
-          .select(selectQuery)
-          .single();
-
-        if (insertError) throw insertError;
-
-        const created = (data as MarketplaceProduct) ?? null;
-        if (created) {
-          setProducts((prev) => [created, ...prev]);
-        }
-        return created;
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Gagal menyimpan produk.",
-        );
-        return null;
-      } finally {
-        setSaving(false);
-      }
-    },
-    [],
+  const activeCount = useMemo(
+    () => products.filter((p) => p.is_active).length,
+    [products],
   );
 
-  const updateProduct = useCallback(
-    async (id: string, payload: ProductPayload, thumbnailFile?: File) => {
-      setSaving(true);
-      setError(null);
-
-      try {
-        if (!supabase || !hasSupabaseConfig) {
-          throw new Error("Supabase belum dikonfigurasi.");
-        }
-
-        const client = getSupabaseClient() as any;
-        const {
-          title,
-          slug,
-          seller_id,
-          price,
-          category,
-          stock,
-          is_active,
-          waste_impact_badge,
-          description,
-        } = payload;
-
-        const updates: Record<string, unknown> = {
-          title,
-          slug,
-          seller_id,
-          price,
-          category,
-          stock,
-          is_active,
-          waste_impact_badge,
-          description,
-        };
-
-        if (thumbnailFile) {
-          updates.thumbnail_url = await uploadThumbnail(thumbnailFile);
-        }
-
-        updates.updated_at = new Date().toISOString();
-
-        const { data, error: updateError } = await client
-          .from("products")
-          .update(updates)
-          .eq("id", id)
-          .select(selectQuery)
-          .single();
-
-        if (updateError) throw updateError;
-
-        const updated = (data as MarketplaceProduct) ?? null;
-        if (updated) {
-          setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
-        }
-        return updated;
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Gagal memperbarui produk.",
-        );
-        return null;
-      } finally {
-        setSaving(false);
-      }
-    },
-    [],
+  const lowStockCount = useMemo(
+    () => products.filter((p) => (p.stock ?? 0) <= 3).length,
+    [products],
   );
 
-  const deleteProduct = useCallback(async (id: string) => {
+  const sellerCount = useMemo(() => {
+    const names = products
+      .map((p) => p.seller?.name)
+      .filter((name): name is string => Boolean(name));
+
+    const uniqueLower = new Set(names.map((name) => name.trim().toLowerCase()));
+
+    return uniqueLower.size;
+  }, [products]);
+
+  const resolveSellerId = async (sellerName: string): Promise<string> => {
+    const trimmed = sellerName.trim();
+    if (!trimmed) {
+      throw new Error("Nama penjual tidak boleh kosong.");
+    }
+
+    const existing = sellers.find(
+      (seller) => seller.name.toLowerCase() === trimmed.toLowerCase(),
+    );
+
+    if (existing) {
+      return existing.id;
+    }
+
+    const client = getSupabaseClient();
+    const { data, error: insertError } = await client
+      .from("sellers")
+      .insert({ name: trimmed })
+      .select("id")
+      .single();
+
+    if (insertError || !data) {
+      throw insertError ?? new Error("Gagal membuat penjual baru.");
+    }
+
+    const newSeller = data as { id: string };
+    setSellers((prev) => [
+      ...prev,
+      { id: newSeller.id, name: trimmed } as Seller,
+    ]);
+    return newSeller.id;
+  };
+
+  const createProduct = async (
+    payload: ProductPayload,
+    imageFile?: File,
+  ): Promise<MarketplaceProduct | null> => {
+    if (!supabase) {
+      setError("Client Supabase tidak tersedia.");
+      return null;
+    }
+
+    setSaving(true);
     setError(null);
 
     try {
-      if (!supabase || !hasSupabaseConfig) {
-        throw new Error("Supabase belum dikonfigurasi.");
+      const sellerId = await resolveSellerId(payload.seller_name);
+      let thumbnailUrl: string | null = null;
+
+      if (imageFile && imageFile instanceof File) {
+        const fileExt = imageFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("marketplace-bucket")
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from("marketplace-bucket")
+          .getPublicUrl(filePath);
+
+        thumbnailUrl = publicUrlData.publicUrl;
       }
 
+      const insertData = {
+        title: payload.title,
+        slug: payload.slug,
+        seller_id: sellerId,
+        price: payload.price,
+        category: payload.category,
+        stock: payload.stock,
+        is_active: payload.is_active,
+        waste_impact_badge: payload.waste_impact_badge || null,
+        description: payload.description || null,
+        thumbnail_url: thumbnailUrl,
+      };
+
+      const { data, error: dbError } = await (supabase.from("products") as any)
+        .insert(insertData)
+        .select("*, seller:sellers(*)")
+        .single();
+
+      if (dbError) throw dbError;
+
+      const created = data as MarketplaceProduct;
+      setProducts((prev) => [created, ...prev]);
+      return created;
+    } catch (err: any) {
+      console.error("Error creating product:", err);
+      setError(err.message || "Gagal menambah produk.");
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateProduct = async (
+    id: string,
+    payload: ProductPayload,
+    imageFile?: File,
+  ): Promise<MarketplaceProduct | null> => {
+    if (!supabase) {
+      setError("Client Supabase tidak tersedia.");
+      return null;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      const sellerId = await resolveSellerId(payload.seller_name);
+      let thumbnailUrl: string | null | undefined = payload.thumbnail_url;
+
+      if (imageFile && imageFile instanceof File) {
+        const fileExt = imageFile.name.split(".").pop();
+        const fileName = `${id}-${Date.now()}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("marketplace-bucket")
+          .upload(filePath, imageFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from("marketplace-bucket")
+          .getPublicUrl(filePath);
+
+        thumbnailUrl = publicUrlData.publicUrl;
+      }
+
+      const updateData = {
+        title: payload.title,
+        slug: payload.slug,
+        seller_id: sellerId,
+        price: payload.price,
+        category: payload.category,
+        stock: payload.stock,
+        is_active: payload.is_active,
+        waste_impact_badge: payload.waste_impact_badge || null,
+        description: payload.description || null,
+        ...(thumbnailUrl !== undefined ? { thumbnail_url: thumbnailUrl } : {}),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error: dbError } = await (supabase.from("products") as any)
+        .update(updateData)
+        .eq("id", id)
+        .select("*, seller:sellers(*)")
+        .single();
+
+      if (dbError) throw dbError;
+
+      const updated = data as MarketplaceProduct;
+      setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      return updated;
+    } catch (err: any) {
+      console.error("Error updating product:", err);
+      setError(err.message || "Gagal memperbarui produk.");
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteProduct = async (id: string): Promise<boolean> => {
+    if (!supabase) return false;
+
+    try {
       const client = getSupabaseClient() as any;
-      const { error: deleteError } = await client
+      const { data, error: dbError } = await client
         .from("products")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .select();
 
-      if (deleteError) throw deleteError;
+      if (dbError) throw dbError;
+
+      if (!data || data.length === 0) {
+        throw new Error("Produk tidak ditemukan atau gagal dihapus.");
+      }
 
       setProducts((prev) => prev.filter((p) => p.id !== id));
       return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menghapus produk.");
+    } catch (err: any) {
+      console.error("Error deleting product:", err);
+      setError(err.message || "Gagal menghapus produk.");
       return false;
     }
-  }, []);
+  };
 
-  const updateStock = useCallback(async (id: string, newStock: number) => {
+  const updateStock = async (
+    id: string,
+    newStock: number,
+  ): Promise<boolean> => {
+    if (!supabase) return false;
+
     setStockUpdatingId(id);
-    setError(null);
-
     try {
-      if (!supabase || !hasSupabaseConfig) {
-        throw new Error("Supabase belum dikonfigurasi.");
-      }
-
-      const client = getSupabaseClient() as any;
-      const { error: updateError } = await client
-        .from("products")
+      const { error: dbError } = await (supabase.from("products") as any)
         .update({ stock: newStock, updated_at: new Date().toISOString() })
         .eq("id", id);
 
-      if (updateError) throw updateError;
+      if (dbError) throw dbError;
 
       setProducts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, stock: newStock } : p)),
       );
       return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memperbarui stok.");
+    } catch (err: any) {
+      console.error("Error updating stock:", err);
       return false;
     } finally {
       setStockUpdatingId(null);
     }
-  }, []);
+  };
 
-  const toggleActive = useCallback(async (id: string, isActive: boolean) => {
-    setError(null);
+  const toggleActive = async (
+    id: string,
+    isActive: boolean,
+  ): Promise<boolean> => {
+    if (!supabase) return false;
 
     try {
-      if (!supabase || !hasSupabaseConfig) {
-        throw new Error("Supabase belum dikonfigurasi.");
-      }
-
-      const client = getSupabaseClient() as any;
-      const { error: updateError } = await client
-        .from("products")
-        .update({
-          is_active: isActive,
-          updated_at: new Date().toISOString(),
-        })
+      const { error: dbError } = await (supabase.from("products") as any)
+        .update({ is_active: isActive, updated_at: new Date().toISOString() })
         .eq("id", id);
 
-      if (updateError) throw updateError;
+      if (dbError) throw dbError;
 
       setProducts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, is_active: isActive } : p)),
       );
       return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal mengubah status.");
+    } catch (err: any) {
+      console.error("Error toggling active state:", err);
       return false;
     }
-  }, []);
-
-  const refresh = useCallback(() => {
-    void fetchProducts();
-    void fetchSellers();
-  }, [fetchProducts, fetchSellers]);
-
-  useEffect(() => {
-    void fetchProducts();
-    void fetchSellers();
-  }, [fetchProducts, fetchSellers]);
-
-  const activeCount = products.filter(
-    (p) => (p.stock ?? 0) > 0 && p.is_active === true,
-  ).length;
-
-  const lowStockCount = products.filter((p) => (p.stock ?? 0) <= 3).length;
+  };
 
   return {
     products,
     sellers,
     loading,
-    error,
     saving,
     stockUpdatingId,
+    error,
     activeCount,
     lowStockCount,
-    sellerCount: sellers.length,
-    refetch: fetchProducts,
-    refresh,
+    sellerCount,
+    refetch: fetchData,
     createProduct,
     updateProduct,
     deleteProduct,

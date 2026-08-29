@@ -1,35 +1,24 @@
 "use client";
 
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentType,
-} from "react";
-import Image from "next/image";
+import React, { ComponentType, useMemo, useRef, useState } from "react";
 import { RemoteImage } from "@/components/remote-image";
 import {
   Package,
-  ShoppingCart,
   Users,
   AlertTriangle,
   Plus,
   Edit,
   Trash2,
   Loader2,
-  Upload,
   RefreshCw,
-  Search,
   X,
-  Check,
+  Search,
 } from "lucide-react";
 import { useMarketplaceProducts } from "@/hooks/useMarketplaceProducts";
 import type {
   MarketplaceProduct,
   ProductPayload,
 } from "@/hooks/useMarketplaceProducts";
-import type { Seller as SellerType } from "@/lib/supabase";
 
 function generateSlug(title: string): string {
   return title
@@ -102,7 +91,7 @@ function StatCard({
 interface ProductForm {
   title: string;
   slug: string;
-  seller_id: string;
+  seller_name: string;
   price: string;
   category: string;
   stock: string;
@@ -114,14 +103,10 @@ interface ProductForm {
   thumbnail_existing: string | null;
 }
 
-interface MarketplaceManagementProps {
-  compact?: boolean;
-}
-
 const EMPTY_FORM: ProductForm = {
   title: "",
   slug: "",
-  seller_id: "",
+  seller_name: "",
   price: "",
   category: "",
   stock: "",
@@ -133,12 +118,9 @@ const EMPTY_FORM: ProductForm = {
   thumbnail_existing: null,
 };
 
-export default function MarketplaceManagement({
-  compact,
-}: MarketplaceManagementProps) {
+export default function MarketplaceManagement(): React.ReactElement {
   const {
     products,
-    sellers,
     loading,
     error,
     saving,
@@ -187,12 +169,16 @@ export default function MarketplaceManagement({
       const sellerName = p.seller?.name?.toLowerCase() ?? "";
       return (
         (p.title?.toLowerCase() ?? "").includes(query) ||
-        sellerName.includes(query)
+        sellerName.includes(query) ||
+        (p.category?.toLowerCase() ?? "").includes(query)
       );
     });
   }, [products, search]);
 
   const resetForm = () => {
+    if (form.thumbnail_preview) {
+      URL.revokeObjectURL(form.thumbnail_preview);
+    }
     setForm(EMPTY_FORM);
     setSlugTouched(false);
   };
@@ -204,10 +190,13 @@ export default function MarketplaceManagement({
   };
 
   const openEdit = (product: MarketplaceProduct) => {
+    if (form.thumbnail_preview) {
+      URL.revokeObjectURL(form.thumbnail_preview);
+    }
     setForm({
       title: product.title ?? "",
       slug: product.slug ?? "",
-      seller_id: product.seller_id ?? "",
+      seller_name: product.seller?.name ?? "",
       price: product.price != null ? String(product.price) : "",
       category: product.category ?? "",
       stock: product.stock != null ? String(product.stock) : "",
@@ -241,12 +230,13 @@ export default function MarketplaceManagement({
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (file) {
-      if (!file.type.startsWith("image/")) {
-        return;
+      if (!file.type.startsWith("image/")) return;
+      if (file.size > 5 * 1024 * 1024) return;
+
+      if (form.thumbnail_preview) {
+        URL.revokeObjectURL(form.thumbnail_preview);
       }
-      if (file.size > 5 * 1024 * 1024) {
-        return;
-      }
+
       setForm((prev) => ({
         ...prev,
         thumbnail_file: file,
@@ -271,7 +261,7 @@ export default function MarketplaceManagement({
   const buildPayload = (): ProductPayload => ({
     title: form.title.trim(),
     slug: form.slug.trim(),
-    seller_id: form.seller_id,
+    seller_name: form.seller_name.trim(),
     price: Number(form.price) || 0,
     category: form.category.trim(),
     stock: Number(form.stock) || 0,
@@ -284,18 +274,16 @@ export default function MarketplaceManagement({
     e.preventDefault();
 
     const payload = buildPayload();
-
-    if (!payload.title) {
-      return;
-    }
+    if (!payload.title || !payload.seller_name) return;
 
     let result: MarketplaceProduct | null = null;
+
     if (isEditMode && editingProduct) {
-      result = await updateProduct(
-        editingProduct.id,
-        payload,
-        form.thumbnail_file ?? undefined,
-      );
+      const fileToUpload = form.thumbnail_file
+        ? form.thumbnail_file
+        : undefined;
+
+      result = await updateProduct(editingProduct.id, payload, fileToUpload);
     } else {
       result = await createProduct(payload, form.thumbnail_file ?? undefined);
     }
@@ -305,21 +293,14 @@ export default function MarketplaceManagement({
     }
   };
 
-  const effectiveThumbnail = (product: MarketplaceProduct) =>
-    product.thumbnail_url ?? null;
-
   const handleDelete = async () => {
     if (!deleteTarget) return;
     const ok = await deleteProduct(deleteTarget.id);
     if (ok) setDeleteTarget(null);
   };
 
-  if (formOpen || deleteTarget) {
-    return null;
-  }
-
-  const content = (
-    <>
+  return (
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-zinc-950">
@@ -332,14 +313,14 @@ export default function MarketplaceManagement({
         <div className="flex items-center gap-3">
           <button
             onClick={() => void refetch()}
-            className="h-10 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 inline-flex items-center gap-2"
+            className="h-10 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 inline-flex items-center gap-2 transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Perbarui
           </button>
           <button
             onClick={openAdd}
-            className="h-10 rounded-lg bg-[#0f5132] px-5 text-sm font-bold text-white hover:bg-[#198754] inline-flex items-center gap-2"
+            className="h-10 rounded-lg bg-[#0f5132] px-5 text-sm font-bold text-white hover:bg-[#198754] inline-flex items-center gap-2 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Tambah Produk
@@ -381,6 +362,20 @@ export default function MarketplaceManagement({
       </div>
 
       <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-sm overflow-hidden">
+        {/* Search Input Filter */}
+        <div className="p-4 border-b border-zinc-100 flex items-center gap-3">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Cari produk atau penjual..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#198754]/25 focus:border-[#198754]"
+            />
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm align-middle">
             <thead>
@@ -417,10 +412,10 @@ export default function MarketplaceManagement({
                 <tr>
                   <td colSpan={9} className="px-4 py-8">
                     <div className="space-y-3">
-                      {Array.from({ length: 6 }).map((_, i) => (
+                      {Array.from({ length: 5 }).map((_, i) => (
                         <div
                           key={i}
-                          className="h-5 bg-zinc-100 rounded animate-pulse"
+                          className="h-8 bg-zinc-100 rounded animate-pulse"
                         />
                       ))}
                     </div>
@@ -432,7 +427,7 @@ export default function MarketplaceManagement({
                     colSpan={9}
                     className="px-4 py-10 text-center text-sm text-zinc-500"
                   >
-                    Belum ada produk.
+                    Belum ada produk yang cocok.
                   </td>
                 </tr>
               ) : (
@@ -452,57 +447,14 @@ export default function MarketplaceManagement({
           </table>
         </div>
       </div>
-    </>
-  );
 
-  if (!formOpen && !deleteTarget) {
-    return (
-      <>
-        {content}
-        {formOpen && (
-          <ProductFormModal
-            open={formOpen}
-            isEditMode={isEditMode}
-            editingProduct={editingProduct}
-            form={form}
-            setForm={setForm}
-            setSlugTouched={setSlugTouched}
-            slugTouched={slugTouched}
-            sellers={sellers}
-            categories={categories}
-            saving={saving}
-            onSubmit={handleSubmit}
-            onCancel={closeForm}
-            onTitleChange={handleTitleChange}
-            onThumbnailChange={handleThumbnailChange}
-            clearThumbnail={clearThumbnail}
-            fileInputRef={fileInputRef}
-          />
-        )}
-        {deleteTarget && (
-          <DeleteConfirm
-            product={deleteTarget}
-            onCancel={() => setDeleteTarget(null)}
-            onConfirm={handleDelete}
-          />
-        )}
-      </>
-    );
-  }
-
-  return (
-    <>
-      {content}
       {formOpen && (
         <ProductFormModal
           open={formOpen}
           isEditMode={isEditMode}
-          editingProduct={editingProduct}
           form={form}
           setForm={setForm}
           setSlugTouched={setSlugTouched}
-          slugTouched={slugTouched}
-          sellers={sellers}
           categories={categories}
           saving={saving}
           onSubmit={handleSubmit}
@@ -513,6 +465,7 @@ export default function MarketplaceManagement({
           fileInputRef={fileInputRef}
         />
       )}
+
       {deleteTarget && (
         <DeleteConfirm
           product={deleteTarget}
@@ -520,7 +473,7 @@ export default function MarketplaceManagement({
           onConfirm={handleDelete}
         />
       )}
-    </>
+    </div>
   );
 }
 
@@ -545,14 +498,11 @@ function StockCell({
     void onUpdateStock(product.id, value);
   };
 
-  const onIncrement = () => commit(current + 1);
-  const onDecrement = () => commit(Math.max(0, current - 1));
-
   return (
     <div className="flex items-center gap-0.5 justify-center">
       <button
         type="button"
-        onClick={onDecrement}
+        onClick={() => commit(Math.max(0, current - 1))}
         disabled={busy}
         className="w-7 h-7 rounded-md border border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-white disabled:opacity-50 flex items-center justify-center text-sm font-bold"
         aria-label={`Kurangi stok ${product.title}`}
@@ -584,7 +534,7 @@ function StockCell({
       />
       <button
         type="button"
-        onClick={onIncrement}
+        onClick={() => commit(current + 1)}
         disabled={busy}
         className="w-7 h-7 rounded-md border border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-white disabled:opacity-50 flex items-center justify-center text-sm font-bold"
         aria-label={`Tambah stok ${product.title}`}
@@ -644,9 +594,9 @@ function ProductRow({
   const thumbnail = product.thumbnail_url;
 
   return (
-    <tr className="border-b border-zinc-100 last:border-0">
+    <tr className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50/50 transition-colors">
       <td className="px-4 py-3">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-zinc-100 overflow-hidden border border-zinc-200">
+        <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-zinc-100 overflow-hidden border border-zinc-200">
           {thumbnail ? (
             <RemoteImage
               src={thumbnail}
@@ -737,7 +687,7 @@ function DeleteConfirm({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onCancel}
@@ -751,7 +701,7 @@ function DeleteConfirm({
         </div>
         <p className="text-sm text-zinc-600 mb-2">
           Apakah Anda yakin ingin menghapus produk{" "}
-          <span className="font-bold">"{product.title}"</span>?
+          <span className="font-bold">&quot;{product.title}&quot;</span>?
         </p>
         <p className="text-xs text-zinc-500 mb-6">
           Data produk tidak dapat dikembalikan setelah dihapus.
@@ -778,12 +728,9 @@ function DeleteConfirm({
 interface ProductFormModalProps {
   open: boolean;
   isEditMode: boolean;
-  editingProduct: MarketplaceProduct | null;
   form: ProductForm;
   setForm: React.Dispatch<React.SetStateAction<ProductForm>>;
   setSlugTouched: (v: boolean) => void;
-  slugTouched: boolean;
-  sellers: SellerType[];
   categories: string[];
   saving: boolean;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
@@ -797,12 +744,9 @@ interface ProductFormModalProps {
 function ProductFormModal({
   open,
   isEditMode,
-  editingProduct,
   form,
   setForm,
   setSlugTouched,
-  slugTouched,
-  sellers,
   categories,
   saving,
   onSubmit,
@@ -869,34 +813,28 @@ function ProductFormModal({
             </label>
             <label className="text-sm font-semibold text-zinc-700">
               Penjual
-              <select
+              <input
                 required
-                value={form.seller_id}
-                onChange={(e) => updateField("seller_id", e.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 font-normal outline-none focus:border-[#198754]"
-              >
-                <option value="">Pilih penjual</option>
-                {sellers.map((seller) => (
-                  <option key={seller.id} value={seller.id}>
-                    {seller.name}
-                  </option>
-                ))}
-              </select>
+                value={form.seller_name}
+                onChange={(e) => updateField("seller_name", e.target.value)}
+                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
+              />
             </label>
             <label className="text-sm font-semibold text-zinc-700">
               Kategori
-              <input
+              <select
                 required
-                list="product-categories"
                 value={form.category}
                 onChange={(e) => updateField("category", e.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
-              />
-              <datalist id="product-categories">
+                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 font-normal outline-none focus:border-[#198754]"
+              >
+                <option value="">Pilih kategori</option>
                 {categories.map((category) => (
-                  <option key={category} value={category} />
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
                 ))}
-              </datalist>
+              </select>
             </label>
             <label className="text-sm font-semibold text-zinc-700">
               Harga
@@ -941,11 +879,12 @@ function ProductFormModal({
               className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 font-normal outline-none focus:border-[#198754]"
             />
           </label>
-          <label className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
+          <label className="flex items-center gap-2 text-sm font-semibold text-zinc-700 cursor-pointer">
             <input
               type="checkbox"
               checked={form.is_active}
               onChange={(e) => updateField("is_active", e.target.checked)}
+              className="rounded accent-[#0f5132]"
             />{" "}
             Produk aktif
           </label>
@@ -960,11 +899,12 @@ function ProductFormModal({
             />
             {preview && (
               <div className="relative h-32 w-32 overflow-hidden rounded-lg border border-zinc-200">
-                <Image
+                {/* Menggunakan img standar agar aman membaca URL Blob maupun URL Supabase tanpa restriction next/image */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={preview}
                   alt="Preview thumbnail"
-                  fill
-                  className="object-cover"
+                  className="h-full w-full object-cover"
                 />
                 <button
                   type="button"

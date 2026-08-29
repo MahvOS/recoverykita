@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import {
   Location,
   CarbonFactor,
@@ -21,39 +21,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey);
-
-export const supabase: ReturnType<typeof createClient> | null =
-  typeof supabaseUrl === "string" && typeof supabaseKey === "string"
-    ? createClient(supabaseUrl, supabaseKey)
-    : null;
-
-export function getSupabaseClient() {
-  if (!supabase) {
-    throw new Error(
-      "Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY di Vercel.",
-    );
-  }
-
-  return supabase;
-}
-
-export type {
-  MapLocationCategory,
-  WasteCategory,
-  Priority,
-  ReportStatus,
-  LocationStatus,
-  LocationCategory,
-  Location,
-  CarbonFactor,
-  Profile,
-  ReportLog,
-  MetricStats,
-  RecentReport,
-  MapLocation,
-  LocationWithCarbon,
-  ReportLogWithLocation,
-};
 
 export interface Seller {
   id: string;
@@ -118,3 +85,36 @@ export interface DownloadableAsset {
   download_count: number | null;
   created_at: string | null;
 }
+
+export const supabase =
+  typeof supabaseUrl === "string" && typeof supabaseKey === "string"
+    ? createClient(supabaseUrl, supabaseKey)
+    : null;
+
+export function getSupabaseClient() {
+  if (!supabase) {
+    throw new Error(
+      "Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY di Vercel.",
+    );
+  }
+
+  return supabase;
+}
+
+export type {
+  MapLocationCategory,
+  WasteCategory,
+  Priority,
+  ReportStatus,
+  LocationStatus,
+  LocationCategory,
+  Location,
+  CarbonFactor,
+  Profile,
+  ReportLog,
+  MetricStats,
+  RecentReport,
+  MapLocation,
+  LocationWithCarbon,
+  ReportLogWithLocation,
+};

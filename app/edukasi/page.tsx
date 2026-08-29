@@ -545,7 +545,7 @@ export default function EdukasiPage() {
                   Potensi Reduksi CO₂
                 </p>
                 <p className="text-2xl font-black text-[#0f5132]">
-                  {co2Result !== null ? `${co2Result} kg` : "— kg"}
+                  {co2Result !== null ? `${co2Result} kg` : "... kg"}
                 </p>
               </div>
             </div>

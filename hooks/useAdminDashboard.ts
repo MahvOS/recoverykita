@@ -66,7 +66,7 @@ export function useAdminDashboard() {
 
     try {
       const client = getSupabaseClient();
-      setDbStatus("Terhubung ke Supabase");
+      setDbStatus("Aktif");
 
       const [locResult] = await Promise.all([
         client.from("locations").select(`
@@ -142,11 +142,21 @@ export function useAdminDashboard() {
       });
       setReports(recentReports);
     } catch (err) {
-      console.error("Dashboard DB fetch error:", err);
+      const unknownErr = err as unknown;
+      const message =
+        unknownErr instanceof Error
+          ? unknownErr.message
+          : typeof unknownErr === "object" &&
+              unknownErr !== null &&
+              "message" in unknownErr
+            ? String((unknownErr as Record<string, unknown>).message)
+            : typeof unknownErr === "string"
+              ? unknownErr
+              : "Gagal memuat data dashboard";
+
+      console.error("Dashboard DB fetch error:", unknownErr);
       setDbStatus("Gagal Query");
-      setError(
-        err instanceof Error ? err.message : "Gagal memuat data dashboard",
-      );
+      setError(message || "Gagal memuat data dashboard");
     } finally {
       setLoading(false);
     }

@@ -493,13 +493,44 @@ export default function MarketplacePage() {
                         />
                       </div>
                       <div className="p-3.5 flex-1 flex flex-col justify-between space-y-3">
-                        <div className="space-y-0.5">
+                        <div className="space-y-2">
                           <p className="text-[11px] text-zinc-400 font-medium">
                             {sellerName}
                           </p>
                           <h3 className="font-bold text-zinc-900 text-sm leading-tight group-hover:text-[#198754] transition-colors">
                             {product.title}
                           </h3>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full">
+                              {product.category ?? "Kategori"}
+                            </span>
+                            <span className="text-[10px] font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full">
+                              Stok: {product.stock ?? 0}
+                            </span>
+                            <span
+                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${product.is_active ? "bg-emerald-50 text-[#198754]" : "bg-rose-50 text-rose-700"}`}
+                            >
+                              {product.is_active ? "Aktif" : "Nonaktif"}
+                            </span>
+                          </div>
+                          {product.waste_impact_badge && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0f5132] bg-[#e8f5e9] px-2 py-0.5 rounded-full">
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18v3"
+                                />
+                              </svg>
+                              {product.waste_impact_badge}
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-bold text-zinc-900">

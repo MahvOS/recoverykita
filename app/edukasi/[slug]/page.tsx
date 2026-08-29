@@ -337,25 +337,12 @@ export default function ArticleDetailPage() {
           <article className="flex-1 min-w-0">
             {isHtml ? (
               <div
-                className="article-content prose prose-zinc max-w-none
-                  [&_h2]:text-xl [&_h2]:font-extrabold [&_h2]:text-[#0f5132] [&_h2]:mt-8 [&_h2]:mb-4
-                  [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-[#0f5132] [&_h3]:mt-6 [&_h3]:mb-3
-                  [&_p]:text-sm [&_p]:md:text-base [&_p]:text-zinc-700 [&_p]:leading-relaxed [&_p]:mb-4
-                  [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_ul]:mb-4
-                  [&_li]:text-sm [&_li]:text-zinc-700
-                  [&_strong]:font-semibold [&_strong]:text-zinc-900"
+                className="article-content"
                 dangerouslySetInnerHTML={{ __html: article.content }}
               />
             ) : (
-              <div className="space-y-4">
-                {article.content.split("\n\n").map((para, i) => (
-                  <p
-                    key={i}
-                    className="text-sm md:text-base text-zinc-700 leading-relaxed"
-                  >
-                    {para}
-                  </p>
-                ))}
+              <div className="text-sm md:text-base text-zinc-700 leading-relaxed space-y-4 whitespace-pre-line">
+                {article.content}
               </div>
             )}
           </article>

@@ -350,13 +350,34 @@ export default function ProductDetailPage() {
               <span className="font-semibold text-zinc-700">{sellerName}</span>
             </p>
 
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-3xl font-black text-zinc-900">
-                {formatPrice(product.price)}
-              </span>
-              <span className="text-xs text-[#0f5132] bg-[#e8f5e9] px-2.5 py-1 rounded-full font-semibold">
-                {badge}
-              </span>
+            <div className="flex flex-col gap-3 mb-6">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl font-black text-zinc-900">
+                  {formatPrice(product.price)}
+                </span>
+                <span className="text-xs text-[#0f5132] bg-[#e8f5e9] px-2.5 py-1 rounded-full font-semibold">
+                  {badge}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${(product.stock ?? 0) === 0 ? "bg-rose-50 text-rose-700 border-rose-200" : (product.stock ?? 0) <= 3 ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-emerald-50 text-[#198754] border-emerald-200"}`}
+                >
+                  {(product.stock ?? 0) === 0
+                    ? "Stok Habis"
+                    : (product.stock ?? 0) <= 3
+                      ? "Stok Menipis"
+                      : "Stok Tersedia"}
+                </span>
+                <span className="text-xs font-semibold text-zinc-600 bg-zinc-100 px-2.5 py-1 rounded-full">
+                  Stok: {product.stock ?? 0}
+                </span>
+                <span
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full ${product.is_active ? "bg-emerald-50 text-[#198754]" : "bg-rose-50 text-rose-700"}`}
+                >
+                  {product.is_active ? "Aktif" : "Nonaktif"}
+                </span>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-8">
@@ -382,16 +403,30 @@ export default function ProductDetailPage() {
 
               <a
                 href={
-                  sellerWhatsapp
+                  product.is_active && sellerWhatsapp
                     ? `https://wa.me/${sellerWhatsapp.replace(/\D/g, "")}`
                     : "#"
                 }
-                target={sellerWhatsapp ? "_blank" : undefined}
-                rel={sellerWhatsapp ? "noreferrer" : undefined}
-                className="flex-1 bg-[#198754] hover:bg-[#0f5132] text-white font-semibold px-5 py-2.5 rounded-xl text-center transition-colors"
+                target={
+                  product.is_active && sellerWhatsapp ? "_blank" : undefined
+                }
+                rel={
+                  product.is_active && sellerWhatsapp ? "noreferrer" : undefined
+                }
+                className={`flex-1 font-semibold px-5 py-2.5 rounded-xl text-center transition-colors ${
+                  product.is_active
+                    ? "bg-[#198754] hover:bg-[#0f5132] text-white"
+                    : "bg-zinc-200 text-zinc-500 cursor-not-allowed"
+                }`}
               >
-                Chat via WhatsApp
+                {product.is_active ? "Chat via WhatsApp" : "Produk Nonaktif"}
               </a>
+              {!product.is_active && (
+                <p className="text-xs text-zinc-500">
+                  Produk ini sedang nonaktif. Chat akan tersedia setelah produk
+                  diaktifkan kembali.
+                </p>
+              )}
             </div>
 
             <div className="border-t border-zinc-200 pt-6">

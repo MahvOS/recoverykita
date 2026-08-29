@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
@@ -17,15 +17,15 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  Store,
-  Trophy,
   GraduationCap,
-  Settings,
 } from "lucide-react";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useMapReports } from "@/hooks/useMapReports";
+import { getHotspotClusters } from "@/actions/mapActions";
 import type { MapReport, Priority, ReportStatus } from "@/types/admin";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import MarketplaceManagement from "@/components/admin/MarketplaceManagement";
+import UserManagement from "@/components/admin/UserManagement";
 import Image from "next/image";
 
 const AdminMap = dynamic(() => import("@/components/admin/AdminMap"), {
@@ -118,7 +118,7 @@ type ViewType =
   | "dashboard"
   | "map-reports"
   | "marketplace"
-  | "community"
+  | "user-management"
   | "education"
   | "settings";
 
@@ -147,6 +147,36 @@ export default function AdminDashboard() {
   const [draft, setDraft] = useState<Filters>(emptyFilters);
   const [selected, setSelected] = useState<MapReport | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("map");
+  const [hotspots, setHotspots] = useState<HotspotArea[]>([]);
+  const [hotspotsLoading, setHotspotsLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchHotspots = async () => {
+      setHotspotsLoading(true);
+      try {
+        const data = await getHotspotClusters();
+        if (!cancelled) {
+          setHotspots(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setHotspots([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setHotspotsLoading(false);
+        }
+      }
+    };
+
+    fetchHotspots();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const categories = React.useMemo(
     () =>
@@ -173,50 +203,6 @@ export default function AdminDashboard() {
   }, [mapReportsList, filters]);
 
   const mapped = filtered.filter(validCoordinate);
-
-  const hotspots = React.useMemo<HotspotArea[]>(() => {
-    const grouped = new Map<string, { count: number; reports: MapReport[] }>();
-
-    filtered.forEach((r) => {
-      if (!validCoordinate(r)) return;
-      const name =
-        r.location_name || r.description || "Wilayah Tidak Diketahui";
-      const existing = grouped.get(name);
-      if (existing) {
-        existing.count += 1;
-        existing.reports.push(r);
-      } else {
-        grouped.set(name, { count: 1, reports: [r] });
-      }
-    });
-
-    const areas: HotspotArea[] = [];
-    grouped.forEach((value, name) => {
-      const sorted = value.reports.sort(
-        (a, b) =>
-          new Date(b.created_at || 0).getTime() -
-          new Date(a.created_at || 0).getTime(),
-      );
-      const latest = sorted[0];
-      const avgLat =
-        value.reports.reduce((sum, r) => sum + (r.latitude || 0), 0) /
-        value.reports.length;
-      const avgLng =
-        value.reports.reduce((sum, r) => sum + (r.longitude || 0), 0) /
-        value.reports.length;
-
-      areas.push({
-        id: name,
-        name,
-        count: value.count,
-        latitude: avgLat,
-        longitude: avgLng,
-        latestReport: latest,
-      });
-    });
-
-    return areas.sort((a, b) => b.count - a.count);
-  }, [filtered]);
 
   const today = new Date().toLocaleDateString("en-US", {
     month: "2-digit",
@@ -672,26 +658,17 @@ export default function AdminDashboard() {
                     </aside>
                   </section>
                 ) : (
-                  <AnalyticsView hotspots={hotspots} loading={mapLoading} />
+                  <AnalyticsView
+                    hotspots={hotspots}
+                    loading={hotspotsLoading}
+                  />
                 )}
               </>
             )}
 
-            {activeView === "marketplace" && (
-              <PlaceholderView
-                title="Pasar"
-                description="Kelola produk pasar sirkular."
-                icon={Store}
-              />
-            )}
+            {activeView === "marketplace" && <MarketplaceManagement />}
 
-            {activeView === "community" && (
-              <PlaceholderView
-                title="Komunitas"
-                description="Kelola tantangan komunitas dan leaderboard."
-                icon={Trophy}
-              />
-            )}
+            {activeView === "user-management" && <UserManagement />}
 
             {activeView === "education" && (
               <PlaceholderView
@@ -860,6 +837,7 @@ function ReportDetail({
               src={photos[photoIndex]}
               alt={`Foto laporan ${photoIndex + 1}`}
               fill
+              sizes="100vw"
               className="object-cover"
               unoptimized
             />
@@ -907,6 +885,7 @@ function ReportDetail({
                     src={url}
                     alt={`Thumbnail ${idx + 1}`}
                     fill
+                    sizes="80px"
                     className="object-cover"
                     unoptimized
                   />

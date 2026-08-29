@@ -1,5 +1,3 @@
-// Precise TypeScript interfaces matching Supabase schema for Admin Dashboard
-
 export type LocationCategory = "waste_bank" | "trash_dump" | "community_action";
 export type MapLocationCategory = LocationCategory;
 export type WasteCategory = LocationCategory;
@@ -41,6 +39,47 @@ export interface Profile {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
+  email: string | null;
+  role: string | null;
+  is_banned: boolean | null;
+  banned_at: string | null;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  phone_number: string | null;
+  avatar_url: string | null;
+  role: string | null;
+  is_banned: boolean | null;
+  banned_at: string | null;
+  created_at: string;
+}
+
+export interface UserReport {
+  id: string;
+  location_id: string | null;
+  category: string | null;
+  location_name: string | null;
+  description: string | null;
+  status: string | null;
+  priority: string | null;
+  reporter_name: string | null;
+  reporter_phone: string | null;
+  created_at: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  user_id: string | null;
+  location: {
+    id: string;
+    title: string | null;
+    category: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    status: string | null;
+    photo_url: string | null;
+  } | null;
 }
 
 export interface ReportLog {
