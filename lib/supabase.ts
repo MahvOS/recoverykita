@@ -86,6 +86,22 @@ export interface DownloadableAsset {
   created_at: string | null;
 }
 
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswerIndex: number;
+  explanation?: string;
+}
+
+export interface Quiz {
+  id: string;
+  article_id: string;
+  title: string | null;
+  description?: string | null;
+  questions: QuizQuestion[];
+}
+
 export const supabase =
   typeof supabaseUrl === "string" && typeof supabaseKey === "string"
     ? createClient(supabaseUrl, supabaseKey)

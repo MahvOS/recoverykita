@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Map as MapIcon,
@@ -11,11 +12,16 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-  { name: "Dasbor", icon: LayoutDashboard, view: "dashboard" },
-  { name: "Laporan Peta", icon: MapIcon, view: "map-reports" },
-  { name: "Pasar", icon: Store, view: "marketplace" },
-  { name: "User Management", icon: Users, view: "user-management" },
-  { name: "Edukasi", icon: GraduationCap, view: "education" },
+  { name: "Dasbor", icon: LayoutDashboard, view: "dashboard", href: null },
+  { name: "Laporan Peta", icon: MapIcon, view: "map-reports", href: null },
+  { name: "Pasar", icon: Store, view: "marketplace", href: null },
+  { name: "User Management", icon: Users, view: "user-management", href: null },
+  {
+    name: "Edukasi",
+    icon: GraduationCap,
+    view: "education",
+    href: "/admin/edukasi",
+  },
 ];
 
 interface AdminSidebarProps {
@@ -27,11 +33,16 @@ export default function AdminSidebar({
   activeView,
   onViewChange,
 }: AdminSidebarProps) {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleClick = (view: string) => {
+  const handleClick = (item: (typeof menuItems)[number]) => {
     setSidebarOpen(false);
-    onViewChange(view);
+    if (item.href) {
+      router.push(item.href);
+    } else {
+      onViewChange(item.view);
+    }
   };
 
   return (
@@ -83,7 +94,7 @@ export default function AdminSidebar({
               return (
                 <button
                   key={item.name}
-                  onClick={() => handleClick(item.view)}
+                  onClick={() => handleClick(item)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-150 ${
                     isActive
                       ? "bg-[#bbf7d0] text-[#0f5132]"

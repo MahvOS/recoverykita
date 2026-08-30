@@ -17,7 +17,6 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  GraduationCap,
 } from "lucide-react";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useMapReports } from "@/hooks/useMapReports";
@@ -26,6 +25,7 @@ import type { MapReport, Priority, ReportStatus } from "@/types/admin";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import MarketplaceManagement from "@/components/admin/MarketplaceManagement";
 import UserManagement from "@/components/admin/UserManagement";
+import { EdukasiManagement } from "@/components/admin/EdukasiManagement";
 import Image from "next/image";
 
 const AdminMap = dynamic(() => import("@/components/admin/AdminMap"), {
@@ -670,13 +670,7 @@ export default function AdminDashboard() {
 
             {activeView === "user-management" && <UserManagement />}
 
-            {activeView === "education" && (
-              <PlaceholderView
-                title="Edukasi"
-                description="Kelola artikel, video, dan panduan edukasi."
-                icon={GraduationCap}
-              />
-            )}
+            {activeView === "education" && <EdukasiManagement />}
           </div>
         </div>
       </main>
@@ -697,26 +691,6 @@ export default function AdminDashboard() {
           }}
         />
       )}
-    </div>
-  );
-}
-
-function PlaceholderView({
-  title,
-  description,
-  icon: Icon,
-}: {
-  title: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <div className="grid min-h-[400px] place-items-center rounded-2xl border border-zinc-200 bg-white text-center">
-      <div>
-        <Icon className="mx-auto h-10 w-10 text-zinc-400" />
-        <h2 className="mt-4 text-xl font-black">{title}</h2>
-        <p className="mt-2 text-sm text-zinc-500">{description}</p>
-      </div>
     </div>
   );
 }

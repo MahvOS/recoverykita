@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { RemoteImage } from "@/components/remote-image";
 import { supabase, getSupabaseClient, Article } from "@/lib/supabase";
 
@@ -26,9 +26,11 @@ function formatReadTime(format: string | null, minutes: number | null): string {
 export default function ArticleDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const router = useRouter();
 
   const [article, setArticle] = useState<Article | null>(null);
   const [related, setRelated] = useState<Article[]>([]);
+  const [quizTitle, setQuizTitle] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -65,6 +67,21 @@ export default function ArticleDetailPage() {
           .from("articles")
           .update({ views_count: (articleData.views_count ?? 0) + 1 })
           .eq("id", articleData.id);
+
+        try {
+          const { data: quizHeader } = await client
+            .from("quizzes")
+            .select("title")
+            .eq("article_id", articleData.id)
+            .maybeSingle();
+
+          if (quizHeader) {
+            setQuizTitle((quizHeader as { title?: string }).title ?? null);
+          }
+        } catch (quizErr) {
+          console.error("Quiz check error:", quizErr);
+          setQuizTitle(null);
+        }
 
         const { data: relatedData } = await (client as any)
           .from("articles")
@@ -385,18 +402,22 @@ export default function ArticleDetailPage() {
               </div>
             )}
 
-            <div className="bg-[#0f5132] rounded-2xl p-6 text-white space-y-4">
-              <h3 className="font-extrabold text-base">
-                Plastic-Free Challenge
-              </h3>
-              <p className="text-xs text-emerald-100 leading-relaxed">
-                Uji pengetahuanmu tentang pengelolaan sampah plastik dan
-                menangkan badge eco-warrior!
-              </p>
-              <button className="w-full bg-[#20c997] text-[#052617] text-xs font-bold py-3 rounded-xl hover:bg-[#1bb285] transition-colors">
-                Ikuti Kuis Sekarang
-              </button>
-            </div>
+            {quizTitle && (
+              <div className="bg-[#0f5132] rounded-2xl p-6 text-white space-y-4">
+                <h3 className="font-extrabold text-base">{quizTitle}</h3>
+                <p className="text-xs text-emerald-100 leading-relaxed">
+                  Uji pengetahuanmu dengan kuis interaktif ini. Klik di bawah
+                  untuk memulai!
+                </p>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/edukasi/${slug}/quiz`)}
+                  className="w-full bg-[#20c997] text-[#052617] text-xs font-bold py-3 rounded-xl hover:bg-[#1bb285] transition-colors"
+                >
+                  Mulai Kuis
+                </button>
+              </div>
+            )}
           </aside>
         </div>
       </main>
