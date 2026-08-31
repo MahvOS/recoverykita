@@ -29,7 +29,7 @@ function normalizeGalleryUrls(
       return filtered.length ? filtered : [fallback];
     }
   } catch {
-    // value may be a comma-separated string
+    // split comma-separated string
   }
 
   const splitValue = String(value)
@@ -65,7 +65,7 @@ export default function ProductDetailPage() {
           .from("products")
           .select("*, seller:sellers(*)")
           .eq("slug", slug)
-          .single();
+          .maybeSingle();
 
         if (error) {
           throw error;
@@ -87,16 +87,26 @@ export default function ProductDetailPage() {
 
   const images = useMemo(() => {
     if (!product) return ["/logo.ico"];
-    return normalizeGalleryUrls(
+
+    const gallery = normalizeGalleryUrls(
       product.gallery_urls,
       product.thumbnail_url ?? "/logo.ico",
     );
+
+    // Pastikan thumbnail_url utama dimasukkan ke urutan paling awal jika ada
+    if (product.thumbnail_url && !gallery.includes(product.thumbnail_url)) {
+      return [product.thumbnail_url, ...gallery];
+    }
+
+    return gallery;
   }, [product]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#fbfcfa] flex items-center justify-center">
-        <div className="text-center text-zinc-500">Memuat produk...</div>
+        <div className="text-center text-zinc-500 font-medium">
+          Memuat produk...
+        </div>
       </div>
     );
   }
@@ -128,131 +138,8 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
       <Navbar />
-      {/*
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col">
-          <div className="h-16 sm:h-20 flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3 w-20">
-              <Link href="/" className="block">
-                <div className="relative w-30 h-30 sm:w-35 sm:h-35">
-                  <Image
-                    src="/logo.ico"
-                    alt="RecoveryKita Logo"
-                    fill
-                    sizes="80px"
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-              </Link>
-            </div>
 
-            <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-8 flex-1">
-              <Link
-                href="/"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Beranda
-              </Link>
-              <Link
-                href="/marketplace"
-                className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
-              >
-                Marketplace
-              </Link>
-              <Link
-                href="/peta"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Peta
-              </Link>
-              <Link
-                href="/lapor"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Lapor
-              </Link>
-              <Link
-                href="/edukasi"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Edukasi
-              </Link>
-            </nav>
-
-            <div className="w-20 flex justify-end">
-              <button
-              type="button"
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100 transition-colors"
-            >
-              <svg
-                className="w-6 h-6 text-zinc-700"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d={
-                    mobileMenuOpen
-                      ? "M6 18L18 6M6 6l12 12"
-                      : "M4 6h16M4 12h16m-7 6h7"
-                  }
-                />
-              </svg>
-              </button>
-            </div>
-          </div>
-
-          {mobileMenuOpen && (
-            <div className="md:hidden absolute top-full left-0 right-0 border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-              <div className="flex flex-col gap-2">
-                <Link
-                  href="/"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Beranda
-                </Link>
-                <Link
-                  href="/marketplace"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0f5132] hover:bg-[#edf7ef]"
-                >
-                  Marketplace
-                </Link>
-                <Link
-                  href="/peta"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Peta
-                </Link>
-                <Link
-                  href="/lapor"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Lapor
-                </Link>
-                <Link
-                  href="/edukasi"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Edukasi
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-      </header> */}
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 pb-6 sm:pb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-6 sm:pb-8">
         <nav className="flex items-center gap-2 text-xs text-zinc-400 mb-6 sm:mb-8 overflow-x-auto whitespace-nowrap pb-1">
           <Link
             href="/marketplace"
@@ -312,7 +199,7 @@ export default function ProductDetailPage() {
                 {savedLabel}
               </span>
               <Image
-                src={images[activeImage]}
+                src={images[activeImage] ?? "/logo.ico"}
                 alt={product.title}
                 fill
                 className="object-cover"
@@ -421,12 +308,6 @@ export default function ProductDetailPage() {
               >
                 {product.is_active ? "Chat via WhatsApp" : "Produk Nonaktif"}
               </a>
-              {!product.is_active && (
-                <p className="text-xs text-zinc-500">
-                  Produk ini sedang nonaktif. Chat akan tersedia setelah produk
-                  diaktifkan kembali.
-                </p>
-              )}
             </div>
 
             <div className="border-t border-zinc-200 pt-6">
@@ -474,9 +355,9 @@ export default function ProductDetailPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2">
-              <div className="relative w-7 h-7">
+              <div className="relative w-8 h-8">
                 <Image
-                  src="/favicon.ico"
+                  src="/logo.ico"
                   alt="RecoveryKita Logo"
                   fill
                   className="object-contain"

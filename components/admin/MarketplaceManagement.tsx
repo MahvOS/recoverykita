@@ -1,6 +1,12 @@
 "use client";
 
-import React, { ComponentType, useMemo, useRef, useState } from "react";
+import React, {
+  ComponentType,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { RemoteImage } from "@/components/remote-image";
 import {
   Package,
@@ -756,7 +762,12 @@ function ProductFormModal({
   clearThumbnail,
   fileInputRef,
 }: ProductFormModalProps) {
-  if (!open) return null;
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  if (!open || !isMounted) return null;
 
   const preview = form.thumbnail_preview ?? form.thumbnail_existing;
   const updateField = (field: keyof ProductForm, value: string | boolean) =>
@@ -899,11 +910,11 @@ function ProductFormModal({
             />
             {preview && (
               <div className="relative h-32 w-32 overflow-hidden rounded-lg border border-zinc-200">
-                {/* Menggunakan img standar agar aman membaca URL Blob maupun URL Supabase tanpa restriction next/image */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={preview}
                   alt="Preview thumbnail"
+                  suppressHydrationWarning
                   className="h-full w-full object-cover"
                 />
                 <button

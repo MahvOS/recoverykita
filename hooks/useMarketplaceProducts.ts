@@ -142,9 +142,11 @@ export function useMarketplaceProducts() {
 
         const { error: uploadError } = await supabase.storage
           .from("marketplace-bucket")
-          .upload(filePath, imageFile);
+          .upload(filePath, imageFile, { upsert: true });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          throw new Error(`Upload gambar gagal: ${uploadError.message}`);
+        }
 
         const { data: publicUrlData } = supabase.storage
           .from("marketplace-bucket")
@@ -169,7 +171,7 @@ export function useMarketplaceProducts() {
       const { data, error: dbError } = await (supabase.from("products") as any)
         .insert(insertData)
         .select("*, seller:sellers(*)")
-        .single();
+        .maybeSingle();
 
       if (dbError) throw dbError;
 
@@ -211,7 +213,9 @@ export function useMarketplaceProducts() {
           .from("marketplace-bucket")
           .upload(filePath, imageFile, { upsert: true });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          throw new Error(`Upload gambar gagal: ${uploadError.message}`);
+        }
 
         const { data: publicUrlData } = supabase.storage
           .from("marketplace-bucket")
@@ -238,7 +242,7 @@ export function useMarketplaceProducts() {
         .update(updateData)
         .eq("id", id)
         .select("*, seller:sellers(*)")
-        .single();
+        .maybeSingle();
 
       if (dbError) throw dbError;
 
