@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Menu } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 export default function EdukasiLayout({
@@ -9,6 +11,18 @@ export default function EdukasiLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [sidebarOpen]);
 
   return (
     <div className="flex min-h-screen bg-zinc-50 font-sans antialiased text-zinc-800">
@@ -21,11 +35,21 @@ export default function EdukasiLayout({
             router.push("/admin");
           }
         }}
+        isOpen={sidebarOpen}
+        onOpenChange={setSidebarOpen}
       />
 
       <main className="flex-1 flex flex-col min-w-0 lg:ml-64">
-        <header className="sticky top-0 z-40 h-16 bg-white border-b border-zinc-200 px-4 sm:px-8 flex items-center justify-between flex-shrink-0">
+        <header className="sticky top-0 z-10 h-14 bg-white border-b border-zinc-200 px-4 sm:px-8 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden flex items-center justify-center rounded-lg p-2 text-zinc-600 hover:bg-zinc-100"
+              aria-label="Buka menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
             <span className="hidden sm:block text-sm font-medium text-zinc-500">
               Administrator
             </span>

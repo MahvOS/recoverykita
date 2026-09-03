@@ -152,15 +152,6 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
 
   return (
     <section className="w-full" aria-label="Kuis Interaktif">
-      <div className="mb-6 rounded-2xl border border-zinc-200/60 bg-white p-5 sm:p-6">
-        <h2 className="text-xl sm:text-2xl font-extrabold text-[#0f5132] mb-1">
-          {title}
-        </h2>
-        <p className="text-sm text-zinc-500">
-          Jawab semua pertanyaan, lalu kirim untuk melihat hasilnya.
-        </p>
-      </div>
-
       {!isSubmitted && (
         <div className="mb-4 flex items-center justify-between text-xs text-zinc-500">
           <span>

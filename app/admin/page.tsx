@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
   Calendar,
@@ -18,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  Menu,
 } from "lucide-react";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useMapReports } from "@/hooks/useMapReports";
@@ -123,29 +123,12 @@ type ViewType =
   | "education"
   | "settings";
 
-const VALID_VIEWS = new Set<ViewType>([
-  "dashboard",
-  "map-reports",
-  "marketplace",
-  "user-management",
-  "education",
-]);
-
 function AdminDashboardContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const viewParam = searchParams.get("view") as ViewType | null;
-  const activeView = (
-    viewParam && VALID_VIEWS.has(viewParam) ? viewParam : "dashboard"
-  ) as ViewType;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeView, setActiveView] = useState<ViewType>("dashboard");
 
   const handleViewChange = (view: string) => {
-    const vt = view as ViewType;
-    if (vt === "dashboard") {
-      router.replace("/admin", { scroll: false });
-    } else {
-      router.replace(`/admin?view=${vt}`, { scroll: false });
-    }
+    setActiveView(view as ViewType);
   };
   const [deleteConfirm, setDeleteConfirm] = useState<MapReport | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -227,6 +210,17 @@ function AdminDashboardContent() {
 
   const mapped = filtered.filter(validCoordinate);
 
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [sidebarOpen]);
+
   const today = new Date().toLocaleDateString("en-US", {
     month: "2-digit",
     day: "2-digit",
@@ -235,38 +229,51 @@ function AdminDashboardContent() {
 
   return (
     <div className="flex min-h-screen bg-zinc-50 font-sans antialiased text-zinc-800">
-      <AdminSidebar activeView={activeView} onViewChange={handleViewChange} />
+      <AdminSidebar
+        activeView={activeView}
+        onViewChange={handleViewChange}
+        isOpen={sidebarOpen}
+        onOpenChange={setSidebarOpen}
+      />
 
       {/* Main Content Area - offset by sidebar width on desktop */}
       <main className="flex-1 flex flex-col min-w-0 lg:ml-64">
-        {/* Top Navbar Info bar - sticky at top */}
-        <header className="sticky top-0 z-40 h-16 bg-white border-b border-zinc-200 px-4 sm:px-8 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400">
-              <span>Server status:</span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  dbStatus.includes("Offline")
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-emerald-100 text-emerald-700"
-                }`}
-              >
-                {dbStatus}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="hidden sm:block text-sm font-medium text-zinc-500">
-              Administrator
-            </span>
-            <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center text-xs font-bold text-zinc-600">
-              AD
-            </div>
-          </div>
-        </header>
-
         {/* Scrollable Dashboard Content */}
         <div className="flex-1 overflow-y-auto">
+          {/* Top Navbar Info bar - sticky at top */}
+          <header className="sticky top-0 z-10 h-14 bg-white border-b border-zinc-200 px-4 sm:px-8 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden flex items-center justify-center rounded-lg p-2 text-zinc-600 hover:bg-zinc-100"
+                aria-label="Buka menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400">
+                <span>Server status:</span>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    dbStatus.includes("Offline")
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-emerald-100 text-emerald-700"
+                  }`}
+                >
+                  {dbStatus}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="hidden sm:block text-sm font-medium text-zinc-500">
+                Administrator
+              </span>
+              <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center text-xs font-bold text-zinc-600">
+                AD
+              </div>
+            </div>
+          </header>
+
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
             {activeView === "dashboard" && (
               <>

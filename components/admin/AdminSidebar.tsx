@@ -27,14 +27,27 @@ const menuItems = [
 interface AdminSidebarProps {
   activeView: string;
   onViewChange: (view: string) => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function AdminSidebar({
   activeView,
   onViewChange,
+  isOpen,
+  onOpenChange,
 }: AdminSidebarProps) {
   const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const sidebarOpen = isOpen ?? internalOpen;
+
+  const setSidebarOpen = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open);
+    } else {
+      setInternalOpen(open);
+    }
+  };
 
   const handleClick = (item: (typeof menuItems)[number]) => {
     setSidebarOpen(false);
