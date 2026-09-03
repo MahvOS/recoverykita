@@ -57,25 +57,26 @@ export function useMapReports() {
 
     try {
       const client = getSupabaseClient();
-      const { data: userData, error: authError } = await client.auth.getUser();
-
-      if (authError || !userData.user) {
+      try {
+        const { data: userData } = await client.auth.getUser();
+        if (userData?.user) {
+          setAuthenticated(true);
+          setUserId(userData.user.id);
+        } else {
+          setAuthenticated(false);
+          setUserId(null);
+        }
+      } catch {
         setAuthenticated(false);
         setUserId(null);
-        setReports([]);
-        setLoading(false);
-        return;
       }
-
-      setAuthenticated(true);
-      setUserId(userData.user.id);
 
       let query = client
         .from("locations")
         .select(
           `
           id, title, description, category, waste_type, priority, status, 
-          latitude, longitude, photo_urls, reporter_name, reporter_phone, 
+          latitude, longitude, photo_urls, photo_url, reporter_name, reporter_phone, 
           address_notes, created_at, updated_at
         `,
         )
@@ -104,47 +105,62 @@ export function useMapReports() {
       if (queryError) throw queryError;
 
       const rows = (data ?? []) as unknown as Record<string, unknown>[];
-      const mapped: MapReport[] = rows.map((row) => ({
-        id: String(row.id),
-        location_name:
-          typeof row.address_notes === "string"
-            ? row.address_notes
-            : typeof row.title === "string"
-              ? row.title
-              : null,
-        description:
-          typeof row.description === "string" ? row.description : null,
-        category: typeof row.category === "string" ? row.category : null,
-        latitude: row.latitude == null ? null : Number(row.latitude),
-        longitude: row.longitude == null ? null : Number(row.longitude),
-        status: normalizeStatus(row.status),
-        priority:
-          row.priority === "rendah" ||
-          row.priority === "sedang" ||
-          row.priority === "tinggi"
-            ? (row.priority as Priority)
-            : null,
-        photo_url: null,
-        photo_urls: Array.isArray(row.photo_urls)
+      const mapped: MapReport[] = rows.map((row) => {
+        const pUrls = Array.isArray(row.photo_urls)
           ? (row.photo_urls.filter(
               (v): v is string => typeof v === "string",
             ) as string[])
-          : null,
-        waste_type:
-          typeof row.waste_type === "string"
-            ? row.waste_type
-            : Array.isArray(row.waste_type)
-              ? (row.waste_type.filter(
-                  (v): v is string => typeof v === "string",
-                ) as string[])
+          : typeof row.photo_url === "string" && row.photo_url.trim()
+            ? [row.photo_url.trim()]
+            : null;
+
+        const primaryPhoto =
+          typeof row.photo_url === "string" && row.photo_url.trim()
+            ? row.photo_url.trim()
+            : pUrls && pUrls.length > 0
+              ? pUrls[0]
+              : null;
+
+        return {
+          id: String(row.id),
+          location_name:
+            typeof row.address_notes === "string" && row.address_notes.trim()
+              ? row.address_notes.trim()
+              : typeof row.title === "string" && row.title.trim()
+                ? row.title.trim()
+                : null,
+          description:
+            typeof row.description === "string" ? row.description : null,
+          category: typeof row.category === "string" ? row.category : null,
+          latitude: row.latitude == null ? null : Number(row.latitude),
+          longitude: row.longitude == null ? null : Number(row.longitude),
+          status: normalizeStatus(row.status),
+          priority:
+            row.priority === "rendah" ||
+            row.priority === "sedang" ||
+            row.priority === "tinggi"
+              ? (row.priority as Priority)
               : null,
-        reporter_name:
-          typeof row.reporter_name === "string" ? row.reporter_name : null,
-        reporter_phone:
-          typeof row.reporter_phone === "string" ? row.reporter_phone : null,
-        created_at: typeof row.created_at === "string" ? row.created_at : null,
-        updated_at: typeof row.updated_at === "string" ? row.updated_at : null,
-      }));
+          photo_url: primaryPhoto,
+          photo_urls: pUrls,
+          waste_type:
+            typeof row.waste_type === "string"
+              ? row.waste_type
+              : Array.isArray(row.waste_type)
+                ? (row.waste_type.filter(
+                    (v): v is string => typeof v === "string",
+                  ) as string[])
+                : null,
+          reporter_name:
+            typeof row.reporter_name === "string" ? row.reporter_name : null,
+          reporter_phone:
+            typeof row.reporter_phone === "string" ? row.reporter_phone : null,
+          created_at:
+            typeof row.created_at === "string" ? row.created_at : null,
+          updated_at:
+            typeof row.updated_at === "string" ? row.updated_at : null,
+        };
+      });
 
       setReports(mapped);
     } catch (caught) {

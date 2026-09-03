@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
   Calendar,
@@ -122,8 +123,30 @@ type ViewType =
   | "education"
   | "settings";
 
-export default function AdminDashboard() {
-  const [activeView, setActiveView] = useState<ViewType>("dashboard");
+const VALID_VIEWS = new Set<ViewType>([
+  "dashboard",
+  "map-reports",
+  "marketplace",
+  "user-management",
+  "education",
+]);
+
+function AdminDashboardContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get("view") as ViewType | null;
+  const activeView = (
+    viewParam && VALID_VIEWS.has(viewParam) ? viewParam : "dashboard"
+  ) as ViewType;
+
+  const handleViewChange = (view: string) => {
+    const vt = view as ViewType;
+    if (vt === "dashboard") {
+      router.replace("/admin", { scroll: false });
+    } else {
+      router.replace(`/admin?view=${vt}`, { scroll: false });
+    }
+  };
   const [deleteConfirm, setDeleteConfirm] = useState<MapReport | null>(null);
   const [deleting, setDeleting] = useState(false);
   const { stats, reports, mapLocations, loading, dbStatus, error, refetch } =
@@ -212,10 +235,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-zinc-50 font-sans antialiased text-zinc-800">
-      <AdminSidebar
-        activeView={activeView}
-        onViewChange={(view) => setActiveView(view as ViewType)}
-      />
+      <AdminSidebar activeView={activeView} onViewChange={handleViewChange} />
 
       {/* Main Content Area - offset by sidebar width on desktop */}
       <main className="flex-1 flex flex-col min-w-0 lg:ml-64">
@@ -694,6 +714,8 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+export default AdminDashboardContent;
 
 function MetricCard({
   icon: Icon,

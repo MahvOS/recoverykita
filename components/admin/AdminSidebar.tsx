@@ -20,7 +20,7 @@ const menuItems = [
     name: "Edukasi",
     icon: GraduationCap,
     view: "education",
-    href: "/admin/edukasi",
+    href: null,
   },
 ];
 
@@ -74,6 +74,7 @@ export default function AdminSidebar({
                 alt="RecoveryKita Logo"
                 fill
                 className="object-contain"
+                unoptimized
               />
             </div>
             <div>

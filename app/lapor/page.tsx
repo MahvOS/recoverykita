@@ -193,9 +193,9 @@ export default function LaporPage() {
         zoomControl: false,
       });
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      L.tileLayer("https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png", {
         attribution:
-          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map);
 

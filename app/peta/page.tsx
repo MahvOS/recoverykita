@@ -94,10 +94,10 @@ function LeafletMap({
         zoomControl: false,
       });
 
-      // Tile layer — OpenStreetMap
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      // Tile layer — CartoDB Voyager
+      L.tileLayer("https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png", {
         attribution:
-          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map);
 

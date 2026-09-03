@@ -68,8 +68,10 @@ export default function AdminMap({ locations }: AdminMapProps) {
           zoomControl: true,
         });
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "© OpenStreetMap contributors",
+        L.tileLayer("https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png", {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19,
         }).addTo(map);
 
         if (!mountedRef.current || initId !== initIdRef.current) {

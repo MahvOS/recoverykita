@@ -21,6 +21,7 @@ type RemoteImageProps = {
   className?: string;
   sizes?: string;
   priority?: boolean;
+  unoptimized?: boolean;
 };
 
 export function RemoteImage({
@@ -30,7 +31,11 @@ export function RemoteImage({
   className,
   sizes,
   priority,
+  unoptimized,
 }: RemoteImageProps) {
+  const isSupabase = src.includes("supabase.co");
+  const shouldUnoptimize = unoptimized ?? isSupabase;
+
   if (canUseNextImage(src)) {
     return (
       <Image
@@ -40,6 +45,7 @@ export function RemoteImage({
         className={className}
         sizes={sizes}
         priority={priority}
+        unoptimized={shouldUnoptimize}
       />
     );
   }

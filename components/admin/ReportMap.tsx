@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import type { MapReport } from "@/types/admin";
+import "leaflet/dist/leaflet.css";
 
 const isLeafletElement = (el: HTMLDivElement | null): boolean => {
   if (!el) return false;
@@ -65,8 +66,9 @@ export default function ReportMap({
         });
 
         L.control.zoom({ position: "topright" }).addTo(mapInstance);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap",
+        L.tileLayer("https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png", {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           maxZoom: 19,
         }).addTo(mapInstance);
 

@@ -428,6 +428,7 @@ export default function UserManagement() {
                               width={32}
                               height={32}
                               className="h-full w-full object-cover"
+                              unoptimized
                             />
                           ) : (
                             (user.full_name || user.email || "U")
