@@ -98,6 +98,7 @@ interface ProductForm {
   title: string;
   slug: string;
   seller_name: string;
+  seller_phone_whatsapp: string;
   price: string;
   category: string;
   stock: string;
@@ -113,6 +114,7 @@ const EMPTY_FORM: ProductForm = {
   title: "",
   slug: "",
   seller_name: "",
+  seller_phone_whatsapp: "",
   price: "",
   category: "",
   stock: "",
@@ -203,6 +205,7 @@ export default function MarketplaceManagement(): React.ReactElement {
       title: product.title ?? "",
       slug: product.slug ?? "",
       seller_name: product.seller?.name ?? "",
+      seller_phone_whatsapp: product.seller?.phone_whatsapp ?? "",
       price: product.price != null ? String(product.price) : "",
       category: product.category ?? "",
       stock: product.stock != null ? String(product.stock) : "",
@@ -268,6 +271,7 @@ export default function MarketplaceManagement(): React.ReactElement {
     title: form.title.trim(),
     slug: form.slug.trim(),
     seller_name: form.seller_name.trim(),
+    seller_phone_whatsapp: form.seller_phone_whatsapp.trim(),
     price: Number(form.price) || 0,
     category: form.category.trim(),
     stock: Number(form.stock) || 0,
@@ -828,6 +832,22 @@ function ProductFormModal({
                 required
                 value={form.seller_name}
                 onChange={(e) => updateField("seller_name", e.target.value)}
+                className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
+              />
+            </label>
+            <label className="text-sm font-semibold text-zinc-700">
+              Nomor WhatsApp Penjual
+              <input
+                value={form.seller_phone_whatsapp}
+                onChange={(e) =>
+                  updateField(
+                    "seller_phone_whatsapp",
+                    e.target.value.replace(/\D/g, ""),
+                  )
+                }
+                placeholder="Contoh: 6281234567890"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className="mt-1 h-10 w-full rounded-lg border border-zinc-300 px-3 font-normal outline-none focus:border-[#198754]"
               />
             </label>

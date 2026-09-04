@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import {
   Location,
   CarbonFactor,
@@ -19,6 +19,7 @@ import {
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey);
 
@@ -91,7 +92,8 @@ export interface QuizQuestion {
   question: string;
   options: string[];
   correctAnswerIndex: number;
-  explanation?: string;
+  correctAnswerIndices?: number[];
+  type?: "multiple_choice" | "checkbox";
 }
 
 export interface Quiz {
@@ -107,6 +109,16 @@ export const supabase =
     ? createClient(supabaseUrl, supabaseKey)
     : null;
 
+export const supabaseAdmin =
+  typeof supabaseUrl === "string" && typeof supabaseServiceRoleKey === "string"
+    ? createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      })
+    : null;
+
 export function getSupabaseClient() {
   if (!supabase) {
     throw new Error(
@@ -115,6 +127,16 @@ export function getSupabaseClient() {
   }
 
   return supabase;
+}
+
+export function getSupabaseAdminClient() {
+  if (!supabaseAdmin) {
+    throw new Error(
+      "Supabase Admin Client belum dikonfigurasi. Tambahkan SUPABASE_SERVICE_ROLE_KEY di environment variables.",
+    );
+  }
+
+  return supabaseAdmin;
 }
 
 export type {

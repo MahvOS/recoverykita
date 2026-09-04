@@ -21,8 +21,8 @@ function quizToForm(quiz: EdukasiQuiz | null) {
     questions: quiz.questions.map((q) => ({
       id: q.id,
       question_text: q.question_text,
-      explanation: q.explanation ?? "",
       order_index: q.order_index,
+      type: q.type,
       quiz_options: q.quiz_options
         .slice()
         .sort((a, b) => a.order_index - b.order_index)

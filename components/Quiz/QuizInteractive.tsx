@@ -24,45 +24,95 @@ function normalizeQuiz(quiz: unknown): Quiz | null {
     if (!item || typeof item !== "object") continue;
     const qi = item as Record<string, unknown>;
 
-    const options: string[] = Array.isArray(qi.options)
-      ? qi.options.map((o: unknown) => String(o ?? "")).filter(Boolean)
-      : [];
+    const quizOptions = Array.isArray(qi.quiz_options)
+      ? (qi.quiz_options as Array<{ option_text?: unknown }>)
+      : undefined;
+
+    const options: string[] = quizOptions
+      ? quizOptions.map((o) => String(o.option_text ?? "")).filter(Boolean)
+      : Array.isArray(qi.options)
+        ? qi.options.map((o: unknown) => String(o ?? "")).filter(Boolean)
+        : [];
 
     if (!qi.question || typeof qi.question !== "string" || options.length < 2) {
       continue;
     }
 
-    // Mendukung berbagai penamaan key index jawaban benar dari database
-    const rawCorrect =
-      qi.correctAnswerIndex ??
-      qi.correct_answer_index ??
-      qi.correct_answer ??
-      qi.correctAnswer;
+    const questionType =
+      qi.type === "checkbox" || qi.question_type === "checkbox"
+        ? "checkbox"
+        : "multiple_choice";
 
-    const parsedCorrect =
-      typeof rawCorrect === "string" ? parseInt(rawCorrect, 10) : rawCorrect;
+    let correctAnswerIndices: number[] = [];
+    if (questionType === "checkbox") {
+      const rawIndices =
+        qi.correctAnswerIndices ??
+        qi.correct_answer_indices ??
+        qi.correctIndices;
+      if (Array.isArray(rawIndices)) {
+        correctAnswerIndices = rawIndices
+          .map((v) => (typeof v === "string" ? parseInt(v, 10) : v))
+          .filter((v) => Number.isInteger(v) && v >= 0 && v < options.length);
+      }
+      if (correctAnswerIndices.length === 0 && Array.isArray(qi.options)) {
+        const rawOpts = qi.options as
+          Array<{ is_correct?: unknown }> | undefined;
+        if (Array.isArray(rawOpts)) {
+          correctAnswerIndices = rawOpts
+            .map((opt, idx) => (opt?.is_correct ? idx : -1))
+            .filter((idx) => idx >= 0);
+        }
+      }
+      if (correctAnswerIndices.length === 0 && Array.isArray(qi.quiz_options)) {
+        const rawOpts = qi.quiz_options as
+          Array<{ is_correct?: unknown }> | undefined;
+        if (Array.isArray(rawOpts)) {
+          correctAnswerIndices = rawOpts
+            .map((opt, idx) => (opt?.is_correct ? idx : -1))
+            .filter((idx) => idx >= 0);
+        }
+      }
+      if (correctAnswerIndices.length === 0) {
+        correctAnswerIndices = [0];
+      }
+    } else {
+      const rawCorrect =
+        qi.correctAnswerIndex ??
+        qi.correct_answer_index ??
+        qi.correct_answer ??
+        qi.correctAnswer;
 
-    const correctAnswerIndex =
-      typeof parsedCorrect === "number" &&
-      !Number.isNaN(parsedCorrect) &&
-      parsedCorrect >= 0 &&
-      parsedCorrect < options.length
-        ? parsedCorrect
-        : 0;
+      const parsedCorrect =
+        typeof rawCorrect === "string" ? parseInt(rawCorrect, 10) : rawCorrect;
 
-    const explanation =
-      typeof qi.explanation === "string"
-        ? qi.explanation
-        : typeof qi.explanation_text === "string"
-          ? qi.explanation_text
-          : undefined;
+      const correctAnswerIndex =
+        typeof parsedCorrect === "number" &&
+        !Number.isNaN(parsedCorrect) &&
+        parsedCorrect >= 0 &&
+        parsedCorrect < options.length
+          ? parsedCorrect
+          : (() => {
+              const rawOpts = qi.quiz_options as
+                Array<{ is_correct?: unknown }> | undefined;
+              if (Array.isArray(rawOpts)) {
+                const found = rawOpts
+                  .map((opt, idx) => (opt?.is_correct ? idx : -1))
+                  .find((idx) => idx >= 0);
+                if (found !== undefined) return found;
+              }
+              return 0;
+            })();
+
+      correctAnswerIndices = [correctAnswerIndex];
+    }
 
     questions.push({
       id: String(qi.id ?? crypto.randomUUID()),
       question: qi.question,
       options,
-      correctAnswerIndex,
-      ...(explanation !== undefined ? { explanation } : {}),
+      correctAnswerIndex: correctAnswerIndices[0] ?? 0,
+      correctAnswerIndices,
+      type: questionType,
     });
   }
 
@@ -93,13 +143,25 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
   };
 
   const questions = parsedQuiz?.questions ?? [];
-  const title = parsedQuiz?.title ?? "Kuis Pengetahuan";
 
   const score = useMemo(() => {
     if (!parsedQuiz) return 0;
     let correct = 0;
     parsedQuiz.questions.forEach((q, idx) => {
-      if (selectedAnswers[idx] === q.correctAnswerIndex) correct++;
+      const userAnswer = selectedAnswers[idx];
+      if (q.type === "checkbox") {
+        const selected = Array.isArray(userAnswer) ? userAnswer : [];
+        const correctSet = new Set(q.correctAnswerIndices ?? []);
+        const selectedSet = new Set(selected);
+        if (
+          correctSet.size === selectedSet.size &&
+          [...correctSet].every((v) => selectedSet.has(v))
+        ) {
+          correct++;
+        }
+      } else {
+        if (userAnswer === q.correctAnswerIndex) correct++;
+      }
     });
     return correct;
   }, [selectedAnswers, parsedQuiz]);
@@ -113,7 +175,9 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
     totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
   const currentQuestion = questions[currentQuestionIndex] ?? questions[0];
-  const isCurrentAnswered = selectedAnswers[currentQuestionIndex] !== undefined;
+  const currentSelected = selectedAnswers[currentQuestionIndex];
+  const isCurrentAnswered = currentSelected !== undefined;
+  const isCheckbox = currentQuestion?.type === "checkbox";
 
   const mode: QuizMode = isSubmitted ? "review" : "interactive";
 
@@ -123,10 +187,20 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
 
   const handleSelect = (optionIndex: number) => {
     if (isSubmitted) return;
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [currentQuestionIndex]: optionIndex,
-    }));
+    setSelectedAnswers((prev) => {
+      const current = prev[currentQuestionIndex];
+      if (isCheckbox) {
+        const selected = Array.isArray(current) ? [...current] : [];
+        const idx = selected.indexOf(optionIndex);
+        if (idx >= 0) {
+          selected.splice(idx, 1);
+        } else {
+          selected.push(optionIndex);
+        }
+        return { ...prev, [currentQuestionIndex]: selected };
+      }
+      return { ...prev, [currentQuestionIndex]: optionIndex };
+    });
   };
 
   const handlePrevious = () => {
@@ -134,8 +208,7 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
   };
 
   const handleNext = () => {
-    const hasCurrent = selectedAnswers[currentQuestionIndex] !== undefined;
-    if (!hasCurrent) return;
+    if (!isCurrentAnswered) return;
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     }
@@ -155,7 +228,7 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
       {!isSubmitted && (
         <div className="mb-4 flex items-center justify-between text-xs text-zinc-500">
           <span>
-            Bertemu {answeredCount} dari {totalQuestions} terjawab
+            {answeredCount} dari {totalQuestions} terjawab
           </span>
           <span>
             Pertanyaan {currentQuestionIndex + 1} dari {totalQuestions}
@@ -256,7 +329,19 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
           <div className="space-y-4">
             {questions.map((q, idx) => {
               const userAnswer = selectedAnswers[idx];
-              const isCorrect = userAnswer === q.correctAnswerIndex;
+
+              // Perbaikan 2: Evaluasi isCorrect yang mendukung tipe checkbox pada mode review
+              let isCorrect = false;
+              if (q.type === "checkbox") {
+                const selected = Array.isArray(userAnswer) ? userAnswer : [];
+                const correctSet = new Set(q.correctAnswerIndices ?? []);
+                const selectedSet = new Set(selected);
+                isCorrect =
+                  correctSet.size === selectedSet.size &&
+                  [...correctSet].every((v) => selectedSet.has(v));
+              } else {
+                isCorrect = userAnswer === q.correctAnswerIndex;
+              }
 
               return (
                 <QuizQuestionCard

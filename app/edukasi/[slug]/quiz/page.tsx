@@ -13,7 +13,7 @@ interface QuizQuestionRow {
   id: string;
   question_text?: string;
   question?: string;
-  explanation?: string | null;
+  type?: string;
 }
 
 interface QuizOptionRow {
@@ -106,16 +106,35 @@ export default function QuizPage() {
 
             const optionsList = (optionsData || []) as QuizOptionRow[];
             const optionsArray = optionsList.map((opt) => opt.option_text);
-            const correctIndex = optionsList.findIndex(
-              (opt) => opt.is_correct === true,
-            );
+            const questionType =
+              q.type === "checkbox" ? "checkbox" : "multiple_choice";
+
+            let correctAnswerIndex = 0;
+            let correctAnswerIndices: number[] | undefined;
+
+            if (questionType === "checkbox") {
+              correctAnswerIndices = optionsList
+                .map((opt, idx) => (opt.is_correct === true ? idx : -1))
+                .filter((idx) => idx >= 0);
+              if (correctAnswerIndices.length === 0) {
+                correctAnswerIndices = [0];
+              }
+              correctAnswerIndex = correctAnswerIndices[0];
+            } else {
+              const correctIndex = optionsList.findIndex(
+                (opt) => opt.is_correct === true,
+              );
+              correctAnswerIndex = correctIndex >= 0 ? correctIndex : 0;
+              correctAnswerIndices = [correctAnswerIndex];
+            }
 
             return {
               id: q.id,
               question: q.question_text || q.question || "Pertanyaan",
               options: optionsArray,
-              correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
-              explanation: q.explanation ?? undefined,
+              correctAnswerIndex,
+              correctAnswerIndices,
+              type: questionType,
             };
           }),
         );
@@ -262,7 +281,7 @@ export default function QuizPage() {
             <div className="flex items-center justify-center md:justify-start gap-2">
               <div className="relative w-7 h-7">
                 <Image
-                  src="/favicon.ico"
+                  src="/logosingle.ico"
                   alt="RecoveryKita Logo"
                   fill
                   className="object-contain"

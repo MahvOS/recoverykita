@@ -27,8 +27,8 @@ const CATEGORIES = [
 interface EditableQuizQuestion {
   id?: string;
   question_text: string;
-  explanation: string;
   options: EditableQuizOption[];
+  type?: "multiple_choice" | "checkbox";
 }
 
 interface EditableQuizOption {
@@ -47,7 +47,6 @@ interface EdukasiFormProps {
     questions: {
       id: string;
       question_text: string;
-      explanation: string | null;
       order_index: number;
       quiz_options: {
         id: string;
@@ -68,7 +67,7 @@ interface EdukasiFormProps {
 
 const EMPTY_QUESTION: EditableQuizQuestion = {
   question_text: "",
-  explanation: "",
+  type: "multiple_choice",
   options: [
     { option_text: "", is_correct: false },
     { option_text: "", is_correct: false },
@@ -118,7 +117,8 @@ export function EdukasiForm({
           .map((q) => ({
             id: q.id,
             question_text: q.question_text,
-            explanation: q.explanation ?? "",
+            type: (q as { type?: string }).type as
+              "multiple_choice" | "checkbox" | undefined,
             options: q.quiz_options
               .sort((a, b) => a.order_index - b.order_index)
               .map((opt) => ({
@@ -208,11 +208,35 @@ export function EdukasiForm({
 
   const updateQuestion = (
     idx: number,
-    field: "question_text" | "explanation",
+    field: "question_text" | "type",
     value: string,
   ) => {
     setQuestions((prev) =>
       prev.map((q, i) => (i === idx ? { ...q, [field]: value } : q)),
+    );
+  };
+
+  const toggleCorrectOption = (qIdx: number, optIdx: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) => {
+        if (i !== qIdx) return q;
+        const isCheckbox = q.type === "checkbox";
+        if (isCheckbox) {
+          return {
+            ...q,
+            options: q.options.map((opt, j) =>
+              j === optIdx ? { ...opt, is_correct: !opt.is_correct } : opt,
+            ),
+          };
+        }
+        return {
+          ...q,
+          options: q.options.map((opt, j) => ({
+            ...opt,
+            is_correct: j === optIdx,
+          })),
+        };
+      }),
     );
   };
 
@@ -260,22 +284,6 @@ export function EdukasiForm({
     );
   };
 
-  const setCorrectOption = (qIdx: number, optIdx: number) => {
-    setQuestions((prev) =>
-      prev.map((q, i) =>
-        i === qIdx
-          ? {
-              ...q,
-              options: q.options.map((opt, j) => ({
-                ...opt,
-                is_correct: j === optIdx,
-              })),
-            }
-          : q,
-      ),
-    );
-  };
-
   const validateForm = (): string | null => {
     if (!title.trim()) return "Judul artikel wajib diisi.";
     if (!slug.trim()) return "Slug tidak boleh kosong.";
@@ -294,7 +302,7 @@ export function EdukasiForm({
           return `Pertanyaan ${i + 1} harus memiliki minimal 2 pilihan jawaban.`;
         const hasCorrect = q.options.some((o) => o.is_correct);
         if (!hasCorrect)
-          return `Pertanyaan ${i + 1} harus memiliki 1 jawaban benar.`;
+          return `Pertanyaan ${i + 1} harus memiliki minimal 1 jawaban benar.`;
       }
     }
 
@@ -311,15 +319,15 @@ export function EdukasiForm({
       questions: questions.map((q, qIdx) => ({
         id: q.id,
         question_text: q.question_text,
-        explanation: q.explanation || undefined,
         order_index: qIdx,
+        type: q.type ?? "multiple_choice",
         options: q.options
           .filter((o) => o.option_text.trim())
           .map((opt, optIdx) => ({
             id: opt.id,
             option_text: opt.option_text,
             is_correct: opt.is_correct,
-            order_index: optIdx,
+            order_index: opt.order_index ?? optIdx,
           })),
       })),
     };
@@ -616,27 +624,34 @@ export function EdukasiForm({
                       placeholder="Masukkan pertanyaan"
                     />
 
-                    <textarea
-                      value={q.explanation}
-                      onChange={(e) =>
-                        updateQuestion(qIdx, "explanation", e.target.value)
-                      }
-                      rows={2}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#198754]/25 focus:border-[#198754]"
-                      placeholder="Penjelasan/pembahasan (opsional)"
-                    />
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <select
+                        value={q.type ?? "multiple_choice"}
+                        onChange={(e) =>
+                          updateQuestion(qIdx, "type", e.target.value)
+                        }
+                        className="h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#198754]/25 focus:border-[#198754]"
+                      >
+                        <option value="multiple_choice">Pilihan Ganda</option>
+                        <option value="checkbox">
+                          Checkbox (Beberapa Jawaban)
+                        </option>
+                      </select>
+                    </div>
 
                     <label className="block text-xs font-bold text-zinc-400 mb-1">
-                      Pilihan Jawaban
+                      {(q.type ?? "multiple_choice") === "checkbox"
+                        ? "Tandai semua jawaban yang benar"
+                        : "Pilih jawaban yang benar"}
                     </label>
                     <div className="space-y-2">
                       {q.options.map((opt, optIdx) => (
                         <div key={optIdx} className="flex items-center gap-2">
                           <input
-                            type="radio"
+                            type={q.type === "checkbox" ? "checkbox" : "radio"}
                             name={`correct-${qIdx}`}
                             checked={opt.is_correct}
-                            onChange={() => setCorrectOption(qIdx, optIdx)}
+                            onChange={() => toggleCorrectOption(qIdx, optIdx)}
                             className="accent-[#198754]"
                           />
                           <input

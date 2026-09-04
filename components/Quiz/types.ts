@@ -1,13 +1,32 @@
-import type { Quiz, QuizQuestion } from "@/lib/supabase";
+import type {
+  Quiz as SupabaseQuiz,
+  QuizQuestion as SupabaseQuizQuestion,
+} from "@/lib/supabase";
 
-export type { Quiz, QuizQuestion };
+export interface QuizQuestion extends Omit<
+  SupabaseQuizQuestion,
+  "options" | "correctAnswerIndex" | "correctAnswerIndices" | "type"
+> {
+  question: string;
+  options: string[];
+  type?: "multiple_choice" | "checkbox";
+  correctAnswerIndex?: number;
+  correctAnswerIndices?: number[];
+}
 
-export type SelectedAnswers = Record<number, number>;
+export interface Quiz {
+  id: string;
+  article_id?: string | null;
+  title?: string | null; // Izinkan null agar cocok dengan tipe Supabase
+  questions: QuizQuestion[];
+}
+
+export type SelectedAnswers = Record<number, number | number[]>;
 
 export type QuizMode = "interactive" | "review";
 
 export interface QuizInteractiveProps {
-  quiz: Quiz | null | undefined;
+  quiz: Quiz | SupabaseQuiz | null | undefined; // Izinkan SupabaseQuiz langsung sebagai prop
   articleId?: string;
 }
 
@@ -15,7 +34,7 @@ export interface QuizQuestionCardProps {
   question: QuizQuestion;
   questionIndex: number;
   totalQuestions: number;
-  selectedAnswer: number | undefined;
+  selectedAnswer: number | number[] | undefined;
   onSelect: (optionIndex: number) => void;
   mode: QuizMode;
   isCorrect?: boolean;

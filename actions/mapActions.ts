@@ -47,7 +47,6 @@ const round2 = (num: number): number => {
 export async function getHotspotClusters(): Promise<HotspotArea[]> {
   const client = getSupabaseClient();
 
-  // 1. Ambil seluruh data laporan dari tabel locations
   let rawReports: any[] = [];
   try {
     const { data: locData, error: locError } = await client

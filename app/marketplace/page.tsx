@@ -433,7 +433,7 @@ export default function MarketplacePage() {
             <div className="flex items-center justify-center md:justify-start gap-2">
               <div className="relative w-8 h-8">
                 <Image
-                  src="/logo.ico"
+                  src="/logosingle.ico"
                   alt="RecoveryKita Logo"
                   fill
                   className="object-contain"

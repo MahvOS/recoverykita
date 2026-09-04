@@ -30,8 +30,8 @@ export interface EdukasiQuizOption {
 export interface EdukasiQuizQuestion {
   id: string;
   question_text: string;
-  explanation: string | null;
   order_index: number;
+  type?: "multiple_choice" | "checkbox";
   quiz_options: EdukasiQuizOption[];
 }
 
@@ -57,8 +57,8 @@ export interface QuizOptionPayload {
 export interface QuizQuestionPayload {
   id?: string;
   question_text: string;
-  explanation?: string;
   order_index: number;
+  type?: "multiple_choice" | "checkbox";
   options: QuizOptionPayload[];
 }
 
@@ -339,8 +339,8 @@ export function useEdukasiData(): UseEdukasiDataReturn {
             for (const q of questionsData as Array<{
               id: string;
               question_text: string;
-              explanation: string | null;
               order_index: number;
+              type?: string;
             }>) {
               const { data: optionsData } = await client
                 .from("quiz_options")
@@ -348,11 +348,16 @@ export function useEdukasiData(): UseEdukasiDataReturn {
                 .eq("question_id", q.id)
                 .order("order_index", { ascending: true });
 
+              const resolvedType =
+                q.type === "checkbox" ? "checkbox" : "multiple_choice";
+
               questions.push({
                 id: q.id,
                 question_text: q.question_text,
-                explanation: q.explanation ?? null,
                 order_index: q.order_index,
+                type:
+                  (q.type as "multiple_choice" | "checkbox" | undefined) ??
+                  "multiple_choice",
                 quiz_options: (optionsData || []).map(
                   (opt: {
                     id: string;
@@ -471,13 +476,15 @@ async function saveQuiz(
 
   for (let i = 0; i < quiz.questions.length; i++) {
     const q = quiz.questions[i];
+    const questionType = q.type ?? "multiple_choice";
+
     const { data: qData, error: qError } = await (client as any)
       .from("quiz_questions")
       .insert({
         quiz_id: quizId,
         question_text: q.question_text,
-        explanation: q.explanation ?? null,
         order_index: i,
+        type: questionType,
       })
       .select("id")
       .single();

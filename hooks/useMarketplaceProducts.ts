@@ -14,6 +14,7 @@ export interface ProductPayload {
   title: string;
   slug: string;
   seller_name: string;
+  seller_phone_whatsapp: string;
   price: number;
   category: string;
   stock: number;
@@ -86,7 +87,10 @@ export function useMarketplaceProducts() {
     return uniqueLower.size;
   }, [products]);
 
-  const resolveSellerId = async (sellerName: string): Promise<string> => {
+  const resolveSellerId = async (
+    sellerName: string,
+    phoneWhatsapp: string,
+  ): Promise<string> => {
     const trimmed = sellerName.trim();
     if (!trimmed) {
       throw new Error("Nama penjual tidak boleh kosong.");
@@ -97,25 +101,57 @@ export function useMarketplaceProducts() {
     );
 
     if (existing) {
+      const client = getSupabaseClient();
+
+      const { error: updateError } = await client
+        .from("sellers")
+        .update({ phone_whatsapp: phoneWhatsapp.trim() })
+        .eq("id", existing.id);
+
+      if (updateError) {
+        console.error("Gagal update phone_whatsapp seller:", updateError);
+        throw new Error("Gagal memperbarui nomor WhatsApp penjual.");
+      }
+
+      let refreshedSeller: Seller = {
+        ...existing,
+        phone_whatsapp: phoneWhatsapp.trim(),
+      };
+
+      try {
+        const { data: refreshed } = await client
+          .from("sellers")
+          .select("*")
+          .eq("id", existing.id)
+          .maybeSingle();
+
+        if (refreshed) {
+          refreshedSeller = refreshed as Seller;
+        }
+      } catch (refreshErr) {
+        console.warn("Gagal refresh data seller setelah update:", refreshErr);
+      }
+
+      setSellers((prev) =>
+        prev.map((s) => (s.id === existing.id ? refreshedSeller : s)),
+      );
+
       return existing.id;
     }
 
     const client = getSupabaseClient();
     const { data, error: insertError } = await client
       .from("sellers")
-      .insert({ name: trimmed })
-      .select("id")
+      .insert({ name: trimmed, phone_whatsapp: phoneWhatsapp.trim() })
+      .select("*")
       .single();
 
     if (insertError || !data) {
       throw insertError ?? new Error("Gagal membuat penjual baru.");
     }
 
-    const newSeller = data as { id: string };
-    setSellers((prev) => [
-      ...prev,
-      { id: newSeller.id, name: trimmed } as Seller,
-    ]);
+    const newSeller = data as Seller;
+    setSellers((prev) => [...prev, newSeller]);
     return newSeller.id;
   };
 
@@ -132,7 +168,10 @@ export function useMarketplaceProducts() {
     setError(null);
 
     try {
-      const sellerId = await resolveSellerId(payload.seller_name);
+      const sellerId = await resolveSellerId(
+        payload.seller_name,
+        payload.seller_phone_whatsapp,
+      );
       let thumbnailUrl: string | null = null;
 
       if (imageFile && imageFile instanceof File) {
@@ -177,6 +216,7 @@ export function useMarketplaceProducts() {
 
       const created = data as MarketplaceProduct;
       setProducts((prev) => [created, ...prev]);
+      await fetchData();
       return created;
     } catch (err: any) {
       console.error("Error creating product:", err);
@@ -201,7 +241,10 @@ export function useMarketplaceProducts() {
     setError(null);
 
     try {
-      const sellerId = await resolveSellerId(payload.seller_name);
+      const sellerId = await resolveSellerId(
+        payload.seller_name,
+        payload.seller_phone_whatsapp,
+      );
       let thumbnailUrl: string | null | undefined = payload.thumbnail_url;
 
       if (imageFile && imageFile instanceof File) {
@@ -248,6 +291,7 @@ export function useMarketplaceProducts() {
 
       const updated = data as MarketplaceProduct;
       setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      await fetchData();
       return updated;
     } catch (err: any) {
       console.error("Error updating product:", err);

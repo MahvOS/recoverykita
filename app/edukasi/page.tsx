@@ -14,6 +14,7 @@ import {
   DownloadableAsset,
   ContentFormat,
 } from "@/lib/supabase";
+import { trackDownload } from "@/actions/assetActions";
 
 const TOPIC_FILTERS = [
   "Semua Topik",
@@ -22,36 +23,6 @@ const TOPIC_FILTERS = [
   "Zero Waste",
   "DIY Upcycling",
   "Kebijakan Lingkungan",
-];
-
-const LOCAL_ASSETS: DownloadableAsset[] = [
-  {
-    id: "local-modul-kompos",
-    title: "Modul Pembuatan Kompos Sederhana",
-    description: "Panduan langkah demi langkah membuat kompos di rumah.",
-    file_url: "/documents/MODUL_PEMBUATAN_KOMPOS_SEDERHANA.docx",
-    file_type: "DOCX",
-    download_count: 0,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "local-poster-plastik",
-    title: "Poster Kode Plastik",
-    description: "Poster siap cetak untuk mengenali kode plastik.",
-    file_url: "/posters/Poster_VII_Kode_plastik.jpeg",
-    file_type: "JPEG",
-    download_count: 0,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "local-template-rtrw",
-    title: "Template Jadwal Log Pengangkutan Sampah RT/RW",
-    description: "Template untuk mencatat jadwal pengangkutan sampah.",
-    file_url: "/templates/Template_Jadwal_Log_Pengangkutan_Sampah_RTRW.xlsx",
-    file_type: "XLSX",
-    download_count: 0,
-    created_at: new Date().toISOString(),
-  },
 ];
 
 const FORMAT_STYLES: Record<string, string> = {
@@ -275,10 +246,8 @@ export default function EdukasiPage() {
           setWasteGuides(guides);
           if (guides.length > 0) setSelectedGuide(guides[0]);
         }
-        if (!assetsRes.error && assetsRes.data && assetsRes.data.length > 0) {
+        if (!assetsRes.error && assetsRes.data) {
           setAssets(assetsRes.data as DownloadableAsset[]);
-        } else {
-          setAssets(LOCAL_ASSETS);
         }
       } finally {
         setLoading(false);
@@ -302,38 +271,34 @@ export default function EdukasiPage() {
   }, [weight, selectedWaste, carbonFactors]);
 
   const handleDownload = async (asset: DownloadableAsset) => {
-    const isLocal =
-      asset.file_url.startsWith("/documents/") ||
-      asset.file_url.startsWith("/posters/") ||
-      asset.file_url.startsWith("/templates/");
-
-    if (!isLocal && supabase) {
-      try {
-        const client = getSupabaseClient() as any;
-        await client
-          .from("downloadable_assets")
-          .update({ download_count: (asset.download_count ?? 0) + 1 })
-          .eq("id", asset.id);
-        setAssets((prev) =>
-          prev.map((a) =>
-            a.id === asset.id
-              ? { ...a, download_count: (a.download_count ?? 0) + 1 }
-              : a,
-          ),
-        );
-      } catch {
-        // ignore counter update failure so download still works
-      }
+    try {
+      await trackDownload(asset.id);
+      setAssets((prev) =>
+        prev.map((a) =>
+          a.id === asset.id
+            ? { ...a, download_count: (a.download_count ?? 0) + 1 }
+            : a,
+        ),
+      );
+    } catch {
+      // ignore tracking failure so download still works
     }
 
-    const link = document.createElement("a");
-    link.href = asset.file_url;
-    link.download = asset.title;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const response = await fetch(asset.file_url);
+      if (!response.ok) throw new Error("Gagal mengambil file.");
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = asset.title;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(asset.file_url, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
