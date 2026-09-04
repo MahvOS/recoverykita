@@ -7,6 +7,15 @@ import { Navbar } from "@/components/navbar";
 import { supabase, getSupabaseClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
+const CARTO_API_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
+
+function buildCartoTileUrl(): string {
+  const base = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  if (!CARTO_API_KEY) return base;
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}api_key=${CARTO_API_KEY}`;
+}
+
 type Priority = "rendah" | "sedang" | "tinggi";
 
 function normalizePhoneNumber(value: string): string {
@@ -193,9 +202,10 @@ export default function LaporPage() {
         zoomControl: false,
       });
 
-      L.tileLayer("https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png", {
+      L.tileLayer(buildCartoTileUrl(), {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: "abcd",
         maxZoom: 19,
       }).addTo(map);
 
