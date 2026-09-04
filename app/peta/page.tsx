@@ -14,10 +14,7 @@ import {
 const CARTO_API_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
 
 function buildCartoTileUrl(): string {
-  const base = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-  if (!CARTO_API_KEY) return base;
-  const separator = base.includes("?") ? "&" : "?";
-  return `${base}${separator}api_key=${encodeURIComponent(CARTO_API_KEY)}`;
+  return "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 }
 
 // ─── Category Config ─────────────────────────────────────────────────────────
@@ -113,8 +110,7 @@ function LeafletMap({
       // Tile layer — CartoDB
       L.tileLayer(buildCartoTileUrl(), {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: "abcd",
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map);
 
