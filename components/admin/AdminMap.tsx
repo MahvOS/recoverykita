@@ -6,6 +6,15 @@ import type { Map as LeafletMap, Marker } from "leaflet";
 
 import type { LocationCategory } from "@/types/admin";
 
+const CARTO_API_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
+
+function buildCartoTileUrl(): string {
+  const base = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  if (!CARTO_API_KEY) return base;
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}api_key=${encodeURIComponent(CARTO_API_KEY)}`;
+}
+
 interface MapMarker {
   id: string;
   title: string;
@@ -48,7 +57,14 @@ export default function AdminMap({ locations }: AdminMapProps) {
         return;
       }
 
-      const { default: L } = await import("leaflet");
+      let L: any = null;
+      try {
+        const mod = await import("leaflet");
+        L = mod.default ?? mod;
+      } catch (importError) {
+        console.error("[AdminMap] Gagal memuat Leaflet:", importError);
+        return;
+      }
 
       if (
         !mountedRef.current ||
@@ -68,9 +84,10 @@ export default function AdminMap({ locations }: AdminMapProps) {
           zoomControl: true,
         });
 
-        L.tileLayer("https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png", {
+        L.tileLayer(buildCartoTileUrl(), {
           attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          subdomains: "abcd",
           maxZoom: 19,
         }).addTo(map);
 

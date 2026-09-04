@@ -11,6 +11,15 @@ import {
   MapLocationCategory,
 } from "@/lib/supabase";
 
+const CARTO_API_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
+
+function buildCartoTileUrl(): string {
+  const base = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  if (!CARTO_API_KEY) return base;
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}api_key=${encodeURIComponent(CARTO_API_KEY)}`;
+}
+
 // ─── Category Config ─────────────────────────────────────────────────────────
 const CATEGORY_CONFIG: Record<
   MapLocationCategory,
@@ -68,7 +77,14 @@ function LeafletMap({
     if (!mapRef.current || mapInstanceRef.current) return;
 
     const init = async () => {
-      const L = (await import("leaflet")).default;
+      let L: any = null;
+      try {
+        const mod = await import("leaflet");
+        L = mod.default ?? mod;
+      } catch (importError) {
+        console.error("[PetaPage] Gagal memuat Leaflet:", importError);
+        return;
+      }
 
       // Guard: Leaflet stamps _leaflet_id on the container div after init.
       // In React Strict Mode the effect fires twice; if the container already
@@ -94,10 +110,11 @@ function LeafletMap({
         zoomControl: false,
       });
 
-      // Tile layer — CartoDB Voyager
-      L.tileLayer("https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png", {
+      // Tile layer — CartoDB
+      L.tileLayer(buildCartoTileUrl(), {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: "abcd",
         maxZoom: 19,
       }).addTo(map);
 
@@ -122,7 +139,15 @@ function LeafletMap({
     if (!mapInstanceRef.current) return;
 
     const updateMarkers = async () => {
-      const L = (await import("leaflet")).default;
+      let L: any = null;
+      try {
+        const mod = await import("leaflet");
+        L = mod.default ?? mod;
+      } catch (importError) {
+        console.error("[PetaPage] Gagal memuat Leaflet:", importError);
+        return;
+      }
+
       const map = mapInstanceRef.current!;
 
       // Clear existing markers
@@ -244,50 +269,7 @@ export default function PetaPage() {
 
         const locations = (locData as Location[]) || [];
 
-        // Try to fetch report_logs (pending reports)
-        const { data: reportData, error: reportError } = await client
-          .from("report_logs")
-          .select(
-            "id, location_name, description, category, latitude, longitude, status",
-          );
-
-        let allLocations = locations;
-
-        if (!reportError && reportData) {
-          const pendingReports = (reportData as any[]).filter(
-            (r) => r.status === "pending",
-          );
-
-          const mappedReports: Location[] = pendingReports.map((r) => ({
-            id: r.id,
-            title: r.location_name || "Laporan Baru",
-            description: r.description || "",
-            category:
-              r.category === "trash_dump" ||
-              r.category === "waste_bank" ||
-              r.category === "community_action"
-                ? (r.category as MapLocationCategory)
-                : "trash_dump",
-            latitude: Number(r.latitude),
-            longitude: Number(r.longitude),
-            address_notes: null,
-            photo_url: null,
-            cleaned_photo_url: null,
-            estimated_volume_kg: null,
-            status: "Pending",
-            reporter_name: null,
-            reporter_phone: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            priority: null,
-            waste_type: null,
-            photo_urls: null,
-          }));
-
-          allLocations = [...locations, ...mappedReports];
-        }
-
-        setLocations(allLocations);
+        setLocations(locations);
         setError(null);
       } catch (err) {
         setError("Gagal memuat data lokasi. Coba lagi nanti.");

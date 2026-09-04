@@ -5,6 +5,15 @@ import type { Map as LeafletMap, Circle, Path } from "leaflet";
 import type { HotspotArea } from "@/types/admin";
 import "leaflet/dist/leaflet.css";
 
+const CARTO_API_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
+
+function buildCartoTileUrl(): string {
+  const base = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  if (!CARTO_API_KEY) return base;
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}api_key=${encodeURIComponent(CARTO_API_KEY)}`;
+}
+
 const isLeafletElement = (el: HTMLDivElement | null): boolean => {
   if (!el) return false;
   const id = (el as HTMLDivElement & { _leaflet_id?: string | number })
@@ -46,7 +55,14 @@ export default function HotspotMap({
         return;
       }
 
-      const { default: L } = await import("leaflet");
+      let L: any = null;
+      try {
+        const mod = await import("leaflet");
+        L = mod.default ?? mod;
+      } catch (importError) {
+        console.error("[HotspotMap] Gagal memuat Leaflet:", importError);
+        return;
+      }
 
       if (
         !mountedRef.current ||
@@ -64,14 +80,15 @@ export default function HotspotMap({
           zoomControl: false,
         });
 
-        L.tileLayer("https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png", {
+        L.tileLayer(buildCartoTileUrl(), {
           attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          subdomains: "abcd",
           maxZoom: 19,
         }).addTo(mapInstance);
 
         if (!mountedRef.current || initId !== initIdRef.current) {
-          mapInstance.remove();
+          mapInstance?.remove();
           mapInstance = null;
           return;
         }

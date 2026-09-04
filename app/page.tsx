@@ -63,18 +63,11 @@ export default function Home() {
 
       try {
         const client = getSupabaseClient() as any;
-        const [{ data: locations }, { data: reports }] = await Promise.all([
-          client.from("locations").select("category"),
-          client
-            .from("report_logs")
-            .select("category, status")
-            .eq("status", "pending"),
-        ]);
+        const { data: locations } = await client
+          .from("locations")
+          .select("category");
 
-        const categories = [
-          ...((locations ?? []) as { category: string }[]),
-          ...((reports ?? []) as { category: string }[]),
-        ];
+        const categories = (locations ?? []) as { category: string }[];
 
         const trashDump = categories.filter(
           (item) => item.category === "trash_dump",
@@ -92,8 +85,14 @@ export default function Home() {
           communityAction,
           total: categories.length,
         });
-      } catch (error) {
-        console.error("Fetch home map stats error:", error);
+      } catch (err) {
+        console.error("Gagal memuat statistik peta:", err);
+        setMapStats({
+          trashDump: 0,
+          wasteBank: 0,
+          communityAction: 0,
+          total: 0,
+        });
       } finally {
         setMapStatsLoading(false);
       }
