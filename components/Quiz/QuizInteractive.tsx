@@ -226,7 +226,7 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
   return (
     <section className="w-full" aria-label="Kuis Interaktif">
       {!isSubmitted && (
-        <div className="mb-4 flex items-center justify-between text-xs text-zinc-500">
+        <div className="mb-3 sm:mb-4 flex items-center justify-between text-[10px] sm:text-xs text-zinc-500">
           <span>
             {answeredCount} dari {totalQuestions} terjawab
           </span>
@@ -237,7 +237,7 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
       )}
 
       {!isSubmitted && (
-        <div className="mb-5 h-2.5 w-full overflow-hidden rounded-full bg-zinc-100">
+        <div className="mb-4 sm:mb-5 h-2 sm:h-2.5 w-full overflow-hidden rounded-full bg-zinc-100">
           <div
             className="h-full rounded-full bg-gradient-to-r from-[#198754] to-[#20c997] transition-all"
             style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
@@ -246,7 +246,7 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
       )}
 
       {!isSubmitted && (
-        <div className="mb-5 flex gap-1 overflow-x-auto pb-1">
+        <div className="mb-4 sm:mb-5 flex gap-1 overflow-x-auto pb-1">
           {questions.map((_, idx) => {
             const answered = selectedAnswers[idx] !== undefined;
             const isCurrent = idx === currentQuestionIndex;
@@ -255,7 +255,7 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
                 key={idx}
                 type="button"
                 onClick={() => handleJump(idx)}
-                className={`flex-shrink-0 flex items-center justify-center rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-all ${
+                className={`flex-shrink-0 flex items-center justify-center rounded-lg sm:rounded-xl border-2 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold transition-all ${
                   isCurrent
                     ? "border-[#198754] bg-[#e8f5e9] text-[#0f5132]"
                     : answered
@@ -281,39 +281,42 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
             mode={mode}
           />
 
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
             <button
               type="button"
               onClick={handlePrevious}
               disabled={currentQuestionIndex === 0}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl border border-zinc-200 bg-white px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
             >
-              <ChevronLeft className="h-4 w-4" />
-              Sebelumnya
+              <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Sebelumnya</span>
+              <span className="sm:hidden">←</span>
             </button>
 
             <button
               type="button"
               onClick={handleSubmit}
               disabled={!allAnswered}
-              className={`inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
                 allAnswered
                   ? "bg-[#20c997] text-[#052617] hover:bg-[#1bb285]"
                   : "bg-zinc-200 text-zinc-500"
               }`}
             >
-              <Send className="h-4 w-4" />
-              Kirim Jawaban
+              <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Kirim Jawaban</span>
+              <span className="sm:hidden">Kirim</span>
             </button>
 
             <button
               type="button"
               onClick={handleNext}
               disabled={!isCurrentAnswered}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl border border-zinc-200 bg-white px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
             >
-              Lanjut
-              <ChevronRight className="h-4 w-4" />
+              <span className="hidden sm:inline">Lanjut</span>
+              <span className="sm:hidden">→</span>
+              <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
           </div>
         </>

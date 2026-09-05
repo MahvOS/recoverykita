@@ -193,7 +193,7 @@ export default function QuizPage() {
 
       {/* Breadcrumbs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24">
-        <nav className="text-xs text-zinc-400 flex items-center gap-1.5 flex-wrap">
+        <nav className="text-[10px] sm:text-xs text-zinc-400 flex items-center gap-1 sm:gap-1.5 flex-wrap">
           <Link href="/" className="hover:text-[#198754] transition-colors">
             Beranda
           </Link>
@@ -223,26 +223,26 @@ export default function QuizPage() {
       </div>
 
       {/* Hero Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-4 sm:pb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0f5132] leading-tight">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 md:pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="space-y-1.5 sm:space-y-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-[#0f5132] leading-tight">
               {quiz?.title ?? "Kuis Interaktif"}
             </h1>
             {quiz?.description && (
-              <p className="text-sm text-zinc-500 max-w-2xl">
+              <p className="text-xs sm:text-sm text-zinc-500 max-w-2xl">
                 {quiz.description}
               </p>
             )}
           </div>
           {article && (
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <Link
                 href={`/edukasi/${article.slug}#quiz-section`}
-                className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:border-[#198754] hover:text-[#0f5132] transition-colors"
+                className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl border border-zinc-200 bg-white px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-zinc-700 hover:border-[#198754] hover:text-[#0f5132] transition-colors"
               >
                 <svg
-                  className="w-4 h-4"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -254,7 +254,8 @@ export default function QuizPage() {
                     d="M3 12h18M3 12l8-8m-8 8l8 8"
                   />
                 </svg>
-                Kembali ke Artikel
+                <span className="hidden sm:inline">Kembali ke Artikel</span>
+                <span className="sm:hidden">Kembali</span>
               </Link>
             </div>
           )}
@@ -262,7 +263,7 @@ export default function QuizPage() {
       </div>
 
       {/* Quiz Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 sm:pb-12 md:pb-16">
         {quiz ? (
           <QuizInteractive quiz={quiz} />
         ) : (
@@ -275,29 +276,30 @@ export default function QuizPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-zinc-200/60 py-8 sm:py-12 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center md:text-left">
+      <footer className="bg-white border-t border-zinc-200/60 py-6 sm:py-8 md:py-12 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
+          <div className="space-y-1.5 sm:space-y-2 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2">
-              <div className="relative w-7 h-7">
+              <div className="relative w-6 h-6 sm:w-7 sm:h-7">
                 <Image
                   src="/logosingle.ico"
                   alt="RecoveryKita Logo"
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-contain"
                 />
               </div>
-              <span className="text-lg font-bold text-[#0f5132] tracking-tight">
+              <span className="text-base sm:text-lg font-bold text-[#0f5132] tracking-tight">
                 RecoveryKita
               </span>
             </div>
-            <p className="text-xs text-zinc-400">
+            <p className="text-[10px] sm:text-xs text-zinc-400">
               © {new Date().getFullYear()} RecoveryKita. All rights reserved.{" "}
               <br className="md:hidden" />
               Menuju Ekonomi Sirkular Indonesia.
             </p>
           </div>
-          <nav className="flex flex-wrap justify-center gap-6 text-xs font-medium text-zinc-500">
+          <nav className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 text-[10px] sm:text-xs font-medium text-zinc-500">
             <Link href="/" className="hover:text-[#198754] transition-colors">
               Beranda
             </Link>

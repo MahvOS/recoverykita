@@ -87,8 +87,8 @@ export function Navbar() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-            <div className="flex flex-col gap-2">
+          <div className="md:hidden absolute top-full left-0 right-0 border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-3 sm:px-4 py-3 sm:py-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               {navigationItems.map((item) => (
                 <Link
                   key={item.href}
@@ -96,8 +96,8 @@ export function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={
                     isActive(item.href)
-                      ? "rounded-lg px-3 py-2 text-sm font-semibold text-[#0f5132] hover:bg-[#edf7ef]"
-                      : "rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                      ? "rounded-lg px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-[#0f5132] hover:bg-[#edf7ef]"
+                      : "rounded-lg px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-zinc-600 hover:bg-zinc-100"
                   }
                 >
                   {item.label}

@@ -1,19 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EdukasiForm } from "@/components/admin/EdukasiForm";
-import { useEdukasiData } from "@/hooks/useEdukasiData";
+import { createArticle } from "@/actions/edukasiActions";
 import type { ArticlePayload, QuizPayload } from "@/hooks/useEdukasiData";
 
 export default function CreateArticlePage() {
   const router = useRouter();
-  const { createArticle, saving, error } = useEdukasiData();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (payload: ArticlePayload, quiz?: QuizPayload) => {
+    setSaving(true);
+    setError(null);
     const result = await createArticle(payload, quiz);
-    if (result) {
+    setSaving(false);
+    if (result.success) {
       router.push("/admin/edukasi");
+    } else {
+      setError(result.error || "Gagal membuat artikel.");
     }
   };
 

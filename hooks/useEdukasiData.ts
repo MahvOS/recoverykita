@@ -178,16 +178,19 @@ export function useEdukasiData(): UseEdukasiDataReturn {
             summary: payload.summary,
             content: payload.content,
             category: payload.category,
-            thumbnail_url: payload.thumbnail_url,
+            thumbnail_url: payload.thumbnail_url || null,
             read_time_minutes: payload.read_time_minutes,
             author_name: payload.author_name,
             is_featured: payload.is_featured,
             published_at: payload.published_at,
           })
           .select("*")
-          .single();
+          .maybeSingle();
 
         if (dbError) throw dbError;
+        if (!data) {
+          throw new Error("Gagal membuat artikel (tidak ada row).");
+        }
 
         const article = data as any;
 
@@ -231,7 +234,7 @@ export function useEdukasiData(): UseEdukasiDataReturn {
       const client = getSupabaseClient();
 
       try {
-        const { data, error: dbError } = await (client as any)
+        const { data: updatedRows, error: dbError } = await (client as any)
           .from("articles")
           .update({
             title: payload.title,
@@ -239,7 +242,7 @@ export function useEdukasiData(): UseEdukasiDataReturn {
             summary: payload.summary,
             content: payload.content,
             category: payload.category,
-            thumbnail_url: payload.thumbnail_url,
+            thumbnail_url: payload.thumbnail_url || null,
             read_time_minutes: payload.read_time_minutes,
             author_name: payload.author_name,
             is_featured: payload.is_featured,
@@ -248,11 +251,18 @@ export function useEdukasiData(): UseEdukasiDataReturn {
           })
           .eq("id", id)
           .select("*")
-          .single();
+          .maybeSingle();
 
         if (dbError) throw dbError;
 
-        const updated = data as any;
+        if (!updatedRows) {
+          setError(
+            "Artikel tidak ditemukan atau tidak dapat diperbarui. Periksa RLS policy untuk UPDATE di tabel articles.",
+          );
+          return null;
+        }
+
+        const updated = updatedRows as any;
 
         if (removeQuiz) {
           await removeQuizForArticle(client, id);

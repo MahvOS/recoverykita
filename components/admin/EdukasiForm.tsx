@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { supabase, getSupabaseClient, Article } from "@/lib/supabase";
 import type { ArticlePayload, QuizPayload } from "@/hooks/useEdukasiData";
+import { uploadArticleThumbnail } from "@/actions/edukasiActions";
 
 function generateSlug(title: string): string {
   return title
@@ -171,26 +172,23 @@ export function EdukasiForm({
   };
 
   const uploadThumbnail = async (): Promise<string | null> => {
-    if (!thumbnailFile) return thumbnailUrl || null;
-    if (!supabase) return thumbnailUrl || null;
+    if (!thumbnailFile) {
+      return thumbnailUrl || null;
+    }
 
     try {
-      const client = getSupabaseClient();
-      const fileExt = thumbnailFile.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-      const filePath = `articles/${fileName}`;
-
-      const { error: uploadError } = await client.storage
-        .from("articles-bucket")
-        .upload(filePath, thumbnailFile);
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = client.storage
-        .from("articles-bucket")
-        .getPublicUrl(filePath);
-
-      return publicUrlData.publicUrl;
+      const fd = new FormData();
+      fd.append("file", thumbnailFile);
+      const result = await uploadArticleThumbnail(fd);
+      if (result.success && result.url) {
+        return result.url;
+      }
+      console.error("Thumbnail upload error:", result.error);
+      alert(
+        result.error ||
+          "Gagal mengunggah thumbnail. Pastikan bucket 'educational-assets' ada di Supabase.",
+      );
+      return thumbnailUrl || null;
     } catch (err) {
       console.error("Thumbnail upload error:", err);
       return thumbnailUrl || null;

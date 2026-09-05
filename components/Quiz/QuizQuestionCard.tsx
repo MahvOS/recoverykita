@@ -26,7 +26,7 @@ function QuizOption({
   questionType,
 }: QuizOptionProps) {
   const baseClasses =
-    "relative flex items-center gap-3 rounded-xl border-2 p-3 sm:p-4 transition-all duration-200 text-left";
+    "relative flex items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 p-2.5 sm:p-3 md:p-4 transition-all duration-200 text-left";
 
   const isCheckbox = questionType === "checkbox";
 
@@ -38,15 +38,15 @@ function QuizOption({
           className={`${baseClasses} border-[#198754] bg-emerald-50 text-[#0f5132]`}
         >
           <div className="flex-1">
-            <span className="text-xs font-bold text-[#0f5132]">
+            <span className="text-[10px] sm:text-xs font-bold text-[#0f5132]">
               {isSelected ? "Jawaban Anda (Benar)" : "Kunci Jawaban"}
             </span>
-            <p className="text-sm font-medium">{option}</p>
+            <p className="text-xs sm:text-sm font-medium">{option}</p>
           </div>
           {isCheckbox ? (
-            <div className="h-5 w-5 flex-shrink-0 rounded border-2 border-[#198754] bg-[#198754] flex items-center justify-center">
+            <div className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 rounded border-2 border-[#198754] bg-[#198754] flex items-center justify-center">
               <svg
-                className="h-3 w-3 text-white"
+                className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -60,7 +60,7 @@ function QuizOption({
               </svg>
             </div>
           ) : (
-            <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-[#198754]" />
+            <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-[#198754]" />
           )}
         </div>
       );
@@ -73,15 +73,15 @@ function QuizOption({
           className={`${baseClasses} border-rose-400 bg-rose-50 text-rose-700`}
         >
           <div className="flex-1">
-            <span className="text-xs font-bold text-rose-600">
+            <span className="text-[10px] sm:text-xs font-bold text-rose-600">
               Jawaban Anda (Salah)
             </span>
-            <p className="text-sm font-medium">{option}</p>
+            <p className="text-xs sm:text-sm font-medium">{option}</p>
           </div>
           {isCheckbox ? (
-            <div className="h-5 w-5 flex-shrink-0 rounded border-2 border-rose-400 bg-rose-100 flex items-center justify-center">
+            <div className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 rounded border-2 border-rose-400 bg-rose-100 flex items-center justify-center">
               <svg
-                className="h-3 w-3 text-rose-600"
+                className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-rose-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -95,7 +95,7 @@ function QuizOption({
               </svg>
             </div>
           ) : (
-            <XCircle className="h-5 w-5 flex-shrink-0 text-rose-600" />
+            <XCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-rose-600" />
           )}
         </div>
       );
@@ -107,13 +107,15 @@ function QuizOption({
         className={`${baseClasses} border-zinc-200 bg-zinc-50 text-zinc-600 opacity-70`}
       >
         <div className="flex-1">
-          <span className="text-xs font-bold text-zinc-400">Pilihan</span>
-          <p className="text-sm font-medium">{option}</p>
+          <span className="text-[10px] sm:text-xs font-bold text-zinc-400">
+            Pilihan
+          </span>
+          <p className="text-xs sm:text-sm font-medium">{option}</p>
         </div>
         {isCheckbox ? (
-          <div className="h-5 w-5 flex-shrink-0 rounded border-2 border-zinc-300" />
+          <div className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 rounded border-2 border-zinc-300" />
         ) : (
-          <div className="h-5 w-5 flex-shrink-0 rounded-full border-2 border-zinc-300" />
+          <div className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 rounded-full border-2 border-zinc-300" />
         )}
       </div>
     );
@@ -129,10 +131,10 @@ function QuizOption({
       }`}
       onClick={onClick}
     >
-      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center">
+      <div className="flex h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 items-center justify-center">
         {isCheckbox ? (
           <div
-            className={`h-4 w-4 rounded border-2 transition-all ${
+            className={`h-3 w-3 sm:h-4 sm:w-4 rounded border-2 transition-all ${
               isSelected
                 ? "border-[#198754] bg-[#198754]"
                 : "border-zinc-300 bg-white"
@@ -140,7 +142,7 @@ function QuizOption({
           >
             {isSelected && (
               <svg
-                className="h-3 w-3 text-white mx-auto mt-0.5"
+                className="h-2 w-2 sm:h-3 sm:w-3 text-white mx-auto mt-0.5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -157,14 +159,16 @@ function QuizOption({
         ) : (
           <div
             className={`rounded-full transition-all ${
-              isSelected ? "bg-[#198754] h-4 w-4" : "bg-zinc-300 h-2.5 w-2.5"
+              isSelected
+                ? "bg-[#198754] h-3 w-3 sm:h-4 sm:w-4"
+                : "bg-zinc-300 h-2 w-2 sm:h-2.5 sm:w-2.5"
             }`}
           />
         )}
       </div>
-      <span className="text-sm font-medium">{option}</span>
+      <span className="text-xs sm:text-sm font-medium">{option}</span>
       {!isCheckbox && (
-        <span className="ml-auto text-xs font-bold text-zinc-400">
+        <span className="ml-auto text-[10px] sm:text-xs font-bold text-zinc-400">
           {String.fromCharCode(65 + index)}
         </span>
       )}
@@ -204,18 +208,18 @@ export function QuizQuestionCard({
   })();
 
   return (
-    <div className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm p-4 sm:p-6">
-      <div className="mb-4 flex items-baseline justify-between">
-        <div className="flex items-baseline gap-2.5 flex-wrap">
-          <span className="text-xs font-bold text-zinc-400">
+    <div className="bg-white rounded-xl sm:rounded-2xl border border-zinc-200/60 shadow-sm p-3 sm:p-4 md:p-6">
+      <div className="mb-3 sm:mb-4 flex items-baseline justify-between">
+        <div className="flex items-baseline gap-1.5 sm:gap-2.5 flex-wrap">
+          <span className="text-[10px] sm:text-xs font-bold text-zinc-400">
             Pertanyaan {questionIndex + 1}/{totalQuestions}
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full">
+          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-100 px-1.5 sm:px-2 py-0.5 rounded-full">
             {isCheckbox ? "Pilih Semua yang Benar" : "Pilihan Ganda"}
           </span>
           {isReview && (
             <span
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+              className={`inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-0.5 text-[9px] sm:text-[10px] font-bold ${
                 isQuestionCorrect
                   ? "bg-emerald-50 text-[#198754]"
                   : "bg-rose-50 text-rose-700"
@@ -227,11 +231,11 @@ export function QuizQuestionCard({
         </div>
       </div>
 
-      <h3 className="font-bold text-zinc-900 text-sm sm:text-base mb-4 sm:mb-5 leading-snug">
+      <h3 className="font-bold text-zinc-900 text-xs sm:text-sm md:text-base mb-3 sm:mb-4 md:mb-5 leading-snug">
         {question.question}
       </h3>
 
-      <div className="flex flex-col gap-2.5 sm:gap-3">
+      <div className="flex flex-col gap-2 sm:gap-2.5 md:gap-3">
         {question.options.map((option, optIndex) => {
           const isSelected = isCheckbox
             ? selectedArray.includes(optIndex)

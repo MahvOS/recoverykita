@@ -793,6 +793,7 @@ export default function LaporPage() {
                               src={src}
                               alt={`Preview ${idx + 1}`}
                               fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                               className="object-cover"
                             />
                             <button
@@ -992,6 +993,7 @@ export default function LaporPage() {
                   src="/favicon.ico"
                   alt="RecoveryKita Logo"
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-contain"
                 />
               </div>

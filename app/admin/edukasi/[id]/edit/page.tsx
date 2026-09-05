@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { EdukasiForm } from "@/components/admin/EdukasiForm";
-import { useEdukasiData } from "@/hooks/useEdukasiData";
+import { updateArticle } from "@/actions/edukasiActions";
 import type {
   ArticlePayload,
   QuizPayload,
@@ -40,40 +40,52 @@ export default function EditArticlePage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const { fetchArticleWithQuiz, updateArticle, saving, error } =
-    useEdukasiData();
 
   const [article, setArticle] = useState<Article | null>(null);
   const [quiz, setQuiz] = useState<ReturnType<typeof quizToForm>>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
 
     const fetchData = async () => {
       setLoading(true);
-      const result = await fetchArticleWithQuiz(id);
-      if (result) {
-        setArticle(result.article);
-        setQuiz(quizToForm(result.quiz));
-      } else {
+      try {
+        const res = await fetch(`/api/admin/articles/${id}`);
+        if (res.ok) {
+          const json = await res.json();
+          setArticle(json.article);
+          setQuiz(quizToForm(json.quiz));
+        } else {
+          setArticle(null);
+          setQuiz(null);
+        }
+      } catch {
         setArticle(null);
         setQuiz(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     void fetchData();
-  }, [id, fetchArticleWithQuiz]);
+  }, [id]);
 
   const handleSubmit = async (
     payload: ArticlePayload,
-    quiz?: QuizPayload,
+    quizPayload?: QuizPayload,
     removeQuiz?: boolean,
   ) => {
-    const result = await updateArticle(id, payload, quiz, removeQuiz);
-    if (result) {
+    setSaving(true);
+    setError(null);
+    const result = await updateArticle(id, payload, quizPayload, removeQuiz);
+    setSaving(false);
+    if (result.success) {
       router.push("/admin/edukasi");
+    } else {
+      setError(result.error || "Gagal memperbarui artikel.");
     }
   };
 

@@ -17,6 +17,7 @@ import { useEdukasiData } from "@/hooks/useEdukasiData";
 import type { EdukasiArticle } from "@/hooks/useEdukasiData";
 import { RemoteImage } from "@/components/remote-image";
 import { getAssets, uploadAsset, deleteAsset } from "@/actions/assetActions";
+import { deleteArticle } from "@/actions/edukasiActions";
 import type { DownloadableAsset } from "@/lib/supabase";
 
 interface DeleteConfirmProps {
@@ -78,7 +79,7 @@ function DeleteConfirm({
 
 export function EdukasiManagement() {
   const router = useRouter();
-  const { articles, loading, error, refetch, deleteArticle } = useEdukasiData();
+  const { articles, loading, error, refetch } = useEdukasiData();
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<EdukasiArticle | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -126,7 +127,10 @@ export function EdukasiManagement() {
     setDeleting(true);
     const ok = await deleteArticle(deleteTarget.id);
     setDeleting(false);
-    if (ok) setDeleteTarget(null);
+    if (ok) {
+      setDeleteTarget(null);
+      await refetch();
+    }
   };
 
   const handleEdit = (article: EdukasiArticle) => {

@@ -1,13 +1,13 @@
 "use server";
 
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseClient, getSupabaseAdminClient } from "@/lib/supabase";
 import type { AdminUser, UserReport } from "@/types/admin";
 import { revalidatePath } from "next/cache";
 
 export async function getAdminUsers(): Promise<AdminUser[]> {
-  const client = getSupabaseClient();
+  const admin = getSupabaseAdminClient();
 
-  const { data, error } = await client.rpc("get_admin_users");
+  const { data, error } = await admin.rpc("get_admin_users");
 
   if (error) {
     console.error("Gagal mengambil daftar pengguna:", error);
@@ -145,9 +145,102 @@ export async function getUserReportCount(userId: string): Promise<number> {
 }
 
 export async function toggleBanUser(userId: string, currentStatus: boolean) {
-  const client = getSupabaseClient();
+  const admin = getSupabaseAdminClient();
+  const publicClient = getSupabaseClient();
 
-  const { error } = await client
+  if (!currentStatus) {
+    // Ban mode: delete all reports + delete profile + delete auth user
+    // 1. Hapus semua laporan di locations yang terkait dengan user ini
+    const orFilters = [
+      `reporter_id.eq.${userId}`,
+      `user_id.eq.${userId}`,
+      `created_by.eq.${userId}`,
+    ];
+
+    const { data: deletedReports, error: deleteReportsError } = await admin
+      .from("locations")
+      .delete()
+      .or(orFilters.join(","))
+      .select("id");
+
+    if (deleteReportsError) {
+      console.error(
+        "Gagal menghapus laporan pengguna (filter user_id):",
+        deleteReportsError,
+      );
+    }
+
+    // 2. Fallback: hapus berdasarkan reporter_name & reporter_phone dari profile
+    const { data: profile, error: profileError } = await admin
+      .from("profiles")
+      .select("full_name, phone_number")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!profileError && profile) {
+      const fallbackFilters: string[] = [];
+      if (profile.full_name) {
+        fallbackFilters.push(`reporter_name.eq.${profile.full_name}`);
+      }
+      if (profile.phone_number) {
+        fallbackFilters.push(`reporter_phone.eq.${profile.phone_number}`);
+      }
+
+      if (fallbackFilters.length > 0) {
+        const { data: deletedByName, error: deleteByNameError } = await admin
+          .from("locations")
+          .delete()
+          .or(fallbackFilters.join(","))
+          .select("id");
+
+        if (deleteByNameError) {
+          console.error(
+            "Gagal menghapus laporan pengguna (fallback by name/phone):",
+            deleteByNameError,
+          );
+        }
+
+        if (Array.isArray(deletedByName)) {
+          deletedReports?.push(...deletedByName);
+        }
+      }
+    }
+
+    const totalDeletedReports = Array.isArray(deletedReports)
+      ? deletedReports.length
+      : 0;
+
+    // 3. Hapus dari auth.users (otomatis trigger hapus profiles via DB trigger)
+    try {
+      const { error: deleteAuthError } =
+        await admin.auth.admin.deleteUser(userId);
+      if (deleteAuthError) {
+        console.error("Gagal menghapus user dari auth.users:", deleteAuthError);
+      } else {
+        console.log(
+          `[Ban] User ${userId} dihapus dari auth.users via service role.`,
+        );
+      }
+    } catch (adminErr) {
+      console.error("Gagal menghapus user dari auth.users:", adminErr);
+    }
+
+    // 4. Pastikan profiles row juga terhapus (idempotent)
+    const { error: deleteProfileError } = await admin
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
+
+    if (deleteProfileError && deleteProfileError.code !== "PGRST116") {
+      console.error("Gagal menghapus profil:", deleteProfileError);
+    }
+
+    revalidatePath("/admin");
+    return { success: true, deletedReports: totalDeletedReports };
+  }
+
+  // Unban mode: just restore profile
+  const { error } = await publicClient
     .from("profiles")
     .update({
       is_banned: !currentStatus,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Search, ShieldAlert, ShieldCheck, X, RefreshCw } from "lucide-react";
 import {
   getAdminUsers,
@@ -243,30 +243,31 @@ export default function UserManagement() {
   const [reportCounts, setReportCounts] = useState<Record<string, number>>({});
   const [countsLoading, setCountsLoading] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    getAdminUsers().then(async (data) => {
-      if (!cancelled) {
-        setUsers(data);
-        setLoading(false);
-        if (data.length > 0) {
-          setCountsLoading(true);
-          const counts = await Promise.all(
-            data.map(
-              async (u) => [u.id, await getUserReportCount(u.id)] as const,
-            ),
-          );
-          if (!cancelled) {
-            setReportCounts(Object.fromEntries(counts));
-            setCountsLoading(false);
-          }
-        }
+  const refreshUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getAdminUsers();
+      setUsers(data);
+      if (data.length > 0) {
+        setCountsLoading(true);
+        const counts = await Promise.all(
+          data.map(
+            async (u) => [u.id, await getUserReportCount(u.id)] as const,
+          ),
+        );
+        setReportCounts(Object.fromEntries(counts));
+        setCountsLoading(false);
+      } else {
+        setReportCounts({});
       }
-    });
-    return () => {
-      cancelled = true;
-    };
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    refreshUsers();
+  }, [refreshUsers]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -299,20 +300,35 @@ export default function UserManagement() {
     );
     setBanLoading(false);
     if (result.success) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === banTarget.id
-            ? {
-                ...u,
-                is_banned: !banTarget.is_banned,
-                banned_at: !banTarget.is_banned
-                  ? new Date().toISOString()
-                  : null,
-              }
-            : u,
-        ),
-      );
+      if (!banTarget.is_banned) {
+        // Ban mode: refetch list (user removed from DB)
+        await refreshUsers();
+        if (result.deletedReports && result.deletedReports > 0) {
+          alert(
+            `Pengguna diblokir. ${result.deletedReports} laporan terkait telah dihapus.`,
+          );
+        } else {
+          alert("Pengguna diblokir. Tidak ada laporan terkait.");
+        }
+      } else {
+        // Unban mode: update status in place
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === banTarget.id
+              ? {
+                  ...u,
+                  is_banned: !banTarget.is_banned,
+                  banned_at: !banTarget.is_banned
+                    ? new Date().toISOString()
+                    : null,
+                }
+              : u,
+          ),
+        );
+      }
       setBanTarget(null);
+    } else {
+      alert(result.error || "Gagal memperbarui status pengguna.");
     }
   };
 
@@ -329,22 +345,7 @@ export default function UserManagement() {
         </div>
         <button
           onClick={() => {
-            setLoading(true);
-            getAdminUsers().then(async (data) => {
-              setUsers(data);
-              setLoading(false);
-              if (data.length > 0) {
-                setCountsLoading(true);
-                const counts = await Promise.all(
-                  data.map(
-                    async (u) =>
-                      [u.id, await getUserReportCount(u.id)] as const,
-                  ),
-                );
-                setReportCounts(Object.fromEntries(counts));
-                setCountsLoading(false);
-              }
-            });
+            void refreshUsers();
           }}
           className="h-10 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 inline-flex items-center gap-2 transition-colors"
         >
@@ -517,9 +518,9 @@ export default function UserManagement() {
         }
         description={
           banTarget
-            ? `Apakah Anda yakin ingin ${
-                banTarget.is_banned ? "membuka blokir" : "memblokir"
-              } pengguna "${banTarget.full_name || banTarget.email}"?`
+            ? banTarget.is_banned
+              ? `Apakah Anda yakin ingin membuka blokir pengguna "${banTarget.full_name || banTarget.email}"?`
+              : `PERINGATAN: Tindakan ini TIDAK DAPAT DIBATALKAN.\n\nPengguna "${banTarget.full_name || banTarget.email}" akan diblokir dan:\n• Profilenya akan dihapus permanen\n• ${reportCounts[banTarget.id] ?? 0} laporan yang dikirim oleh pengguna ini akan dihapus dari peta\n• Pengguna tidak akan bisa lagi login ke akun ini\n\nLanjutkan memblokir?`
             : ""
         }
         confirmLabel={
@@ -527,7 +528,7 @@ export default function UserManagement() {
             ? "Memproses..."
             : banTarget?.is_banned
               ? "Ya, Buka Blokir"
-              : "Ya, Blokir"
+              : "Ya, Blokir & Hapus"
         }
         tone={banTarget?.is_banned ? "success" : "danger"}
         loading={banLoading}
