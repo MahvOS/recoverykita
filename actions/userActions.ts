@@ -3,8 +3,14 @@
 import { getSupabaseClient, getSupabaseAdminClient } from "@/lib/supabase";
 import type { AdminUser, UserReport } from "@/types/admin";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth";
 
 export async function getAdminUsers(): Promise<AdminUser[]> {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    console.warn("[getAdminUsers] Blocked:", guard.message);
+    return [];
+  }
   const admin = getSupabaseAdminClient();
 
   const { data, error } = await admin.rpc("get_admin_users");
@@ -34,6 +40,11 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
 }
 
 export async function getUserReports(userId: string): Promise<UserReport[]> {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    console.warn("[getUserReports] Blocked:", guard.message);
+    return [];
+  }
   const client = getSupabaseClient();
 
   const { data: profile, error: profileError } = await client
@@ -106,6 +117,11 @@ export async function getUserReports(userId: string): Promise<UserReport[]> {
 }
 
 export async function getUserReportCount(userId: string): Promise<number> {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    console.warn("[getUserReportCount] Blocked:", guard.message);
+    return 0;
+  }
   const client = getSupabaseClient();
 
   const { data: profile, error: profileError } = await client
@@ -145,6 +161,10 @@ export async function getUserReportCount(userId: string): Promise<number> {
 }
 
 export async function toggleBanUser(userId: string, currentStatus: boolean) {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    return { success: false, error: guard.message };
+  }
   const admin = getSupabaseAdminClient();
   const publicClient = getSupabaseClient();
 

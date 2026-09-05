@@ -257,10 +257,19 @@ export default function EdukasiPage() {
     fetchData();
   }, []);
 
+  const featuredArticle = useMemo(() => {
+    if (articles.length === 0) return null;
+    return articles.find((a) => a.is_featured) ?? articles[0];
+  }, [articles]);
+
   const filteredArticles = useMemo(() => {
-    if (activeTopic === "Semua Topik") return articles;
-    return articles.filter((a) => a.category === activeTopic);
-  }, [articles, activeTopic]);
+    const base =
+      activeTopic === "Semua Topik"
+        ? articles
+        : articles.filter((a) => a.category === activeTopic);
+    if (!featuredArticle) return base;
+    return base.filter((a) => a.id !== featuredArticle.id);
+  }, [articles, activeTopic, featuredArticle]);
 
   const co2Result = useMemo(() => {
     const kg = parseFloat(weight);
@@ -306,19 +315,127 @@ export default function EdukasiPage() {
       {/* Navbar */}
       <Navbar />
 
-      {/* Hero */}
-      <section className="pt-20 sm:pt-24 py-10 sm:py-14 px-4 sm:px-6 text-center">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0f5132] mb-3 tracking-tight">
-          Pusat Edukasi RecoveryKita
-        </h1>
-        <p className="text-zinc-500 text-sm md:text-base max-w-2xl mx-auto leading-relaxed px-2">
-          Pelajari cara mengelola sampah secara berkelanjutan dan gaya hidup
-          sirkular. Semua materi edukasi tersedia gratis untuk semua.
-        </p>
+      {/* Hero — Majalah: featured article di kiri, headline di kanan (desktop), stacked di mobile */}
+      <section className="pt-20 sm:pt-24 pb-10 sm:pb-12 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+            {/* Featured article — kiri di desktop, atas di mobile */}
+            <div className="lg:col-span-7 order-1">
+              {loading ? (
+                <div className="relative aspect-[16/9] sm:aspect-[21/9] lg:h-full lg:aspect-auto rounded-2xl bg-zinc-100 animate-pulse" />
+              ) : featuredArticle ? (
+                <Link
+                  href={`/edukasi/${featuredArticle.slug}`}
+                  className="group block relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:min-h-[420px] rounded-2xl overflow-hidden border border-zinc-200/60 shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  <RemoteImage
+                    src={featuredArticle.thumbnail_url}
+                    alt={featuredArticle.title}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 60vw"
+                    className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <div className="absolute top-3 left-3 sm:top-5 sm:left-5">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#198754] text-white uppercase tracking-wider">
+                      Artikel Unggulan
+                    </span>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 md:p-10 text-white">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3 flex-wrap">
+                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-200">
+                        {featuredArticle.category}
+                      </span>
+                      <span className="text-[10px] sm:text-[11px] text-white/70">
+                        ·
+                      </span>
+                      <span className="text-[10px] sm:text-[11px] text-white/80">
+                        {formatReadTime(
+                          featuredArticle.format,
+                          featuredArticle.read_time_minutes,
+                        )}
+                      </span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black leading-tight max-w-3xl mb-2 sm:mb-3 line-clamp-2">
+                      {featuredArticle.title}
+                    </h2>
+                    <p className="text-xs sm:text-sm md:text-base text-white/85 leading-relaxed max-w-2xl line-clamp-2 hidden sm:block">
+                      {featuredArticle.summary}
+                    </p>
+                    <div className="mt-3 sm:mt-5 inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-white group-hover:gap-3 transition-all">
+                      Baca selengkapnya
+                      <svg
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </Link>
+              ) : null}
+            </div>
+
+            {/* Headline + meta — kanan di desktop, bawah di mobile */}
+            <div className="lg:col-span-5 order-2 flex flex-col justify-center">
+              <p className="text-[11px] font-semibold tracking-wider text-[#198754] uppercase mb-2">
+                Pusat Edukasi
+              </p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0f5132] mb-3 tracking-tight leading-tight">
+                Bacaan, panduan, dan kuis untuk gaya hidup sirkular.
+              </h1>
+              <p className="text-zinc-500 text-sm md:text-base leading-relaxed mb-5">
+                Pelajari cara mengelola sampah secara berkelanjutan. Semua
+                materi edukasi tersedia gratis untuk semua.
+              </p>
+
+              {featuredArticle && (
+                <div className="hidden lg:flex flex-col gap-2 pt-4 border-t border-zinc-200">
+                  <p className="text-[10px] font-bold tracking-widest text-zinc-400 uppercase">
+                    Sedang dibaca
+                  </p>
+                  <Link
+                    href={`/edukasi/${featuredArticle.slug}`}
+                    className="group flex items-start gap-3 -mx-2 px-2 py-2 rounded-lg hover:bg-zinc-50 transition-colors"
+                  >
+                    <div className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden border border-zinc-200/60">
+                      <RemoteImage
+                        src={featuredArticle.thumbnail_url}
+                        alt=""
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-zinc-800 group-hover:text-[#0f5132] line-clamp-2 transition-colors">
+                        {featuredArticle.title}
+                      </p>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">
+                        {formatReadTime(
+                          featuredArticle.format,
+                          featuredArticle.read_time_minutes,
+                        )}
+                      </p>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 py-8 sm:py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
           {TOPIC_FILTERS.map((topic) => (
             <button

@@ -42,6 +42,109 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --kraft: #d6c3a1;
+  --kraft-deep: #8a6a3b;
+  --kraft-ink: #3a2a14;
+  --denim: #1f3354;
+  --denim-soft: #2f4877;
+  --clay: #c66949;
+  --indigo-tasik: #244a5b;
+  --indigo-soft: #3a6c7f;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  font-feature-settings: "ss01", "ss02";
+  font-variation-settings:
+    "opsz" 144,
+    "SOFT" 50;
+}
+
+.font-mono-tag {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.swing-tag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.9rem 0.35rem 0.7rem;
+  background: #fef9ed;
+  color: #3a2a14;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid #c9a972;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.swing-tag::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.45rem;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 9px;
+  height: 9px;
+  background: #fef9ed;
+  border-left: 1px solid #c9a972;
+  border-bottom: 1px solid #c9a972;
+}
+
+.swing-tag::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.45rem;
+  transform: translate(-50%, -50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #8a6a3b;
+  box-shadow: 0 0 0 2px #fef9ed;
+}
+
+.swing-tag-dark {
+  background: #3a2a14;
+  color: #f5e9d0;
+  border-color: #3a2a14;
+}
+
+.swing-tag-dark::before {
+  background: #3a2a14;
+  border-color: #6b4d24;
+}
+
+.swing-tag-dark::after {
+  background: #f5e9d0;
+  box-shadow: 0 0 0 2px #3a2a14;
+}
+
+.paper-texture {
+  background-color: #fbf6ec;
+  background-image:
+    radial-gradient(rgba(138, 106, 59, 0.06) 1px, transparent 1px),
+    radial-gradient(rgba(138, 106, 59, 0.04) 1px, transparent 1px);
+  background-size:
+    18px 18px,
+    32px 32px;
+  background-position:
+    0 0,
+    9px 16px;
+}
+
+.denim-stitch {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 6px,
+    rgba(245, 233, 208, 0.35) 6px,
+    rgba(245, 233, 208, 0.35) 7px
+  );
 }
 
 html {

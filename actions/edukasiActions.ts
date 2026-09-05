@@ -2,6 +2,7 @@
 
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth";
 
 const ARTICLE_BUCKET = "educational-assets";
 
@@ -195,6 +196,10 @@ export async function updateArticle(
   removeQuiz = false,
 ): Promise<{ success: boolean; data?: unknown; error?: string }> {
   try {
+    const guard = await requireAdmin();
+    if (!guard.ok) {
+      return { success: false, error: guard.message };
+    }
     const admin = getSupabaseAdminClient();
 
     const normalized = normalizeArticlePayload(payload);
@@ -253,6 +258,11 @@ export async function updateArticle(
 
 export async function deleteArticle(id: string): Promise<boolean> {
   try {
+    const guard = await requireAdmin();
+    if (!guard.ok) {
+      console.warn("[deleteArticle] Blocked:", guard.message);
+      return false;
+    }
     const admin = getSupabaseAdminClient();
     await removeQuizForArticle(id);
     const { error } = await admin.from("articles").delete().eq("id", id);
@@ -274,6 +284,10 @@ export async function createArticle(
   quiz?: QuizPayload,
 ): Promise<{ success: boolean; data?: unknown; error?: string }> {
   try {
+    const guard = await requireAdmin();
+    if (!guard.ok) {
+      return { success: false, error: guard.message };
+    }
     const admin = getSupabaseAdminClient();
 
     const normalized = normalizeArticlePayload(payload);
@@ -324,6 +338,10 @@ export async function uploadArticleThumbnail(
   formData: FormData,
 ): Promise<{ success: boolean; url?: string | null; error?: string }> {
   try {
+    const guard = await requireAdmin();
+    if (!guard.ok) {
+      return { success: false, error: guard.message };
+    }
     const file = formData.get("file") as File | null;
     if (!file) {
       return { success: false, error: "File tidak ditemukan." };

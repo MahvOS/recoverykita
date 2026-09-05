@@ -252,8 +252,8 @@ export default function Home() {
               Bumi yang Bersih
             </h1>
             <p className="text-zinc-600 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl px-2">
-              Mulai langkah kecilmu untuk lingkungan. Cari tahu cara mengelola
-              barang bekas di rumahmu agar bernilai kembali.
+              Mulai langkah kecilmu untuk lingkungan. Sampahmu masuk kategori
+              apa?
             </p>
 
             {/* Search Bar */}
@@ -292,7 +292,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Search Result Feedback */}
               {searchResult && (
                 <div className="p-3 sm:p-3.5 bg-white border border-[#198754]/20 rounded-xl shadow-sm text-xs md:text-sm animate-pulse-subtle flex items-start justify-center gap-2 text-[#0f5132] font-semibold mx-auto max-w-xl">
                   <svg
@@ -312,66 +311,25 @@ export default function Home() {
                 </div>
               )}
             </form>
-
-            {/* Waste Categories Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 w-full max-w-4xl mt-4 sm:mt-8 px-2">
-              {/* Category 1: Organik */}
-              <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-row sm:flex-col items-start sm:items-start text-left gap-3 sm:gap-4 group hover:shadow-md hover:border-zinc-200 transition-all duration-300">
-                <div className="space-y-1 sm:space-y-1.5 flex-1">
-                  <h3 className="font-extrabold text-[#0f5132] text-base sm:text-lg">
-                    Organik
-                  </h3>
-                  <p className="text-xs text-zinc-500 leading-relaxed">
-                    Sisa makanan, daun, dahan. Bisa diolah jadi kompos subur.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category 2: Anorganik */}
-              <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-row sm:flex-col items-start sm:items-start text-left gap-3 sm:gap-4 group hover:shadow-md hover:border-zinc-200 transition-all duration-300">
-                <div className="space-y-1 sm:space-y-1.5 flex-1">
-                  <h3 className="font-extrabold text-[#0f5132] text-base sm:text-lg">
-                    Anorganik
-                  </h3>
-                  <p className="text-xs text-zinc-500 leading-relaxed">
-                    Plastik, kertas, kaca, logam. Bisa didaur ulang jadi barang
-                    baru.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category 3: B3 */}
-              <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-row sm:flex-col items-start sm:items-start text-left gap-3 sm:gap-4 group hover:shadow-md hover:border-zinc-200 transition-all duration-300">
-                <div className="space-y-1 sm:space-y-1.5 flex-1">
-                  <h3 className="font-extrabold text-[#0f5132] text-base sm:text-lg">
-                    B3
-                  </h3>
-                  <p className="text-xs text-zinc-500 leading-relaxed">
-                    Baterai, lampu, obat kadaluarsa. Butuh penanganan khusus.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
-        {/* 3. Impact Stats Section */}
         <section className="space-y-6 sm:space-y-8">
           <div className="text-center space-y-2">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#0a3622]">
-              Dampak Lingkungan Kita
+              Kenali Jenis Sampahmu
             </h2>
             <p className="text-zinc-500 text-xs sm:text-sm md:text-base">
-              Bersama kita membuat perubahan nyata untuk bumi.
+              karena setiap kategori punya penanganan yang berbeda.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {/* Stat Card 1 */}
-            <div className="bg-white border border-[#e2e8f0]/60 shadow-md shadow-zinc-100/50 rounded-2xl p-4 sm:p-6 md:p-8 flex items-center gap-4 sm:gap-6 group hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#e8f5e9] text-[#198754] rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#198754] group-hover:text-white transition-colors duration-300">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            {/* Category 1: Organik */}
+            <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left gap-3 group hover:shadow-md hover:border-zinc-200 transition-all duration-300">
+              <div className="w-12 h-12 bg-[#e8f5e9] text-[#198754] rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#198754] group-hover:text-white transition-colors duration-300">
                 <svg
-                  className="w-5 h-5 sm:w-7 sm:h-7"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -380,28 +338,25 @@ export default function Home() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z"
                   />
                 </svg>
               </div>
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-[#0f5132] tracking-tight">
-                  12.4{" "}
-                  <span className="text-base sm:text-lg font-bold text-zinc-500">
-                    Tons
-                  </span>
-                </p>
-                <p className="text-xs sm:text-sm font-semibold text-zinc-400">
-                  Total Sampah Terkelola
+              <div className="space-y-1.5 flex-1">
+                <h3 className="font-extrabold text-[#0f5132] text-base sm:text-lg">
+                  Organik
+                </h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Sisa makanan, daun, dahan. Bisa diolah jadi kompos subur.
                 </p>
               </div>
             </div>
 
-            {/* Stat Card 2 */}
-            <div className="bg-white border border-[#e2e8f0]/60 shadow-md shadow-zinc-100/50 rounded-2xl p-4 sm:p-6 md:p-8 flex items-center gap-4 sm:gap-6 group hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#e8f5e9] text-[#198754] rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#198754] group-hover:text-white transition-colors duration-300">
+            {/* Category 2: Anorganik */}
+            <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left gap-3 group hover:shadow-md hover:border-zinc-200 transition-all duration-300">
+              <div className="w-12 h-12 bg-[#e8f5e9] text-[#198754] rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#198754] group-hover:text-white transition-colors duration-300">
                 <svg
-                  className="w-5 h-5 sm:w-7 sm:h-7"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -410,28 +365,26 @@ export default function Home() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+                    d="M7 7h10l-1.5 2.5M17 17H7l1.5-2.5M5 12h2m10 0h2M12 5V3m0 18v-2M8.5 8.5L6.7 6.7m10.6 10.6l-1.8-1.8M8.5 15.5L6.7 17.3m10.6-10.6l-1.8 1.8"
                   />
                 </svg>
               </div>
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-[#0f5132] tracking-tight">
-                  6.5{" "}
-                  <span className="text-base sm:text-lg font-bold text-zinc-500">
-                    Tons
-                  </span>
-                </p>
-                <p className="text-xs sm:text-sm font-semibold text-zinc-400">
-                  Pengurangan Emisi CO₂
+              <div className="space-y-1.5 flex-1">
+                <h3 className="font-extrabold text-[#0f5132] text-base sm:text-lg">
+                  Anorganik
+                </h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Plastik, kertas, kaca, logam. Bisa didaur ulang jadi barang
+                  baru.
                 </p>
               </div>
             </div>
 
-            {/* Stat Card 3 */}
-            <div className="bg-white border border-[#e2e8f0]/60 shadow-md shadow-zinc-100/50 rounded-2xl p-4 sm:p-6 md:p-8 flex items-center gap-4 sm:gap-6 group hover:-translate-y-1 hover:shadow-lg transition-all duration-300 sm:col-span-2 md:col-span-1">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#e8f5e9] text-[#198754] rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#198754] group-hover:text-white transition-colors duration-300">
+            {/* Category 3: B3 */}
+            <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left gap-3 group hover:shadow-md hover:border-zinc-200 transition-all duration-300">
+              <div className="w-12 h-12 bg-[#e8f5e9] text-[#198754] rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#198754] group-hover:text-white transition-colors duration-300">
                 <svg
-                  className="w-5 h-5 sm:w-7 sm:h-7"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -440,19 +393,16 @@ export default function Home() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>
               </div>
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-[#0f5132] tracking-tight">
-                  50{" "}
-                  <span className="text-base sm:text-lg font-bold text-zinc-500">
-                    Titik
-                  </span>
-                </p>
-                <p className="text-xs sm:text-sm font-semibold text-zinc-400">
-                  Laporan Sampah Selesai
+              <div className="space-y-1.5 flex-1">
+                <h3 className="font-extrabold text-[#0f5132] text-base sm:text-lg">
+                  B3
+                </h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Baterai, lampu, obat kadaluarsa. Butuh penanganan khusus.
                 </p>
               </div>
             </div>

@@ -50,7 +50,7 @@ Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memilik
 ### Solusi yang Ditawarkan
 
 **RecoveryKita** hadir sebagai platform _crowdsourced waste management_ yang memungkinkan warga melaporkan titik sampah liar secara visual berbasis peta, serta menyediakan **Dashboard Admin & Analitik** bagi pihak pengelola untuk memantau kluster titik rawan (Hotspot & Red Zone) secara efisien.
-    
+
 ### Tujuan Proyek
 
 - 🎯 **Tujuan Utama**: Mempercepat respon penanganan sampah liar melalui transparansi data lokasi berbasis geospatial.
@@ -553,7 +553,96 @@ Jika `npm run build` keluar tanpa error dan warning `Image` Next.js tidak muncul
 
 ---
 
-## 📄 Lisensi
+## 🔐 Keamanan & Role-Based Access
+
+### Lapisan Proteksi `/admin`
+
+RecoveryKita menggunakan **3 lapis proteksi** untuk route admin dan operasi sensitif:
+
+1. **Edge Middleware** (`middleware.ts`)
+   - Semua request ke `/admin/*` dicegat
+   - User belum login → redirect ke `/lapor?needLogin=1&redirect=/admin`
+   - User login tapi `profiles.role !== 'admin'` → redirect ke `/?denied=admin`
+   - Match via `config.matcher: ["/admin/:path*"]` — efisien, tidak menambah latency
+
+2. **Server Action Guard** (`lib/auth.ts` → `requireAdmin()`)
+   - Dipanggil di awal setiap Server Action yang tulis data sensitif
+   - Membaca cookie session Supabase via `createServerClient`
+   - Cek `profiles.role` user; throw error jika bukan admin
+   - Melindungi dari serangan langsung ke Server Action (mis. via `fetch` di console browser)
+
+3. **Database RLS** (sudah ada di `supabase/schema.sql`)
+   - Policy `WHERE profiles.role = 'admin'` untuk tabel `articles`, `quiz_questions`, `downloadable_assets`, `marketplace_products`
+   - Service role key hanya dipakai di Server Action yang sudah melewati `requireAdmin()`
+
+### Fungsi yang Dilindungi
+
+| Server Action            | Guard             |
+| ------------------------ | ----------------- |
+| `getAssets`              | ✅ `requireAdmin` |
+| `uploadAsset`            | ✅ `requireAdmin` |
+| `deleteAsset`            | ✅ `requireAdmin` |
+| `trackDownload`          | ✅ `requireAdmin` |
+| `getAdminUsers`          | ✅ `requireAdmin` |
+| `getUserReports`         | ✅ `requireAdmin` |
+| `getUserReportCount`     | ✅ `requireAdmin` |
+| `toggleBanUser`          | ✅ `requireAdmin` |
+| `createArticle`          | ✅ `requireAdmin` |
+| `updateArticle`          | ✅ `requireAdmin` |
+| `deleteArticle`          | ✅ `requireAdmin` |
+| `uploadArticleThumbnail` | ✅ `requireAdmin` |
+
+### Cara Promote User ke Admin
+
+```sql
+-- 1. Cari UUID user
+SELECT id, email FROM auth.users WHERE email LIKE '%admin%';
+
+-- 2. Set role
+UPDATE public.profiles SET role = 'admin' WHERE id = '<uuid>';
+
+-- 3. Verifikasi
+SELECT id, full_name, role FROM public.profiles WHERE role = 'admin';
+```
+
+Setelah role di-set, user **HARUS logout & login ulang** agar:
+
+1. Middleware membaca JWT session baru (JWT sebelumnya masih punya `role: 'citizen'` di claim)
+2. Server Action `requireAdmin()` membaca `profiles.role` yang baru
+3. RLS policy di database mengenali user sebagai admin
+
+Tanpa re-login, perubahan role di database TIDAK akan berlaku sampai token JWT di-refresh (Supabase JWT lifetime default = 1 jam).
+
+### Troubleshooting
+
+| Gejala                                                   | Penyebab                               | Solusi                                                                  |
+| -------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------- |
+| User admin masih di-redirect ke `/`                      | JWT lama masih punya `role: 'citizen'` | Logout lalu login ulang                                                 |
+| User logout masih dianggap login                         | Cookie tidak terhapus                  | Buka DevTools → Application → Cookies → hapus cookies `sb-*-auth-token` |
+| Error "Supabase env belum dikonfigurasi" di Vercel       | `NEXT_PUBLIC_*` env var belum diset    | Tambahkan di Vercel Dashboard → Settings → Environment Variables        |
+| RLS masih block admin                                    | Policy belum include role check        | Pastikan policy `USING (auth.uid() = id AND role = 'admin')`            |
+| Server Action return "Hanya admin..." padahal user admin | `requireAdmin()` membaca cache profile | Tunggu 1 menit atau logout/login agar cache invalidate                  |
+
+### Menambah Proteksi ke Server Action Baru
+
+Pola standar untuk Server Action yang butuh admin:
+
+```ts
+"use server";
+import { requireAdmin } from "@/lib/auth";
+import { getSupabaseAdminClient } from "@/lib/supabase";
+
+export async function myAdminAction(payload: SomePayload) {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    return { success: false, error: guard.message };
+  }
+  const client = getSupabaseAdminClient();
+  // ... logika admin
+}
+```
+
+---
 
 Proyek ini dilisensikan di bawah [MIT License](LICENSE) - lihat file LICENSE untuk detail lebih lanjut.
 

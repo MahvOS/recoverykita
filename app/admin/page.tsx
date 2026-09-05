@@ -20,6 +20,7 @@ import {
   Menu,
 } from "lucide-react";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useMapReports } from "@/hooks/useMapReports";
 import { getHotspotClusters } from "@/actions/mapActions";
 import type { MapReport, Priority, ReportStatus } from "@/types/admin";
@@ -134,6 +135,8 @@ function AdminDashboardContent() {
   const [deleting, setDeleting] = useState(false);
   const { stats, reports, mapLocations, loading, dbStatus, error, refetch } =
     useAdminDashboard();
+  const currentUser = useCurrentUser();
+  const displayName = currentUser?.name || "Admin";
 
   const mapReports = useMapReports();
   const {
@@ -262,14 +265,6 @@ function AdminDashboardContent() {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="hidden sm:block text-sm font-medium text-zinc-500">
-                Administrator
-              </span>
-              <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center text-xs font-bold text-zinc-600">
-                AD
-              </div>
-            </div>
           </header>
 
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
@@ -278,7 +273,8 @@ function AdminDashboardContent() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-zinc-950">
-                      Selamat Datang Kembali, Admin!
+                      Selamat Datang Kembali,{" "}
+                      <span className="text-[#198754]">{displayName}</span>!
                     </h1>
                     <p className="text-sm text-zinc-500">
                       Berikut adalah pembaruan terbaru mengenai dampak ekonomi

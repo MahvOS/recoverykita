@@ -1,9 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 import Image from "next/image";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  axes: ["opsz", "SOFT"],
+});
 
 export const metadata: Metadata = {
   title: "RecoveryKita | Aksi Lokal, Dampak Global",
@@ -17,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
-      <body className={`${inter.className} overflow-x-hidden`}>{children}</body>
+    <html lang="id" className={`${inter.variable} ${fraunces.variable}`}>
+      <body className="overflow-x-hidden font-sans">{children}</body>
     </html>
   );
 }

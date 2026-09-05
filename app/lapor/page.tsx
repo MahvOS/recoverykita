@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/navbar";
-import { supabase, getSupabaseClient } from "@/lib/supabase";
+import { supabase, getSupabaseAuthClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 type Priority = "rendah" | "sedang" | "tinggi";
@@ -34,6 +35,16 @@ interface FormData {
 }
 
 export default function LaporPage() {
+  return (
+    <Suspense fallback={null}>
+      <LaporPageInner />
+    </Suspense>
+  );
+}
+
+function LaporPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const mapRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -71,26 +82,48 @@ export default function LaporPage() {
     }
 
     let mounted = true;
-    const client = getSupabaseClient();
+    const client = getSupabaseAuthClient() as any;
 
-    client.auth.getUser().then(({ data }) => {
-      if (mounted) {
-        setUser(data.user);
-        setAuthChecked(true);
+    client.auth.getUser().then(({ data }: { data: { user: User | null } }) => {
+      if (!mounted) return;
+      setUser(data.user);
+      setAuthChecked(true);
+      if (data.user) {
+        const redirectTo = searchParams.get("redirect");
+        if (redirectTo && redirectTo.startsWith("/")) {
+          router.replace(redirectTo);
+        }
       }
     });
 
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange((_event, session) => {
-      if (mounted) setUser(session?.user ?? null);
-    });
+    } = client.auth.onAuthStateChange(
+      (_event: string, session: { user: User | null } | null) => {
+        if (!mounted) return;
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          const redirectTo = searchParams.get("redirect");
+          if (redirectTo && redirectTo.startsWith("/")) {
+            router.replace(redirectTo);
+          }
+        }
+      },
+    );
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [router, searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get("needLogin") === "1") {
+      setAuthMessage(
+        "Silakan login terlebih dahulu untuk mengakses halaman Admin.",
+      );
+    }
+  }, [searchParams]);
 
   const handleAuthSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -99,7 +132,7 @@ export default function LaporPage() {
     setError("");
 
     try {
-      const client = getSupabaseClient() as any;
+      const client = getSupabaseAuthClient() as any;
       const username = normalizeUsername(authUsername);
 
       if (!/^[a-z0-9_]{3,30}$/.test(username)) {
@@ -162,8 +195,8 @@ export default function LaporPage() {
   };
 
   const handleLogout = async () => {
-    if (!supabase) return;
-    await getSupabaseClient().auth.signOut();
+    if (typeof window === "undefined") return;
+    await getSupabaseAuthClient().auth.signOut();
     setUser(null);
     setAuthMessage("Anda sudah logout.");
   };
@@ -321,7 +354,7 @@ export default function LaporPage() {
         );
       }
 
-      const client = getSupabaseClient() as any;
+      const client = getSupabaseAuthClient() as any;
       const {
         data: { user: currentUser },
       } = await client.auth.getUser();

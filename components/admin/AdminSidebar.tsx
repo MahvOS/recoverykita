@@ -9,7 +9,11 @@ import {
   Store,
   Users,
   GraduationCap,
+  LogOut,
+  ShieldCheck,
 } from "lucide-react";
+import { getSupabaseAuthClient } from "@/lib/supabase";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const menuItems = [
   { name: "Dasbor", icon: LayoutDashboard, view: "dashboard", href: null },
@@ -41,6 +45,10 @@ export default function AdminSidebar({
   const [internalOpen, setInternalOpen] = useState(false);
   const sidebarOpen = isOpen ?? internalOpen;
 
+  const [loggingOut, setLoggingOut] = useState(false);
+  const currentUser = useCurrentUser();
+  const adminName = currentUser?.name || "Admin";
+
   const setSidebarOpen = (open: boolean) => {
     if (onOpenChange) {
       onOpenChange(open);
@@ -58,6 +66,21 @@ export default function AdminSidebar({
     }
   };
 
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      const client = getSupabaseAuthClient() as any;
+      await client.auth.signOut();
+    } catch (err) {
+      console.error("Logout gagal:", err);
+    } finally {
+      setSidebarOpen(false);
+      router.push("/lapor");
+      router.refresh();
+    }
+  };
+
   return (
     <>
       {/* Mobile overlay */}
@@ -72,18 +95,18 @@ export default function AdminSidebar({
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-zinc-200
-          flex flex-col justify-between p-6 flex-shrink-0
+          flex flex-col p-6 flex-shrink-0
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
         `}
       >
-        <div className="space-y-8">
+        <div className="flex-1 min-h-0 space-y-8 overflow-y-auto">
           {/* Logo brand */}
           <div className="flex items-center gap-3">
             <div className="relative w-12 h-12">
               <Image
-                src="/logosingle.ico"
+                src="/favicon.ico"
                 alt="RecoveryKita Logo"
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -124,6 +147,33 @@ export default function AdminSidebar({
               );
             })}
           </nav>
+        </div>
+
+        {/* User info + Logout */}
+        <div className="pt-4 mt-4 border-t border-zinc-200 space-y-3 flex-shrink-0">
+          <div className="flex items-center gap-3 px-2">
+            <div className="relative w-9 h-9 rounded-full bg-gradient-to-br from-[#0f5132] to-[#198754] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+              {adminName.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-zinc-900 truncate">
+                {adminName}
+              </p>
+              <p className="text-[10px] font-semibold text-[#198754] tracking-wider uppercase flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" />
+                Administrator
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <LogOut className="w-4 h-4" />
+            {loggingOut ? "Keluar..." : "Keluar"}
+          </button>
         </div>
       </aside>
     </>

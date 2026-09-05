@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 import {
   Location,
   CarbonFactor,
@@ -118,6 +119,25 @@ export const supabaseAdmin =
         },
       })
     : null;
+
+let _browserAuthClient: ReturnType<typeof createBrowserClient> | null = null;
+
+export function getSupabaseAuthClient() {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      "Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+    );
+  }
+  if (typeof window === "undefined") {
+    throw new Error(
+      "getSupabaseAuthClient hanya untuk dipakai di client/browser.",
+    );
+  }
+  if (!_browserAuthClient) {
+    _browserAuthClient = createBrowserClient(supabaseUrl, supabaseKey);
+  }
+  return _browserAuthClient;
+}
 
 export function getSupabaseClient() {
   if (!supabase) {

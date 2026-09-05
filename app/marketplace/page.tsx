@@ -143,46 +143,80 @@ export default function MarketplacePage() {
   const formatPrice = (price: number) =>
     `Rp ${Number(price).toLocaleString("id-ID").replace(/,/g, ".")}`;
 
+  const totalSavedKg = useMemo(
+    () =>
+      products.reduce(
+        (acc, p) => acc + (p.seller?.total_waste_saved_kg ?? 0),
+        0,
+      ),
+    [products],
+  );
+  const featuredProducts = useMemo(() => products.slice(0, 3), [products]);
+
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
       <Navbar />
 
-      <section className="bg-gradient-to-b from-[#eaf6ee] to-[#fbfcfa] mt-10 pt-20 sm:pt-24 py-10 sm:py-14 px-4 sm:px-6 text-center">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0f5132] tracking-tight">
-          Marketplace RecoveryKita
-        </h1>
-        <p className="text-zinc-500 text-sm md:text-base max-w-md mx-auto leading-relaxed mb-6 sm:mb-8 px-2">
-          Dukung pengrajin lokal dan selamatkan lingkungan dengan setiap
-          pembelian. Temukan produk daur ulang berkualitas.
-        </p>
+      {/* HERO — asimetris */}
+      <section className="relative pt-20 sm:pt-24 pb-10 sm:pb-14 px-4 sm:px-6 overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-16 h-72 bg-gradient-to-br from-[#eaf6ee] via-[#f1f8f4] to-[#fcfefe] opacity-60 pointer-events-none"
+        />
+        <div className="max-w-7xl mx-auto relative">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            {/* Headline kiri */}
+            <div className="lg:col-span-6 order-2 lg:order-1">
+              <p className="text-[11px] font-semibold tracking-wider text-[#198754] mb-3 uppercase">
+                Marketplace Pengrajin Lokal
+              </p>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0f5132] leading-[1.1] tracking-tight">
+                Barang layak pakai,
+                <br />
+                <span className="text-[#198754]">diselamatkan</span> dari tempat
+                pembuangan.
+              </h1>
+              <p className="mt-5 text-sm sm:text-[15px] text-zinc-600 leading-relaxed max-w-md">
+                Setiap tas, celana, dan keranjang di sini dibuat tangan oleh
+                pengrajin dari limbah rumah tangga. Plastik jadi anyaman, denim
+                jadipapan, kardus jadi binder.
+              </p>
 
-        <div className="max-w-xl mx-auto relative">
-          <div className="flex items-center bg-white border border-zinc-200 rounded-2xl sm:rounded-full px-4 sm:px-5 py-3 shadow-sm focus-within:ring-2 focus-within:ring-[#198754]/25 focus-within:border-[#198754] transition-all">
-            <svg
-              className="w-5 h-5 text-zinc-400 mr-3 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari produk daur ulang..."
-              className="w-full text-zinc-800 placeholder-zinc-400 bg-transparent border-none focus:outline-none text-sm"
-            />
+              <div className="mt-7 max-w-md">
+                <div className="flex items-center bg-white border border-zinc-200 rounded-2xl sm:rounded-full px-4 sm:px-5 py-3 shadow-sm focus-within:ring-2 focus-within:ring-[#198754]/25 focus-within:border-[#198754] transition-all">
+                  <svg
+                    className="w-5 h-5 text-zinc-400 mr-3 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Cari produk daur ulang..."
+                    className="w-full text-zinc-800 placeholder-zinc-400 bg-transparent border-none focus:outline-none text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Kolase foto produk kanan */}
+            <div className="lg:col-span-6 order-1 lg:order-2">
+              <HeroCollage products={featuredProducts} loading={loading} />
+            </div>
           </div>
         </div>
       </section>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-12 py-8 sm:py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Mobile filters */}
         <div className="md:hidden mb-6 space-y-4">
           <div className="overflow-x-auto -mx-4 px-4 pb-1">
@@ -341,6 +375,7 @@ export default function MarketplacePage() {
                     "/logo.ico";
 
                   const sellerName = product.seller?.name ?? "Seller";
+                  const savedKg = product.seller?.total_waste_saved_kg ?? 0;
                   const badge =
                     product.waste_impact_badge ?? "Produk Daur Ulang";
 
@@ -351,9 +386,11 @@ export default function MarketplacePage() {
                       className="bg-white rounded-2xl border border-zinc-200/60 shadow-sm overflow-hidden flex flex-col group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                     >
                       <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
-                        <span className="absolute top-2 left-2 z-10 bg-[#e8f5e9]/90 text-[#0f5132] text-[9px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1 backdrop-blur-sm">
-                          {badge}
-                        </span>
+                        {savedKg > 0 && (
+                          <span className="absolute top-2 right-2 z-10 bg-[#e8f5e9]/90 text-[#0f5132] text-[9px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1 backdrop-blur-sm">
+                            {Math.round(savedKg)} kg diselamatkan
+                          </span>
+                        )}
                         <Image
                           src={primaryImage}
                           alt={product.title ?? "Produk"}
@@ -468,6 +505,70 @@ export default function MarketplacePage() {
           </nav>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function HeroCollage({
+  products,
+  loading,
+}: {
+  products: MarketplaceProduct[];
+  loading: boolean;
+}) {
+  const placeholders = ["/logo.ico", "/logo.ico", "/logo.ico"];
+  const items = loading
+    ? placeholders
+    : [
+        products[0]?.thumbnail_url || placeholders[0],
+        products[1]?.thumbnail_url || placeholders[1],
+        products[2]?.thumbnail_url || placeholders[2],
+      ];
+
+  return (
+    <div className="relative h-[420px] sm:h-[480px] lg:h-[520px]">
+      {/* Foto utama */}
+      <div className="absolute top-0 right-2 sm:right-6 w-[58%] h-[68%] rotate-[2deg] rounded-2xl shadow-xl border border-zinc-200/60 overflow-hidden bg-white">
+        <Image
+          src={items[0] ?? "/logo.ico"}
+          alt="Karya utama"
+          fill
+          sizes="(max-width: 1024px) 60vw, 40vw"
+          className="object-cover"
+          priority
+        />
+        <span className="absolute bottom-3 left-3 z-10 bg-[#e8f5e9]/90 text-[#0f5132] text-[9px] font-bold px-2 py-1 rounded-full shadow-sm backdrop-blur-sm">
+          Karya pilihan
+        </span>
+      </div>
+
+      {/* Foto kedua */}
+      <div className="absolute bottom-2 right-0 w-[42%] h-[44%] -rotate-[3deg] rounded-2xl shadow-lg border border-zinc-200/60 overflow-hidden bg-white">
+        <Image
+          src={items[1] ?? "/logo.ico"}
+          alt="Karya kedua"
+          fill
+          sizes="(max-width: 1024px) 45vw, 30vw"
+          className="object-cover"
+        />
+        <span className="absolute bottom-2 right-2 z-10 bg-[#e8f5e9]/90 text-[#0f5132] text-[9px] font-bold px-2 py-1 rounded-full shadow-sm backdrop-blur-sm">
+          Pengrajin lokal
+        </span>
+      </div>
+
+      {/* Foto ketiga — aksen */}
+      <div className="absolute top-[40%] left-0 w-[34%] h-[36%] rotate-[4deg] rounded-2xl shadow-lg border border-zinc-200/60 overflow-hidden bg-white">
+        <Image
+          src={items[2] ?? "/logo.ico"}
+          alt="Karya ketiga"
+          fill
+          sizes="(max-width: 1024px) 35vw, 25vw"
+          className="object-cover"
+        />
+        <span className="absolute top-2 left-2 z-10 bg-[#e8f5e9]/90 text-[#0f5132] text-[9px] font-bold px-2 py-1 rounded-full shadow-sm backdrop-blur-sm">
+          Baru
+        </span>
+      </div>
     </div>
   );
 }

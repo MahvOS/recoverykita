@@ -3,8 +3,14 @@
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { DownloadableAsset } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth";
 
 export async function getAssets(): Promise<DownloadableAsset[]> {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    console.warn("[getAssets] Blocked:", guard.message);
+    return [];
+  }
   const client = getSupabaseAdminClient();
 
   const { data, error } = await client
@@ -21,6 +27,10 @@ export async function getAssets(): Promise<DownloadableAsset[]> {
 }
 
 export async function uploadAsset(formData: FormData) {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    return { success: false, error: guard.message };
+  }
   const client = getSupabaseAdminClient();
   const file = formData.get("file") as File | null;
   const title = (formData.get("title") as string | null)?.trim();
@@ -75,6 +85,10 @@ export async function uploadAsset(formData: FormData) {
 }
 
 export async function deleteAsset(assetId: string) {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    return { success: false, error: guard.message };
+  }
   const client = getSupabaseAdminClient();
 
   const { data: asset, error: fetchError } = await client
@@ -116,6 +130,10 @@ export async function deleteAsset(assetId: string) {
 }
 
 export async function trackDownload(assetId: string) {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    return { success: false };
+  }
   const client = getSupabaseAdminClient();
 
   const { data: current, error: fetchError } = await client
