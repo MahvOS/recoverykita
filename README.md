@@ -45,12 +45,12 @@
 
 ### Latar Belakang
 
-Penumpukan sampah ilegal di area perkotaan sering kali tidak terdeteksi dengan cepat oleh pihak berwenang karena terbatasnya sistem pelaporan warga yang terintegrasi secara real-time. Selain itu, penanganan sampah sering kali bersifat reaktif tanpa adanya pemetaan wilayah rawan (Red Zone) berbasis data analitik.
+Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memiliki akses ke layanan pengumpulan sampah dasar, yang mendorong timbulnya titik-titik pembuangan ilegal (illegal dumping). dan berdasarkan data dari SIPSN KLHK (Sistem Informasi Pengelolaan Sampah Nasional) Sekitar 31% - 35% sampah nasional belum terkelola dengan baik dan terbuang ke lingkungan/TPS liar
 
 ### Solusi yang Ditawarkan
 
 **RecoveryKita** hadir sebagai platform _crowdsourced waste management_ yang memungkinkan warga melaporkan titik sampah liar secara visual berbasis peta, serta menyediakan **Dashboard Admin & Analitik** bagi pihak pengelola untuk memantau kluster titik rawan (Hotspot & Red Zone) secara efisien.
-
+    
 ### Tujuan Proyek
 
 - 🎯 **Tujuan Utama**: Mempercepat respon penanganan sampah liar melalui transparansi data lokasi berbasis geospatial.
@@ -352,14 +352,14 @@ Pastikan Anda telah menginstall:
 
 ### Langkah Instalasi
 
-#### 1️⃣ Clone Repository
+#### 1️. Clone Repository
 
 ```bash
 git clone https://github.com/[username]/[repo-name].git
 cd [repo-name]
 ```
 
-#### 2️⃣ Install Dependencies
+#### 2️. Install Dependencies
 
 ```bash
 # Menggunakan npm
@@ -372,7 +372,7 @@ yarn install
 pnpm install
 ```
 
-#### 3️⃣ Setup Environment Variables
+#### 3️. Setup Environment Variables
 
 Buat file `.env.local` di root directory dan isi variabel berikut:
 
@@ -410,13 +410,13 @@ NEXT_PUBLIC_CARTO_API_KEY="your_carto_api_key"
 > - Di Vercel, masukkan sebagai **Environment Variable** biasa (bukan `NEXT_PUBLIC_*`) agar tidak ikut ter-bundle ke client.
 > - Jangan pernah commit `.env.local` ke Git (sudah ada di `.gitignore`).
 
-#### 4️⃣ Setup Database
+#### 4️. Setup Database
 
 Jalankan SQL schema Supabase yang tersedia di dokumentasi proyek untuk membuat tabel: `profiles`, `locations`, `location_status_history`, `articles`, `quiz_questions`, `downloadable_assets`, `marketplace_products`, `carbon_factors`, dan `waste_lookup_guides`.
 
 Pastikan **RLS** diaktifkan dan Anda membuat **policy** yang sesuai. Untuk admin (upload/hapus aset edukasi, dsb.), Server Action akan memakai service-role key untuk mem-bypass RLS.
 
-#### 5️⃣ Setup Storage Bucket
+#### 5️. Setup Storage Bucket
 
 Buat bucket **public** di Supabase Storage dengan nama persis:
 
@@ -426,7 +426,7 @@ educational-assets
 
 Bucket ini digunakan oleh fitur **Download Panduan & Poster** di halaman Edukasi untuk menyimpan file DOCX/PDF/JPEG/XLSX. Pastikan policy storage mengizinkan `read` untuk publik dan `insert/update/delete` dilakukan lewat service-role (Server Action).
 
-#### 6️⃣ Upload Assets
+#### 6️. Upload Assets
 
 Letakkan file panduan dan poster di folder:
 
@@ -436,7 +436,7 @@ Letakkan file panduan dan poster di folder:
 
 Atau, upload lewat **Admin Panel → Kelola Edukasi → Tambah Aset** (disarankan agar metadata tercatat di tabel `downloadable_assets`).
 
-#### 7️⃣ Run Development Server
+#### 7️. Run Development Server
 
 ```bash
 npm run dev
