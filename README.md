@@ -198,62 +198,116 @@ flowchart LR
 
 ```mermaid
 erDiagram
-    profiles ||--o{ locations : "melaporkan"
-    locations ||--o{ location_status_history : "memiliki"
+    auth_users ||--|| profiles : "id"
+    profiles ||--o{ user_quiz_attempts : "mengerjakan"
+    sellers ||--o{ products : "memiliki"
+    profiles ||--o| sellers : "id"
+    locations ||--o{ report_logs : "memiliki"
+
+    articles ||--o| quizzes : "memiliki"
+    quizzes ||--o{ quiz_questions : "memiliki"
+    quiz_questions ||--o{ quiz_options : "memiliki"
+    quizzes ||--o{ user_quiz_attempts : "dicoba"
+
     locations {
         uuid id PK
-        text title
+        varchar title
         text description
-        text category
-        float latitude
-        float longitude
-        jsonb photo_urls
-        uuid reporter_id FK
-        text status
-        text priority
-        jsonb waste_type
+        map_location_category category
+        float8 latitude
+        float8 longitude
+        text address_notes
+        text photo_url
+        text cleaned_photo_url
+        numeric estimated_volume_kg
+        report_status status
+        varchar reporter_name
+        varchar reporter_phone
+        _text waste_type
+        _text photo_urls
+        report_priority priority
         timestamptz created_at
+        timestamptz updated_at
     }
-    profiles {
+
+    report_logs {
         uuid id PK
-        text full_name
-        text phone_number
-        text role
-        timestamptz created_at
+        uuid location_id FK
+        report_status previous_status
+        report_status new_status
+        text notes
+        text updated_by
+        timestamptz updated_at
     }
-    articles ||--o{ quiz_questions : "memiliki"
+
     articles {
         uuid id PK
-        text title
-        text slug
-        text category
+        varchar title
+        varchar slug
+        text summary
         text content
+        content_format format
+        varchar category
         text thumbnail_url
-        boolean has_quiz
-        int views_count
+        int4 read_time_minutes
+        varchar author_name
+        int4 views_count
+        bool is_featured
         timestamptz published_at
+        timestamptz created_at
+        timestamptz updated_at
     }
-    downloadable_assets {
+
+    quizzes {
         uuid id PK
-        text title
+        uuid article_id FK
+        varchar title
         text description
-        text file_url
-        text file_type
-        int download_count
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    quiz_questions {
+        uuid id PK
+        uuid quiz_id FK
+        text question_text
+        question_type type
+        int4 order_index
         timestamptz created_at
     }
-    marketplace_products {
+
+    quiz_options {
         uuid id PK
-        text title
-        text slug
-        text description
-        int price
-        int stock
-        text condition
-        text image_url
+        uuid question_id FK
+        text option_text
+        bool is_correct
+        int4 order_index
+    }
+
+    sellers {
+        uuid id PK
+        varchar name
+        varchar phone_whatsapp
+        numeric total_waste_saved_kg
+        timestamptz created_at
+    }
+
+    products {
+        uuid id PK
         uuid seller_id FK
-        boolean is_active
+        varchar title
+        varchar slug
+        numeric price
+        product_category category
+        varchar waste_impact_badge
+        text description
+        text thumbnail_url
+        _text gallery_urls
+        bool is_featured
+        int4 stock
+        bool is_active
         timestamptz created_at
+        timestamptz updated_at
     }
 ```
 
