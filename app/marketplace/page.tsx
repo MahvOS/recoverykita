@@ -332,7 +332,6 @@ export default function MarketplacePage() {
             ) : (
               <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-4">
                 {sorted.map((product) => {
-                  // Utamakan thumbnail_url hasil update admin
                   const primaryImage =
                     product.thumbnail_url ||
                     normalizeGalleryUrls(
@@ -353,19 +352,6 @@ export default function MarketplacePage() {
                     >
                       <div className="relative aspect-square w-full bg-zinc-100 overflow-hidden">
                         <span className="absolute top-2 left-2 z-10 bg-[#e8f5e9]/90 text-[#0f5132] text-[9px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1 backdrop-blur-sm">
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18v3"
-                            />
-                          </svg>
                           {badge}
                         </span>
                         <Image

@@ -333,7 +333,6 @@ export function QuizInteractive({ quiz }: QuizInteractiveProps) {
             {questions.map((q, idx) => {
               const userAnswer = selectedAnswers[idx];
 
-              // Perbaikan 2: Evaluasi isCorrect yang mendukung tipe checkbox pada mode review
               let isCorrect = false;
               if (q.type === "checkbox") {
                 const selected = Array.isArray(userAnswer) ? userAnswer : [];

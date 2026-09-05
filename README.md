@@ -84,10 +84,19 @@ Penumpukan sampah ilegal di area perkotaan sering kali tidak terdeteksi dengan c
 ### Screenshot Aplikasi
 
 <div align="center">
-  <img src="https://via.placeholder.com/800x450?text=Peta+Laporan+Utama" alt="Peta Laporan Utama" width="800"/>
+  <img src="https://imgur.com/a/5PjVzrt" alt="Halaman Utama Recoverykita" width="800"/>
+  <p><em>Halaman Utama Recoverykita</em></p>
+
+  <img src="https://imgur.com/a/FCs5584" alt="Halaman Marketplace RecoveryKita" width="800"/>
+  <p><em>Halaman Marketplace RecoveryKita</em></p>
+
+  <img src="https://imgur.com/a/JSvUtut" alt="Halaman Edukasi RecoveryKita" width="800"/>
+  <p><em>Halaman Edukasi RecoveryKita</em></p>
+
+  <img src="https://imgur.com/a/zEnGf4N" alt="Peta Laporan Utama" width="800"/>
   <p><em>Peta Interaktif Pelaporan Sampah Warga</em></p>
 
-  <img src="https://via.placeholder.com/800x450?text=Dashboard+Analitik+Red+Zone" alt="Dashboard Analitik Red Zone" width="800"/>
+  <img src="https://imgur.com/a/BWQgiiI" alt="Dashboard Analitik Red Zone" width="800"/>
   <p><em>Dashboard Analitik Admin & Pemetaan Red Zone</em></p>
 </div>
 
@@ -112,11 +121,13 @@ State        : React Context API + useState/useEffect
 #### Backend
 
 ```
-Runtime      : Node.js
-Database     : Supabase (PostgreSQL)
+Runtime      : Node.js (Server Actions & API Routes)
+Database     : Supabase (PostgreSQL) + Row Level Security (RLS)
 Auth         : Supabase Auth (Email/Password)
-Storage      : Supabase Storage
+Storage      : Supabase Storage (bucket: educational-assets)
+Tile Maps    : CARTO Basemaps (light_all) + Leaflet 1.9.4
 Realtime     : Supabase Realtime (optional)
+Server Auth  : Service Role Key (server-only) untuk bypass RLS
 ```
 
 #### DevOps & Tools
@@ -178,7 +189,7 @@ flowchart LR
     Admin[🛡️ Admin] --> Next
     Next --> Supabase[(Supabase PostgreSQL)]
     Next --> Storage[Supabase Storage]
-    Next --> Map[Leaflet / CartoDB Tiles]
+    Next --> Map[Leaflet]
     Supabase --> RLS[Row Level Security]
     Storage --> Assets[Dokumen / Poster / Template]
 ```
@@ -262,7 +273,7 @@ project-root/
 │   ├── Quiz/                    # Interactive quiz components
 │   └── *.tsx                    # Shared UI components
 ├── hooks/                       # Custom React hooks
-├── actions/                     # Server Actions (mapActions, userActions)
+├── actions/                     # Server Actions (assetActions, edukasiActions, mapActions, userActions)
 ├── types/                       # TypeScript type definitions
 ├── lib/                         # Supabase client & shared utilities
 ├── public/                      # Static assets (images, documents, posters, templates)
@@ -309,19 +320,59 @@ pnpm install
 
 #### 3️⃣ Setup Environment Variables
 
-Buat file `.env.local` di root directory:
+Buat file `.env.local` di root directory dan isi variabel berikut:
 
 ```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL="[your_supabase_url]"
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="[your_supabase_anon_key]"
+# =============================================
+# Supabase (wajib)
+# =============================================
+# URL project Supabase Anda (Settings -> API -> Project URL)
+NEXT_PUBLIC_SUPABASE_URL="https://<your-project-ref>.supabase.co"
+
+# Publishable / anon key (Settings -> API -> Project API keys -> Publishable key)
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_xxx..."
+
+# =============================================
+# Supabase (server-only, JANGAN di-publish)
+# =============================================
+# Service role / secret key (Settings -> API -> Project API keys -> Secret key)
+# Digunakan oleh lib/supabase.ts (getSupabaseAdminClient) untuk Server Actions
+# yang mem-bypass RLS, seperti upload/hapus aset edukasi & sinkronisasi produk
+SUPABASE_SERVICE_ROLE_KEY="sb_secret_xxx..."
+
+# =============================================
+# Map / Tile Provider (opsional tapi direkomendasikan)
+# =============================================
+# API key CARTO basemaps untuk tile peta Leaflet. Jika kosong, tile masih
+# dimuat (tanpa api_key) untuk development. Untuk produksi & guna menghindari
+# rate-limit, daftar di https://carto.com/ dan isi variabel ini.
+NEXT_PUBLIC_CARTO_API_KEY="your_carto_api_key"
 ```
+
+> ⚠️ **Penting tentang `SUPABASE_SERVICE_ROLE_KEY`**
+>
+> - Variabel ini **TIDAK** boleh memakai prefix `NEXT_PUBLIC_` karena akan ter-ekspos ke browser.
+> - Hanya digunakan di server (Server Actions di `actions/`, `lib/supabase.ts`).
+> - Di Vercel, masukkan sebagai **Environment Variable** biasa (bukan `NEXT_PUBLIC_*`) agar tidak ikut ter-bundle ke client.
+> - Jangan pernah commit `.env.local` ke Git (sudah ada di `.gitignore`).
 
 #### 4️⃣ Setup Database
 
 Jalankan SQL schema Supabase yang tersedia di dokumentasi proyek untuk membuat tabel: `profiles`, `locations`, `location_status_history`, `articles`, `quiz_questions`, `downloadable_assets`, `marketplace_products`, `carbon_factors`, dan `waste_lookup_guides`.
 
-#### 5️⃣ Upload Assets
+Pastikan **RLS** diaktifkan dan Anda membuat **policy** yang sesuai. Untuk admin (upload/hapus aset edukasi, dsb.), Server Action akan memakai service-role key untuk mem-bypass RLS.
+
+#### 5️⃣ Setup Storage Bucket
+
+Buat bucket **public** di Supabase Storage dengan nama persis:
+
+```
+educational-assets
+```
+
+Bucket ini digunakan oleh fitur **Download Panduan & Poster** di halaman Edukasi untuk menyimpan file DOCX/PDF/JPEG/XLSX. Pastikan policy storage mengizinkan `read` untuk publik dan `insert/update/delete` dilakukan lewat service-role (Server Action).
+
+#### 6️⃣ Upload Assets
 
 Letakkan file panduan dan poster di folder:
 
@@ -329,7 +380,9 @@ Letakkan file panduan dan poster di folder:
 - `public/posters/` untuk poster JPEG/PNG
 - `public/templates/` untuk template XLSX
 
-#### 6️⃣ Run Development Server
+Atau, upload lewat **Admin Panel → Kelola Edukasi → Tambah Aset** (disarankan agar metadata tercatat di tabel `downloadable_assets`).
+
+#### 7️⃣ Run Development Server
 
 ```bash
 npm run dev
@@ -384,61 +437,71 @@ Production:  https://recoverykita.vercel.app
 
 ### Server Actions
 
-Proyek ini menggunakan **Next.js Server Actions** untuk operasi data, di antaranya:
+Proyek ini menggunakan **Next.js Server Actions** (di folder `actions/`) untuk semua operasi tulis & baca data yang butuh service-role. Server-side admin client dibuat lewat `getSupabaseAdminClient()` di `lib/supabase.ts` dan **mem-bypass RLS** karena berjalan dengan `SUPABASE_SERVICE_ROLE_KEY`.
 
-#### Waste Reports
+#### Waste Reports (`actions/mapActions.ts`)
 
-- `getHotspotClusters()` - Mengambil kluster hotspot dari Supabase
-- `deleteReportAction(id)` - Menghapus laporan sampah
-- `updateReportStatus(id, status)` - Memperbarui status laporan
+- `getHotspotClusters()` - Mengambil kluster hotspot dari Supabase (dipakai oleh `app/peta/page.tsx` & `components/admin/HotspotMap.tsx`)
 
-#### User Management
+> ℹ️ Operasi tulis laporan (`updateStatus`, `deleteReport`, `createReport`) di sisi admin dipanggil lewat custom hook `hooks/useMapReports.ts` yang melakukan update langsung via Supabase client admin.
 
-- `approveUser(userId, approve)` - Menyetujui/menolak verifikasi pengguna
-- `setUserRole(userId, role)` - Mengubah role pengguna
+#### User Management (`actions/userActions.ts`)
+
+- `getAdminUsers()` - Mengambil daftar user (admin)
+- `getUserReports(userId)` - Mengambil semua laporan milik user
+- `getUserReportCount(userId)` - Menghitung jumlah laporan user
+- `toggleBanUser(userId, currentStatus)` - Ban / unban user (admin)
+
+> ℹ️ Pengaturan role & approval user dilakukan di `components/admin/UserManagement.tsx` lewat Supabase client admin (`getSupabaseAdminClient`).
+
+#### Education Assets (`actions/assetActions.ts`)
+
+- `getAssets()` - Mengambil semua aset edukasi dari tabel `downloadable_assets`
+- `uploadAsset(formData)` - Upload file ke bucket `educational-assets` + insert metadata (admin)
+- `deleteAsset(id, fileUrl)` - Hapus file dari storage + baris DB (admin)
+- `trackDownload(id)` - Menambah `download_count` (RPC increment)
+
+#### Education Articles (`actions/edukasiActions.ts`)
+
+- `createArticle(payload)` - Membuat artikel edukasi baru + soal kuis (admin)
+- `updateArticle(id, payload)` - Memperbarui artikel + kuis terkait (admin)
+- `deleteArticle(id)` - Menghapus artikel (admin)
+- `uploadArticleThumbnail(formData)` - Upload thumbnail artikel ke Supabase Storage
+
+> ℹ️ Semua aksi di atas memakai **admin client** (`getSupabaseAdminClient`) sehingga dapat menulis ke storage dan tabel tanpa dibatasi policy RLS publik. Lindungi route `/admin/*` di level aplikasi.
 
 ### Database Tables
 
-| Table                     | Description                                 |
-| ------------------------- | ------------------------------------------- |
-| `profiles`                | Data profil pengguna                        |
-| `locations`               | Laporan titik sampah                        |
-| `location_status_history` | Riwayat perubahan status laporan            |
-| `articles`                | Artikel edukasi                             |
-| `quiz_questions`          | Pertanyaan kuis edukasi                     |
-| `downloadable_assets`     | Aset unduhan (dokumen, poster, template)    |
-| `marketplace_products`    | Produk marketplace                          |
-| `carbon_factors`          | Faktor emisi karbon per jenis sampah        |
-| `waste_lookup_guides`     | Panduan daur ulang berdasarkan jenis sampah |
+| Table                     | Description                                  |
+| ------------------------- | -------------------------------------------- |
+| `profiles`                | Data profil pengguna                         |
+| `locations`               | Laporan titik sampah                         |
+| `location_status_history` | Riwayat perubahan status laporan             |
+| `articles`                | Artikel edukasi                              |
+| `quiz_questions`          | Pertanyaan kuis edukasi (kolom: `type` ENUM) |
+| `downloadable_assets`     | Aset unduhan (dokumen, poster, template)     |
+| `marketplace_products`    | Produk marketplace                           |
+| `carbon_factors`          | Faktor emisi karbon per jenis sampah         |
+| `waste_lookup_guides`     | Panduan daur ulang berdasarkan jenis sampah  |
 
 ---
 
-## 🧪 Testing
+## 🧪 Validasi & Kualitas Kode
 
-### Running Tests
+Karena fokus proyek ini adalah **submission ITECHNO CUP 2026** (bukan project jangka panjang dengan CI penuh), validasi dilakukan dengan:
 
 ```bash
-# Unit tests
-npm run test
+# Lint seluruh proyek (ESLint + Next.js rules)
+npm run lint
 
-# Integration tests
-npm run test:integration
+# Build produksi (menjalankan TypeScript check + kompilasi)
+npm run build
 
-# E2E tests
-npm run test:e2e
-
-# Test coverage
-npm run test:coverage
+# Menjalankan server produksi lokal
+npm run start
 ```
 
-### Test Coverage
-
-```
-Statements   : XX%
-Branches     : XX%
-Functions    : XX%
-Lines        : XX%
-```
+Jika `npm run build` keluar tanpa error dan warning `Image` Next.js tidak muncul, aplikasi siap di-deploy ke Vercel.
 
 ---
 

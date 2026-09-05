@@ -31,7 +31,6 @@ function QuizOption({
   const isCheckbox = questionType === "checkbox";
 
   if (mode === "review") {
-    // 1. Jika opsi ini adalah jawaban BENAR (baik dipilih maupun tidak oleh user)
     if (isCorrect) {
       return (
         <div
@@ -66,7 +65,6 @@ function QuizOption({
       );
     }
 
-    // 2. Jika opsi ini SALAH dan DIPILIH oleh user
     if (isWrong) {
       return (
         <div
@@ -101,7 +99,6 @@ function QuizOption({
       );
     }
 
-    // 3. Opsi netral (bukan kunci jawaban & tidak dipilih user)
     return (
       <div
         className={`${baseClasses} border-zinc-200 bg-zinc-50 text-zinc-600 opacity-70`}
@@ -121,7 +118,6 @@ function QuizOption({
     );
   }
 
-  // Mode Pengerjaan Quiz (bukan Review)
   return (
     <div
       className={`${baseClasses} cursor-pointer ${

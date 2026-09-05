@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, Circle, Path } from "leaflet";
 import type { HotspotArea } from "@/types/admin";
 import "leaflet/dist/leaflet.css";
-const CARTO_API_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
 
 function buildCartoTileUrl(): string {
   return "https://tile.openstreetmap.org/{z}/{x}/{y}.png";

@@ -11,13 +11,10 @@ import {
   MapLocationCategory,
 } from "@/lib/supabase";
 
-const CARTO_API_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
-
 function buildCartoTileUrl(): string {
   return "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 }
 
-// ─── Category Config ─────────────────────────────────────────────────────────
 const CATEGORY_CONFIG: Record<
   MapLocationCategory,
   {
@@ -83,14 +80,7 @@ function LeafletMap({
         return;
       }
 
-      // Guard: Leaflet stamps _leaflet_id on the container div after init.
-      // In React Strict Mode the effect fires twice; if the container already
-      // has an id the map was already created, so skip re-initialization.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((mapRef.current as any)?._leaflet_id) return;
-
-      // Fix default icon path issue in Next.js
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl:
@@ -107,14 +97,12 @@ function LeafletMap({
         zoomControl: false,
       });
 
-      // Tile layer — CartoDB
       L.tileLayer(buildCartoTileUrl(), {
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map);
 
-      // Custom zoom control (top-right)
       L.control.zoom({ position: "topright" }).addTo(map);
 
       mapInstanceRef.current = map;
@@ -130,7 +118,6 @@ function LeafletMap({
     };
   }, []);
 
-  // Update markers when locations/filters change
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
@@ -146,7 +133,6 @@ function LeafletMap({
 
       const map = mapInstanceRef.current!;
 
-      // Clear existing markers
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
 
@@ -157,7 +143,6 @@ function LeafletMap({
       filtered.forEach((loc) => {
         const cfg = CATEGORY_CONFIG[loc.category];
 
-        // Custom circular div icon
         const icon = L.divIcon({
           className: "",
           html: `
@@ -207,7 +192,6 @@ function LeafletMap({
     updateMarkers();
   }, [locations, activeFilters, onSelectLocation]);
 
-  // Fly to selected location
   useEffect(() => {
     if (!mapInstanceRef.current || !selectedLocation) return;
     mapInstanceRef.current.flyTo(
@@ -234,7 +218,6 @@ export default function PetaPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Fetch from Supabase
   useEffect(() => {
     const fetchLocations = async () => {
       setLoading(true);
@@ -251,7 +234,6 @@ export default function PetaPage() {
       try {
         const client = getSupabaseClient();
 
-        // Fetch locations (verified)
         const { data: locData, error: locError } = await client
           .from("locations")
           .select("*");
@@ -291,7 +273,6 @@ export default function PetaPage() {
     setSelectedLocation(loc);
   }, []);
 
-  // Filtered for sidebar search
   const searchResults = searchQuery.trim()
     ? locations.filter(
         (l) =>
@@ -313,12 +294,10 @@ export default function PetaPage() {
 
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800 flex flex-col">
-      {/* ── Navbar ── */}
       <Navbar />
 
       {/* ── Map Layout ── */}
       <div className="flex flex-1 relative min-h-0 pt-16 sm:pt-20 h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-5rem)]">
-        {/* ── Mobile Sidebar Overlay ── */}
         {sidebarOpen && (
           <div
             className="fixed inset-x-0 top-16 sm:top-20 bottom-0 bg-black/50 z-30 md:hidden"

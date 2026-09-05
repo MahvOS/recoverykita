@@ -10,7 +10,6 @@ const VALID_STATUS = new Set<ReportStatus>([
   "rejected",
 ]);
 
-// PERBAIKAN: Mapping disesuaikan persis dengan value Enum report_status di PostgreSQL
 const LOCATION_STATUS_MAP: Record<ReportStatus, string> = {
   pending: "pending",
   in_progress: "in_progress",
@@ -208,7 +207,6 @@ export function useMapReports() {
           };
         };
 
-        // 1. Jika status REJECTED -> Hapus dari tabel locations
         if (status === "rejected") {
           await client.from("report_logs").insert({
             location_id: id,
@@ -230,7 +228,6 @@ export function useMapReports() {
           return true;
         }
 
-        // 2. Jika status selain REJECTED -> UPDATE status dengan value Enum yang valid
         const targetStatus = LOCATION_STATUS_MAP[status] ?? status;
 
         const { error: updateError } = await client

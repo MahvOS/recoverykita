@@ -317,21 +317,6 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 w-full max-w-4xl mt-4 sm:mt-8 px-2">
               {/* Category 1: Organik */}
               <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-row sm:flex-col items-start sm:items-start text-left gap-3 sm:gap-4 group hover:shadow-md hover:border-zinc-200 transition-all duration-300">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 text-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z"
-                    />
-                  </svg>
-                </div>
                 <div className="space-y-1 sm:space-y-1.5 flex-1">
                   <h3 className="font-extrabold text-[#0f5132] text-base sm:text-lg">
                     Organik
@@ -344,21 +329,6 @@ export default function Home() {
 
               {/* Category 2: Anorganik */}
               <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-row sm:flex-col items-start sm:items-start text-left gap-3 sm:gap-4 group hover:shadow-md hover:border-zinc-200 transition-all duration-300">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 text-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18v3"
-                    />
-                  </svg>
-                </div>
                 <div className="space-y-1 sm:space-y-1.5 flex-1">
                   <h3 className="font-extrabold text-[#0f5132] text-base sm:text-lg">
                     Anorganik
@@ -372,21 +342,6 @@ export default function Home() {
 
               {/* Category 3: B3 */}
               <div className="bg-white border border-zinc-100 shadow-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-row sm:flex-col items-start sm:items-start text-left gap-3 sm:gap-4 group hover:shadow-md hover:border-zinc-200 transition-all duration-300">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 text-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                </div>
                 <div className="space-y-1 sm:space-y-1.5 flex-1">
                   <h3 className="font-extrabold text-[#0f5132] text-base sm:text-lg">
                     B3

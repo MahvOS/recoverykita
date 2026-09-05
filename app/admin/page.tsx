@@ -238,9 +238,7 @@ function AdminDashboardContent() {
 
       {/* Main Content Area - offset by sidebar width on desktop */}
       <main className="flex-1 flex flex-col min-w-0 lg:ml-64">
-        {/* Scrollable Dashboard Content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Top Navbar Info bar - sticky at top */}
           <header className="sticky top-0 z-10 h-14 bg-white border-b border-zinc-200 px-4 sm:px-8 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-4">
               <button
@@ -277,7 +275,6 @@ function AdminDashboardContent() {
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
             {activeView === "dashboard" && (
               <>
-                {/* Welcome Title and Date Selection */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-zinc-950">
@@ -289,7 +286,6 @@ function AdminDashboardContent() {
                     </p>
                   </div>
 
-                  {/* Date Container */}
                   <div className="flex items-center gap-2.5 bg-white border border-zinc-200 px-4 py-2 rounded-xl shadow-sm text-sm text-zinc-600 font-medium">
                     <Calendar className="w-4 h-4 text-zinc-400" />
                     <span>{today}</span>
@@ -309,7 +305,6 @@ function AdminDashboardContent() {
                   </div>
                 )}
 
-                {/* Top Metrics Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   <MetricCard
                     icon={Loader2}
@@ -333,7 +328,6 @@ function AdminDashboardContent() {
 
                 {/* Main Split Grid - Map & Latest Reports */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                  {/* Left Block: Ringkasan Peta (Col Span 2) */}
                   <div className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 shadow-sm lg:col-span-2">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <h3 className="text-base sm:text-lg font-bold text-zinc-900">
@@ -353,11 +347,9 @@ function AdminDashboardContent() {
                       </div>
                     </div>
 
-                    {/* Dynamic Leaflet component */}
                     <AdminMap locations={mapLocations} />
                   </div>
 
-                  {/* Right Block: Laporan Terbaru (Col Span 1) */}
                   <div className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-6 flex flex-col shadow-sm">
                     <div className="flex items-center justify-between mb-4 sm:mb-6">
                       <h3 className="text-base sm:text-lg font-bold text-zinc-900">

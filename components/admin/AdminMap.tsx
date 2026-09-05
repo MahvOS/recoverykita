@@ -5,7 +5,6 @@ import "leaflet/dist/leaflet.css";
 import type { Map as LeafletMap, Marker } from "leaflet";
 
 import type { LocationCategory } from "@/types/admin";
-const CARTO_API_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
 
 function buildCartoTileUrl(): string {
   return "https://tile.openstreetmap.org/{z}/{x}/{y}.png";

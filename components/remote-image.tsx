@@ -52,7 +52,6 @@ export function RemoteImage({
 
   if (fill) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={alt}
@@ -61,8 +60,5 @@ export function RemoteImage({
     );
   }
 
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className={className} />
-  );
+  return <img src={src} alt={alt} className={className} />;
 }

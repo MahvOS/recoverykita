@@ -441,131 +441,7 @@ export default function LaporPage() {
 
   return (
     <div className="min-h-screen bg-[#fbfcfa] font-sans antialiased text-zinc-800">
-      {/* Header */}
       <Navbar />
-      {/*
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col">
-          <div className="h-16 sm:h-20 flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3 w-20">
-              <Link href="/" className="block">
-                <div className="relative w-30 h-30 sm:w-35 sm:h-35">
-                  <Image
-                    src="/logo.ico"
-                    alt="RecoveryKita Logo"
-                    fill
-                    sizes="80px"
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-              </Link>
-            </div>
-
-            <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-8 flex-1">
-              <Link
-                href="/"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Beranda
-              </Link>
-              <Link
-                href="/marketplace"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Marketplace
-              </Link>
-              <Link
-                href="/peta"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Peta
-              </Link>
-              <Link
-                href="/lapor"
-                className="text-sm font-semibold text-[#0f5132] border-b-2 border-[#198754] pb-1 transition-colors"
-              >
-                Lapor
-              </Link>
-              <Link
-                href="/edukasi"
-                className="text-sm font-medium text-zinc-600 hover:text-[#0f5132] transition-colors"
-              >
-                Edukasi
-              </Link>
-            </nav>
-
-            <div className="w-20 flex justify-end">
-              <button
-                type="button"
-                aria-label="Toggle navigation menu"
-                aria-expanded={mobileMenuOpen}
-                onClick={() => setMobileMenuOpen((prev) => !prev)}
-                className="md:hidden flex items-center p-2 rounded-lg hover:bg-zinc-100"
-              >
-                <svg
-                  className="w-6 h-6 text-zinc-700"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d={
-                      mobileMenuOpen
-                        ? "M6 18L18 6M6 6l12 12"
-                        : "M4 6h16M4 12h16m-7 6h7"
-                    }
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {mobileMenuOpen && (
-            <div className="md:hidden absolute top-full left-0 right-0 border-b border-[#e2e8f0]/60 bg-[#fbfcfa] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-              <div className="flex flex-col gap-2">
-                <Link
-                  href="/"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Beranda
-                </Link>
-                <Link
-                  href="/marketplace"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Marketplace
-                </Link>
-                <Link
-                  href="/peta"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Peta
-                </Link>
-                <Link
-                  href="/lapor"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0f5132] hover:bg-[#edf7ef]"
-                >
-                  Lapor
-                </Link>
-                <Link
-                  href="/edukasi"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  Edukasi
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-      </header> */}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 py-6 sm:py-8">
@@ -926,16 +802,7 @@ export default function LaporPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-zinc-200 lg:sticky lg:top-24">
               <div className="flex items-center gap-2 mb-6">
-                <div className="text-[#198754]">
-                  <svg
-                    className="w-6 h-6"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-[#198754]">
+                <h3 className="text-lg font-bold text-[#198754]">
                   Panduan Lapor
                 </h3>
               </div>
