@@ -84,19 +84,19 @@ Penumpukan sampah ilegal di area perkotaan sering kali tidak terdeteksi dengan c
 ### Screenshot Aplikasi
 
 <div align="center">
-  <img src="https://imgur.com/a/5PjVzrt" alt="Halaman Utama Recoverykita" width="800"/>
+  <img src="https://i.imgur.com/zB6kcvN.png" alt="Halaman Utama Recoverykita" width="800"/>
   <p><em>Halaman Utama Recoverykita</em></p>
 
-  <img src="https://imgur.com/a/FCs5584" alt="Halaman Marketplace RecoveryKita" width="800"/>
+  <img src="https://i.imgur.com/wh3orvC.png" alt="Halaman Marketplace RecoveryKita" width="800"/>
   <p><em>Halaman Marketplace RecoveryKita</em></p>
 
-  <img src="https://imgur.com/a/JSvUtut" alt="Halaman Edukasi RecoveryKita" width="800"/>
+  <img src="https://i.imgur.com/Bw9Q8Dz.png" alt="Halaman Edukasi RecoveryKita" width="800"/>
   <p><em>Halaman Edukasi RecoveryKita</em></p>
 
-  <img src="https://imgur.com/a/zEnGf4N" alt="Peta Laporan Utama" width="800"/>
+  <img src="https://i.imgur.com/I0uNRZj.png" alt="Peta Laporan Utama" width="800"/>
   <p><em>Peta Interaktif Pelaporan Sampah Warga</em></p>
 
-  <img src="https://imgur.com/a/BWQgiiI" alt="Dashboard Analitik Red Zone" width="800"/>
+  <img src="https://i.imgur.com/uvDKCS9.png" alt="Dashboard Analitik Red Zone" width="800"/>
   <p><em>Dashboard Analitik Admin & Pemetaan Red Zone</em></p>
 </div>
 
