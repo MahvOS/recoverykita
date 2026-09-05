@@ -96,7 +96,7 @@ Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memilik
   <img src="https://i.imgur.com/I0uNRZj.png" alt="Peta Laporan Utama" width="800"/>
   <p><em>Peta Interaktif Pelaporan Sampah Warga</em></p>
 
-  <img src="https://imgur.com/R452nBe" alt="Dashboard Analitik Red Zone" width="800"/>
+  <img src="https://i.imgur.com/R452nBe.png" alt="Dashboard Analitik Red Zone" width="800"/>
   <p><em>Dashboard Analitik Admin & Pemetaan Red Zone</em></p>
 </div>
 
