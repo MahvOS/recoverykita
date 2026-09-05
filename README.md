@@ -84,7 +84,7 @@ Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memilik
 ### Screenshot Aplikasi
 
 <div align="center">
-  <img src="https://i.imgur.com/zB6kcvN.png" alt="Halaman Utama Recoverykita" width="800"/>
+  <img src="https://i.imgur.com/HmMbcUj.png" alt="Halaman Utama Recoverykita" width="800"/>
   <p><em>Halaman Utama Recoverykita</em></p>
 
   <img src="https://imgur.com/0oqoPDA" alt="Halaman Marketplace RecoveryKita" width="800"/>
@@ -442,7 +442,7 @@ Aplikasi akan berjalan di `http://localhost:3000`
 
 ## 🚀 Penggunaan
 
-### Cara Menjalankan Aplikasi
+### Menjalankan Aplikasi
 
 ```bash
 # Development mode
