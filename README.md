@@ -87,16 +87,16 @@ Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memilik
   <img src="https://i.imgur.com/zB6kcvN.png" alt="Halaman Utama Recoverykita" width="800"/>
   <p><em>Halaman Utama Recoverykita</em></p>
 
-  <img src="https://i.imgur.com/wh3orvC.png" alt="Halaman Marketplace RecoveryKita" width="800"/>
+  <img src="https://imgur.com/0oqoPDA" alt="Halaman Marketplace RecoveryKita" width="800"/>
   <p><em>Halaman Marketplace RecoveryKita</em></p>
 
-  <img src="https://i.imgur.com/Bw9Q8Dz.png" alt="Halaman Edukasi RecoveryKita" width="800"/>
+  <img src="https://imgur.com/jx5MVlD" alt="Halaman Edukasi RecoveryKita" width="800"/>
   <p><em>Halaman Edukasi RecoveryKita</em></p>
 
   <img src="https://i.imgur.com/I0uNRZj.png" alt="Peta Laporan Utama" width="800"/>
   <p><em>Peta Interaktif Pelaporan Sampah Warga</em></p>
 
-  <img src="https://i.imgur.com/uvDKCS9.png" alt="Dashboard Analitik Red Zone" width="800"/>
+  <img src="https://imgur.com/R452nBe" alt="Dashboard Analitik Red Zone" width="800"/>
   <p><em>Dashboard Analitik Admin & Pemetaan Red Zone</em></p>
 </div>
 
