@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Fraunces } from "next/font/google";
-import Image from "next/image";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,9 +16,49 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "RecoveryKita | Aksi Lokal, Dampak Global",
+  metadataBase: new URL("https://recoverykita.vercel.app"),
+  title: {
+    default: "RecoveryKita | Aksi Lokal, Dampak Global",
+    template: "%s | RecoveryKita",
+  },
   description:
-    "RecoveryKita adalah platform yang menghubungkan individu, komunitas, dan organisasi untuk berkolaborasi dalam upaya pemulihan bencana. Dengan fokus pada aksi lokal dan dampak global, kami menyediakan sumber daya, informasi, dan jaringan untuk mendukung pemulihan yang berkelanjutan dan inklusif.",
+    "Platform crowdsourced waste management untuk melaporkan titik sampah liar, memantau Red Zone, dan mendukung ekonomi sirkular lewat marketplace barang daur ulang pengrajin lokal.",
+  keywords: [
+    "sampah",
+    "daur ulang",
+    "lingkungan",
+    "peta sampah",
+    "marketplace daur ulang",
+    "edukasi lingkungan",
+    "zero waste",
+    "RecoveryKita",
+  ],
+  authors: [
+    { name: "PAPAN ATAS!" },
+    { name: "Mahvin Aflah Mulyana" },
+    { name: "Sulthan Fatin Aditya" },
+    { name: "Muhammad Adzka Mumtaza" },
+  ],
+  creator: "PAPAN ATAS!",
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: "https://recoverykita.vercel.app",
+    siteName: "RecoveryKita",
+    title: "RecoveryKita | Aksi Lokal, Dampak Global",
+    description:
+      "Platform crowdsourced waste management — lapor titik sampah, lihat Red Zone, belanja barang daur ulang, dan pelajari gaya hidup sirkular.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RecoveryKita | Aksi Lokal, Dampak Global",
+    description:
+      "Lapor titik sampah, lihat peta Red Zone, belanja barang daur ulang. Semua gratis untuk warga.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
