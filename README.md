@@ -442,7 +442,7 @@ Aplikasi akan berjalan di `http://localhost:3000`
 
 ## 🚀 Penggunaan
 
-### Menjalankan Aplikasi
+### Cara Menjalankan Aplikasi
 
 ```bash
 # Development mode
