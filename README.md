@@ -412,7 +412,7 @@ NEXT_PUBLIC_CARTO_API_KEY="your_carto_api_key"
 
 #### 4️. Setup Database
 
-Jalankan SQL schema Supabase yang tersedia di dokumentasi proyek untuk membuat tabel: `profiles`, `locations`, `location_status_history`, `articles`, `quiz_questions`, `downloadable_assets`, `marketplace_products`, `carbon_factors`, dan `waste_lookup_guides`.
+Jalankan SQL schema Supabase yang tersedia di folder supabase untuk membuat tabel: `profiles`, `locations`, `location_status_history`, `articles`, `quiz_questions`, `downloadable_assets`, `marketplace_products`, `carbon_factors`, dan `waste_lookup_guides`.
 
 Pastikan **RLS** diaktifkan dan Anda membuat **policy** yang sesuai. Untuk admin (upload/hapus aset edukasi, dsb.), Server Action akan memakai service-role key untuk mem-bypass RLS.
 
@@ -428,13 +428,7 @@ Bucket ini digunakan oleh fitur **Download Panduan & Poster** di halaman Edukasi
 
 #### 6️. Upload Assets
 
-Letakkan file panduan dan poster di folder:
-
-- `public/documents/` untuk file DOCX/PDF
-- `public/posters/` untuk poster JPEG/PNG
-- `public/templates/` untuk template XLSX
-
-Atau, upload lewat **Admin Panel → Kelola Edukasi → Tambah Aset** (disarankan agar metadata tercatat di tabel `downloadable_assets`).
+upload asset lewat **Admin Panel → Edukasi → Tambah Aset** (disarankan agar metadata tercatat di tabel `downloadable_assets`).
 
 #### 7️. Run Development Server
 
