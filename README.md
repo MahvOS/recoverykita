@@ -81,6 +81,23 @@ Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memilik
 
 🔗 **[Kunjungi RecoveryKita](https://recoverykita.vercel.app)**
 
+## 🎥 Video Demo & Showcase
+
+[![RecoveryKita Website Short Demo](https://img.youtube.com/vi/kG0JGNdoSvs/maxresdefault.jpg)](https://youtu.be/kG0JGNdoSvs)
+
+> 🎬 **Tonton Demo Video:** [RecoveryKita Website Short Demo di YouTube](https://youtu.be/kG0JGNdoSvs)
+
+Dalam video demo di atas, dipresentasikan beberapa fitur utama platform **RecoveryKita**:
+
+* 🗺️ **Fitur Peta**: Pemetaan interaktif sebaran titik sampah liar, bank sampah, dan aksi komunitas.
+* 📝 **Fitur Lapor**: Pelaporan lokasi titik sampah baru secara langsung ke peta.
+* 🛍️ **Fitur Marketplace Sirkular**: Produk daur ulang buatan pengrajin lokal lengkap dengan indikator *kilogram limbah yang diselamatkan*.
+* 📚 **Fitur Edukasi**: Artikel isu lingkungan, panduan interaktif pemilahan sampah, dan kalkulator emisi karbon.
+* 💡 **Fitur Kuis Interaktif**: Uji pemahaman langsung dari materi artikel edukasi yang dibaca.
+
+---
+🌐 *Untuk mencoba langsung dan menjelajahi fitur selengkapnya, kunjungi platform kami di:* **[recoverykita.vercel.app](https://recoverykita.vercel.app) * atau bisa dengan instalasi projek ini*
+
 ### Screenshot Aplikasi
 
 <div align="center">
