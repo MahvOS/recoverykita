@@ -39,6 +39,119 @@ interface FetchReportsFilters {
   date?: string;
 }
 
+const LOCATION_CATEGORIES = [
+  "trash_dump",
+  "waste_bank",
+  "community_action",
+] as const;
+
+export async function createAdminReport(formData: FormData): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const guard = await requireAdmin();
+  if (!guard.ok) return { success: false, error: guard.message };
+
+  const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const category = String(formData.get("category") ?? "");
+  const addressNotes = String(formData.get("address_notes") ?? "").trim();
+  const reporterName = String(formData.get("reporter_name") ?? "").trim();
+  const reporterPhone = String(formData.get("reporter_phone") ?? "").trim();
+  const priority = String(formData.get("priority") ?? "sedang");
+  const latitude = Number(formData.get("latitude"));
+  const longitude = Number(formData.get("longitude"));
+  const wasteTypes = formData.getAll("waste_type").map(String).filter(Boolean);
+
+  if (!title || !description) {
+    return { success: false, error: "Judul dan deskripsi wajib diisi." };
+  }
+  if (
+    !LOCATION_CATEGORIES.includes(
+      category as (typeof LOCATION_CATEGORIES)[number],
+    )
+  ) {
+    return { success: false, error: "Kategori laporan tidak valid." };
+  }
+  if (!["rendah", "sedang", "tinggi"].includes(priority)) {
+    return { success: false, error: "Prioritas laporan tidak valid." };
+  }
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+    return {
+      success: false,
+      error: "Latitude harus berada antara -90 dan 90.",
+    };
+  }
+  if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+    return {
+      success: false,
+      error: "Longitude harus berada antara -180 dan 180.",
+    };
+  }
+
+  const admin = getSupabaseAdminClient();
+  const uploadedPaths: string[] = [];
+  const photoUrls: string[] = [];
+
+  try {
+    const files = formData
+      .getAll("photos")
+      .filter((value): value is File => value instanceof File && value.size > 0)
+      .slice(0, 3);
+
+    for (const file of files) {
+      if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+        return {
+          success: false,
+          error: "Foto harus berupa gambar maksimal 5MB.",
+        };
+      }
+
+      const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `admin/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await admin.storage
+        .from("report-photos")
+        .upload(path, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) throw uploadError;
+      uploadedPaths.push(path);
+      photoUrls.push(
+        admin.storage.from("report-photos").getPublicUrl(path).data.publicUrl,
+      );
+    }
+
+    const { error: insertError } = await admin.from("locations").insert({
+      title,
+      description,
+      category,
+      latitude,
+      longitude,
+      address_notes: addressNotes || null,
+      photo_url: photoUrls[0] ?? null,
+      photo_urls: photoUrls.length > 0 ? photoUrls : null,
+      status: "pending",
+      reporter_name: reporterName || "Admin",
+      reporter_phone: reporterPhone || null,
+      priority,
+      waste_type: wasteTypes,
+    });
+
+    if (insertError) throw insertError;
+
+    revalidatePath("/admin");
+    revalidatePath("/peta");
+    return { success: true };
+  } catch (error) {
+    if (uploadedPaths.length > 0) {
+      await admin.storage.from("report-photos").remove(uploadedPaths);
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Gagal membuat laporan.",
+    };
+  }
+}
+
 export async function fetchMapReports(
   filters: FetchReportsFilters = {},
 ): Promise<MapReport[]> {

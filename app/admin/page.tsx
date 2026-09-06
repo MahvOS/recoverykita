@@ -28,6 +28,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import MarketplaceManagement from "@/components/admin/MarketplaceManagement";
 import UserManagement from "@/components/admin/UserManagement";
 import { EdukasiManagement } from "@/components/admin/EdukasiManagement";
+import AdminReportForm from "@/components/admin/AdminReportForm";
 import Image from "next/image";
 
 const AdminMap = dynamic(() => import("@/components/admin/AdminMap"), {
@@ -444,6 +445,8 @@ function AdminDashboardContent() {
                     </button>
                   </div>
                 )}
+
+                <AdminReportForm onCreated={refetchMap} />
 
                 {/* Top Metrics Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

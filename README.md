@@ -45,11 +45,11 @@
 
 ### Latar Belakang
 
-Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memiliki akses ke layanan pengumpulan sampah dasar, yang mendorong timbulnya titik-titik pembuangan ilegal (illegal dumping). dan berdasarkan data dari SIPSN KLHK (Sistem Informasi Pengelolaan Sampah Nasional) Sekitar 31% - 35% sampah nasional belum terkelola dengan baik dan terbuang ke lingkungan/TPS liar
+Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memiliki akses ke layanan pengumpulan sampah dasar, yang mendorong timbulnya titik-titik pembuangan ilegal (illegal dumping). dan berdasarkan data dari SIPSN KLHK (Sistem Informasi Pengelolaan Sampah Nasional) Sekitar 31% - 35% sampah nasional belum terkelola dengan baik dan terbuang ke lingkungan/TPS liar. Permasalahan ini secara langsung mendesak pencapaian sasaran Pembangunan Berkelanjutan (SDGs), khususnya SDG 11: Kota dan Pemukiman yang Berkelanjutan (Target 11.6) — Memperbaiki pengelolaan sampah perkotaan dan mengurangi dampak lingkungan negatif per kapita.
 
 ### Solusi yang Ditawarkan
 
-**RecoveryKita** hadir sebagai platform _crowdsourced waste management_ yang memungkinkan warga melaporkan titik sampah liar secara visual berbasis peta, serta menyediakan **Dashboard Admin & Analitik** bagi pihak pengelola untuk memantau kluster titik rawan (Hotspot & Red Zone) secara efisien.
+**RecoveryKita** hadir sebagai platform _crowdsourced waste management_ yang mendukung pencapaian SDG 11 (Kota & Pemukiman Berkelanjutan). Platform ini memungkinkan warga melaporkan titik sampah liar secara visual berbasis peta, serta menyediakan **Dashboard Admin & Analitik** bagi pihak pengelola untuk memantau kluster titik rawan (Hotspot & Red Zone) secara efisien.
 
 ### Tujuan Proyek
 
