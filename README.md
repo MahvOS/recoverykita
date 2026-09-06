@@ -12,6 +12,9 @@
 
 **By PAPAN ATAS!**
 
+> 🔑 **Catatan Akses Admin (Penguji / Juri):**
+> Kredensial khusus untuk mengakses Dashboard Admin telah dikirimkan secara langsung melalui WhatsApp ke **Kak Reza**. Silakan periksa pesan privat untuk informasi login.
+
 </div>
 
 ---
