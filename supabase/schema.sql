@@ -3583,13 +3583,6 @@ create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Tambahkan opsi kategori ke tipe ENUM Postgres
-ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'organik';
-ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'anorganik';
-ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'daur_ulang';
-ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'hasil_olahan';
-ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'kompos';
-
 
 
 

@@ -413,11 +413,32 @@ NEXT_PUBLIC_CARTO_API_KEY="your_carto_api_key"
 > - Di Vercel, masukkan sebagai **Environment Variable** biasa (bukan `NEXT_PUBLIC_*`) agar tidak ikut ter-bundle ke client.
 > - Jangan pernah commit `.env.local` ke Git (sudah ada di `.gitignore`).
 
-#### 4️. Setup Database
+#### 4️. Setup Supabase Authentication
+
+Karena aplikasi menggunakan username yang dipetakan ke email internal
+`<username>@recoverykita.com`, konfigurasi provider Email Supabase perlu diatur
+sebelum login atau registrasi:
+
+1. Buka **Supabase Dashboard → Authentication → Sign In / Providers**.
+2. Pastikan provider **Email** dalam keadaan aktif.
+3. Nonaktifkan **Confirm email** terlebih dahulu.
+4. Simpan perubahan.
+
+Dengan **Confirm email** nonaktif, akun dapat langsung digunakan setelah
+registrasi tanpa menunggu email verifikasi. Username tetap harus terdiri dari
+3-30 karakter dan hanya berisi huruf kecil, angka, atau underscore, misalnya
+`admin_recovery`.
+
+> Jika muncul error seperti `"xxx" is invalid`, pastikan yang dimasukkan pada
+> field username hanya username yang valid, bukan alamat email, spasi, atau
+> karakter khusus. Aplikasi akan membentuk alamat internal yang valid secara
+> otomatis, misalnya `admin_recovery@recoverykita.com`.
+
+#### 5️. Setup Database
 
 Jalankan `supabase/schema.sql` di **Supabase SQL Editor**. File ini membuat tabel, enum, relasi, dan policy database yang diperlukan aplikasi.
 
-#### 5️. Setup Storage Buckets dan Policies
+#### 6️. Setup Storage Buckets dan Policies
 
 Aplikasi membutuhkan tiga bucket Storage dengan nama persis berikut:
 
@@ -461,11 +482,11 @@ with check (bucket_id = 'report-photos');
 
 > Jangan menambahkan `SUPABASE_SERVICE_ROLE_KEY` ke client atau memberi policy `insert` kepada `anon`. Server Action sudah memakai service-role key untuk operasi admin, sedangkan laporan warga harus melalui autentikasi Supabase.
 
-#### 6️. Upload Assets
+#### 7️. Upload Assets
 
 upload asset lewat **Admin Panel → Edukasi → Tambah Aset** (disarankan agar metadata tercatat di tabel `downloadable_assets`).
 
-#### 7️. Run Development Server
+#### 8️. Run Development Server
 
 ```bash
 npm run dev
