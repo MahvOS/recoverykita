@@ -358,8 +358,8 @@ Pastikan Anda telah menginstall:
 #### 1️. Clone Repository
 
 ```bash
-git clone https://github.com/[username]/[repo-name].git
-cd [repo-name]
+git clone https://github.com/MahvOS/recoverykita
+cd recoverykita
 ```
 
 #### 2️. Install Dependencies
