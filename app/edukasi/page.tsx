@@ -16,13 +16,13 @@ import {
 } from "@/lib/supabase";
 import { trackDownload } from "@/actions/assetActions";
 
-const TOPIC_FILTERS = [
-  "Semua Topik",
-  "Daur Ulang",
-  "Kompos",
-  "Zero Waste",
-  "DIY Upcycling",
-  "Kebijakan Lingkungan",
+const DEFAULT_TOPICS = [
+  "Pengelolaan Sampah",
+  "Energi & Iklim",
+  "Air & Lingkungan",
+  "Konsumsi Berkelanjutan",
+  "Komunitas & Gerakan",
+  "Plastik",
 ];
 
 const FORMAT_STYLES: Record<string, string> = {
@@ -215,10 +215,12 @@ export default function EdukasiPage() {
             client
               .from("articles")
               .select("*")
+              .not("published_at", "is", null)
               .order("published_at", { ascending: false }),
             client
               .from("articles")
               .select("*")
+              .not("published_at", "is", null)
               .order("views_count", { ascending: false })
               .limit(3),
             client.from("carbon_factors").select("*").order("waste_type"),
@@ -270,6 +272,17 @@ export default function EdukasiPage() {
     if (!featuredArticle) return base;
     return base.filter((a) => a.id !== featuredArticle.id);
   }, [articles, activeTopic, featuredArticle]);
+
+  const topicFilters = useMemo(() => {
+    const articleCategories = articles
+      .map((article) => article.category?.trim())
+      .filter((category): category is string => Boolean(category));
+
+    return [
+      "Semua Topik",
+      ...Array.from(new Set([...DEFAULT_TOPICS, ...articleCategories])).sort(),
+    ];
+  }, [articles]);
 
   const co2Result = useMemo(() => {
     const kg = parseFloat(weight);
@@ -437,7 +450,7 @@ export default function EdukasiPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
-          {TOPIC_FILTERS.map((topic) => (
+          {topicFilters.map((topic) => (
             <button
               key={topic}
               onClick={() => setActiveTopic(topic)}

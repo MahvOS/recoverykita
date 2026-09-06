@@ -468,7 +468,7 @@ export function EdukasiForm({
                 type="checkbox"
                 checked={publishedAt === "true"}
                 onChange={(e) =>
-                  setPublishedAt(e.target.value === "true" ? "true" : "false")
+                  setPublishedAt(e.target.checked ? "true" : "false")
                 }
                 className="rounded accent-[#0f5132]"
               />

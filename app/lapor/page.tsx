@@ -21,7 +21,7 @@ function normalizeUsername(value: string): string {
 }
 
 function getInternalAuthEmail(username: string): string {
-  return `${normalizeUsername(username)}@accounts.recoverykita.local`;
+  return `${normalizeUsername(username)}@recoverykita.com`;
 }
 
 interface FormData {

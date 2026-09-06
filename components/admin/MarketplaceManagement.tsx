@@ -45,6 +45,13 @@ interface StockStatus {
   className: string;
 }
 
+const DEFAULT_CATEGORIES = [
+  "Fashion",
+  "Dekorasi Rumah",
+  "Aksesoris",
+  "Alat Tulis",
+];
+
 function getStockStatus(stock: number): StockStatus {
   if (stock === 0) {
     return {
@@ -161,11 +168,12 @@ export default function MarketplaceManagement(): React.ReactElement {
   const categories = useMemo(
     () =>
       Array.from(
-        new Set(
-          products
+        new Set([
+          ...DEFAULT_CATEGORIES,
+          ...products
             .map((p) => p.category)
             .filter((c): c is string => Boolean(c) && c.trim() !== ""),
-        ),
+        ]),
       ).sort(),
     [products],
   );

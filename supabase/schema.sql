@@ -3563,9 +3563,32 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
+-- 1. Buat fungsi untuk menyalin user metadata ke profiles
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, full_name, phone_number)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'username'),
+    new.raw_user_meta_data->>'phone_number'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$ language plpgsql security definer;
 
+-- 2. Pasang trigger setelah insert di auth.users
+create or replace trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
 
-
+-- Tambahkan opsi kategori ke tipe ENUM Postgres
+ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'organik';
+ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'anorganik';
+ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'daur_ulang';
+ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'hasil_olahan';
+ALTER TYPE product_category ADD VALUE IF NOT EXISTS 'kompos';
 
 
 

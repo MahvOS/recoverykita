@@ -127,7 +127,7 @@ State        : React Context API + useState/useEffect
 Runtime      : Node.js (Server Actions & API Routes)
 Database     : Supabase (PostgreSQL) + Row Level Security (RLS)
 Auth         : Supabase Auth (Email/Password)
-Storage      : Supabase Storage (bucket: educational-assets)
+Storage      : Supabase Storage (`report-photos`, `marketplace-bucket`, `educational-assets`)
 Tile Maps    : CARTO Basemaps (light_all) + Leaflet 1.9.4
 Realtime     : Supabase Realtime (optional)
 Server Auth  : Service Role Key (server-only) untuk bypass RLS
@@ -415,19 +415,51 @@ NEXT_PUBLIC_CARTO_API_KEY="your_carto_api_key"
 
 #### 4️. Setup Database
 
-Jalankan SQL schema Supabase yang tersedia di folder supabase untuk membuat tabel: `profiles`, `locations`, `location_status_history`, `articles`, `quiz_questions`, `downloadable_assets`, `marketplace_products`, `carbon_factors`, dan `waste_lookup_guides`.
+Jalankan `supabase/schema.sql` di **Supabase SQL Editor**. File ini membuat tabel, enum, relasi, dan policy database yang diperlukan aplikasi.
 
-Pastikan **RLS** diaktifkan dan Anda membuat **policy** yang sesuai. Untuk admin (upload/hapus aset edukasi, dsb.), Server Action akan memakai service-role key untuk mem-bypass RLS.
+#### 5️. Setup Storage Buckets dan Policies
 
-#### 5️. Setup Storage Bucket
+Aplikasi membutuhkan tiga bucket Storage dengan nama persis berikut:
 
-Buat bucket **public** di Supabase Storage dengan nama persis:
+| Bucket               | Kegunaan                                | Public |
+| -------------------- | --------------------------------------- | ------ |
+| `report-photos`      | Foto bukti laporan warga                | Ya     |
+| `marketplace-bucket` | Thumbnail produk marketplace            | Ya     |
+| `educational-assets` | Thumbnail artikel dan file aset edukasi | Ya     |
 
+Buat bucket melalui **Supabase Dashboard → Storage → New bucket**, atau jalankan SQL berikut di **Supabase SQL Editor**. SQL ini aman dijalankan ulang:
+
+```sql
+insert into storage.buckets (id, name, public)
+values
+  ('report-photos', 'report-photos', true),
+  ('marketplace-bucket', 'marketplace-bucket', true),
+  ('educational-assets', 'educational-assets', true)
+on conflict (id) do update
+set public = excluded.public;
 ```
-educational-assets
+
+Tambahkan policy Storage berikut. Policy baca diperlukan karena aplikasi menggunakan URL publik untuk menampilkan gambar. Upload foto laporan dilakukan langsung dari browser oleh user yang sudah login, sehingga policy `insert` untuk `report-photos` wajib ada. Upload marketplace dan edukasi dilakukan melalui Server Action dengan service-role key, sehingga tidak memerlukan policy insert publik.
+
+```sql
+drop policy if exists "Public can read application storage" on storage.objects;
+create policy "Public can read application storage"
+on storage.objects
+for select
+to public
+using (
+  bucket_id in ('report-photos', 'marketplace-bucket', 'educational-assets')
+);
+
+drop policy if exists "Authenticated users can upload report photos" on storage.objects;
+create policy "Authenticated users can upload report photos"
+on storage.objects
+for insert
+to authenticated
+with check (bucket_id = 'report-photos');
 ```
 
-Bucket ini digunakan oleh fitur **Download Panduan & Poster** di halaman Edukasi untuk menyimpan file DOCX/PDF/JPEG/XLSX. Pastikan policy storage mengizinkan `read` untuk publik dan `insert/update/delete` dilakukan lewat service-role (Server Action).
+> Jangan menambahkan `SUPABASE_SERVICE_ROLE_KEY` ke client atau memberi policy `insert` kepada `anon`. Server Action sudah memakai service-role key untuk operasi admin, sedangkan laporan warga harus melalui autentikasi Supabase.
 
 #### 6️. Upload Assets
 
