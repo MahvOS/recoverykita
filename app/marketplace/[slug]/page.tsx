@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { useParams } from "next/navigation";
 import {
-  supabase,
+  hasSupabaseConfig,
   getSupabaseClient,
   MarketplaceProduct,
 } from "@/lib/supabase";
@@ -53,7 +53,7 @@ export default function ProductDetailPage() {
     const fetchProduct = async () => {
       setLoading(true);
 
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setProduct(null);
         setLoading(false);
         return;

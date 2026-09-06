@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase, getSupabaseClient, Article } from "@/lib/supabase";
+import { hasSupabaseConfig, getSupabaseClient, Article } from "@/lib/supabase";
 
 export interface EdukasiArticle {
   id: string;
@@ -109,7 +109,7 @@ export function useEdukasiData(): UseEdukasiDataReturn {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!supabase) {
+    if (!hasSupabaseConfig) {
       setArticles([]);
       setLoading(false);
       return;
@@ -152,7 +152,8 @@ export function useEdukasiData(): UseEdukasiDataReturn {
   }, []);
 
   useEffect(() => {
-    void fetchData();
+    const timer = window.setTimeout(() => void fetchData(), 0);
+    return () => window.clearTimeout(timer);
   }, [fetchData]);
 
   const createArticle = useCallback(
@@ -160,7 +161,7 @@ export function useEdukasiData(): UseEdukasiDataReturn {
       payload: ArticlePayload,
       quiz?: QuizPayload,
     ): Promise<EdukasiArticle | null> => {
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setError("Client Supabase tidak tersedia.");
         return null;
       }
@@ -224,7 +225,7 @@ export function useEdukasiData(): UseEdukasiDataReturn {
       quiz?: QuizPayload,
       removeQuiz = false,
     ): Promise<EdukasiArticle | null> => {
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setError("Client Supabase tidak tersedia.");
         return null;
       }
@@ -303,7 +304,7 @@ export function useEdukasiData(): UseEdukasiDataReturn {
 
   const fetchArticleWithQuiz = useCallback(
     async (id: string): Promise<ArticleWithQuiz | null> => {
-      if (!supabase) return null;
+      if (!hasSupabaseConfig) return null;
 
       try {
         const client = getSupabaseClient();
@@ -403,7 +404,7 @@ export function useEdukasiData(): UseEdukasiDataReturn {
   );
 
   const deleteArticle = useCallback(async (id: string): Promise<boolean> => {
-    if (!supabase) {
+    if (!hasSupabaseConfig) {
       setError("Client Supabase tidak tersedia.");
       return false;
     }

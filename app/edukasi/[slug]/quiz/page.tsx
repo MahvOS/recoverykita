@@ -5,7 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { useParams } from "next/navigation";
-import { supabase, getSupabaseClient, Article, Quiz } from "@/lib/supabase";
+import {
+  hasSupabaseConfig,
+  getSupabaseClient,
+  Article,
+  Quiz,
+} from "@/lib/supabase";
 import { QuizInteractive } from "@/components/Quiz";
 import type { QuizQuestion } from "@/lib/supabase";
 
@@ -44,7 +49,7 @@ export default function QuizPage() {
     const fetchData = async () => {
       setLoading(true);
 
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setNotFound(true);
         setLoading(false);
         return;

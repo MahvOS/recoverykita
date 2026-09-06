@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import {
-  supabase,
+  hasSupabaseConfig,
   getSupabaseClient,
   Location,
   MapLocationCategory,
@@ -142,6 +142,7 @@ function LeafletMap({
 
       filtered.forEach((loc) => {
         const cfg = CATEGORY_CONFIG[loc.category];
+        const photoUrl = loc.photo_urls?.[0] || loc.photo_url;
 
         const icon = L.divIcon({
           className: "",
@@ -167,21 +168,38 @@ function LeafletMap({
         const marker = L.marker([loc.latitude, loc.longitude], { icon });
 
         // Popup
-        marker.bindPopup(
-          `<div style="font-family:sans-serif; min-width:180px; padding:4px 2px">
-            <span style="
-              display:inline-block;
-              background:${cfg.bg};
-              color:${cfg.color};
-              border:1px solid ${cfg.border};
-              font-size:10px; font-weight:700;
-              padding:2px 8px; border-radius:99px; margin-bottom:6px;
-            ">${cfg.label}</span>
-            <p style="font-size:13px; font-weight:700; color:#111; margin:0 0 4px">${loc.title}</p>
-            <p style="font-size:11px; color:#555; margin:0; line-height:1.5">${loc.description}</p>
-          </div>`,
-          { maxWidth: 240 },
-        );
+        let popupHtml = [
+          `<div style="font-family:sans-serif;min-width:200px;padding:6px 4px">`,
+          `<span style="display:inline-block;background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.border};font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-bottom:6px">${cfg.label}</span>`,
+          `<p style="font-size:15px;font-weight:700;color:#111;margin:0 0 4px">${loc.title}</p>`,
+          `<p style="font-size:12px;color:#555;margin:0 0 4px;line-height:1.4">${loc.description}</p>`,
+        ].join("");
+
+        if (photoUrl) {
+          popupHtml += `<img src="${photoUrl}" style="width:100%;max-height:120px;object-fit:cover;border-radius:4px;margin-bottom:4px;" />`;
+        }
+
+        if (loc.reporter_name) {
+          popupHtml += `<p style="font-size:11px;color:#555;margin:0 0 2px"><span style="font-weight:700">Pelapor:</span> ${loc.reporter_name}</p>`;
+        }
+        if (loc.reporter_phone) {
+          popupHtml += `<p style="font-size:11px;color:#555;margin:0 0 2px"><span style="font-weight:700">No. HP:</span> <a href="tel:${loc.reporter_phone}" style="color:#198754;text-decoration:underline">${loc.reporter_phone}</a></p>`;
+        }
+        if (loc.waste_type) {
+          const wt = Array.isArray(loc.waste_type)
+            ? loc.waste_type.join(", ")
+            : loc.waste_type;
+          popupHtml += `<p style="font-size:11px;color:#555;margin:0 0 2px"><span style="font-weight:700">Jenis Sampah:</span> ${wt}</p>`;
+        }
+        popupHtml += `<p style="font-size:10px;color:#999;margin:4px 0 0"><span style="font-weight:700">Tanggal:</span> ${new Date(loc.created_at).toLocaleDateString("id-ID")}</p>`;
+        popupHtml += `</div>`;
+
+        marker.bindPopup(popupHtml, {
+          maxWidth: 320,
+          closeButton: true,
+          closeOnEscape: true,
+          closeOnClick: true,
+        });
 
         marker.on("click", () => onSelectLocation(loc));
         marker.addTo(map);
@@ -222,7 +240,7 @@ export default function PetaPage() {
     const fetchLocations = async () => {
       setLoading(true);
 
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setError(
           "Supabase belum dikonfigurasi. Tambahkan variabel environment di Vercel.",
         );
@@ -539,6 +557,89 @@ export default function PetaPage() {
                 <p className="text-xs text-zinc-600 leading-relaxed line-clamp-2">
                   {selectedLocation.description}
                 </p>
+                {(() => {
+                  const photos =
+                    selectedLocation.photo_urls ||
+                    (selectedLocation.photo_url
+                      ? [selectedLocation.photo_url]
+                      : []);
+                  if (photos.length === 0) return null;
+                  return (
+                    <div className="mt-2">
+                      <Image
+                        src={photos[0]}
+                        alt={selectedLocation.title || "Foto lokasi"}
+                        width={280}
+                        height={140}
+                        className="w-full h-24 sm:h-32 object-cover rounded-lg"
+                        unoptimized
+                      />
+                      {photos.length > 1 && (
+                        <div className="flex gap-1 mt-1.5 overflow-x-auto pb-0.5">
+                          {photos.slice(1, 5).map((url, idx) => (
+                            <Image
+                              key={idx}
+                              src={url}
+                              alt={`Foto ${idx + 2}`}
+                              width={60}
+                              height={60}
+                              className="w-15 h-15 object-cover rounded flex-shrink-0"
+                              unoptimized
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+                {selectedLocation.waste_type && (
+                  <div className="mt-2 flex justify-between gap-4">
+                    <span className="text-[10px] text-zinc-400">
+                      Jenis Sampah
+                    </span>
+                    <div className="flex flex-wrap gap-1 justify-end max-w-[65%]">
+                      {Array.isArray(selectedLocation.waste_type) ? (
+                        selectedLocation.waste_type.map((w) => (
+                          <span
+                            key={w}
+                            className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold text-zinc-700"
+                          >
+                            {w}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold text-zinc-700">
+                          {selectedLocation.waste_type}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div className="mt-1 flex justify-between gap-4">
+                  <span className="text-[10px] text-zinc-400">Pelapor</span>
+                  <span className="text-[10px] font-medium text-zinc-700">
+                    {selectedLocation.reporter_name || "Anonim"}
+                  </span>
+                </div>
+                {selectedLocation.reporter_phone && (
+                  <div className="flex justify-between gap-4 items-center">
+                    <span className="text-[10px] text-zinc-400">No. HP</span>
+                    <a
+                      href={`tel:${selectedLocation.reporter_phone}`}
+                      className="text-[10px] font-medium text-zinc-700 hover:text-[#198754] hover:underline"
+                    >
+                      {selectedLocation.reporter_phone}
+                    </a>
+                  </div>
+                )}
+                <div className="mt-1 flex justify-between gap-4">
+                  <span className="text-[10px] text-zinc-400">Tanggal Lap</span>
+                  <span className="text-[10px] font-medium text-zinc-700">
+                    {new Date(selectedLocation.created_at).toLocaleString(
+                      "id-ID",
+                    )}
+                  </span>
+                </div>
                 <p className="text-[10px] text-zinc-400 mt-2 font-mono">
                   {selectedLocation.latitude.toFixed(4)},{" "}
                   {selectedLocation.longitude.toFixed(4)}

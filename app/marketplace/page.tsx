@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import {
-  supabase,
+  hasSupabaseConfig,
   getSupabaseClient,
   MarketplaceProduct,
 } from "@/lib/supabase";
@@ -57,7 +57,7 @@ export default function MarketplacePage() {
       setLoading(true);
       setError(null);
 
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setError(
           "Supabase belum dikonfigurasi. Silakan tambahkan variabel environment di Vercel.",
         );
@@ -219,13 +219,13 @@ export default function MarketplacePage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Mobile filters */}
         <div className="md:hidden mb-6 space-y-4">
-          <div className="overflow-x-auto -mx-4 px-4 pb-1">
-            <div className="flex gap-2 w-max min-w-full">
+          <div className="overflow-x-auto -mx-4 px-4 pb-2">
+            <div className="flex gap-2.5 w-max min-w-full pb-1">
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`whitespace-nowrap px-3.5 py-2 rounded-full text-xs font-semibold transition-all flex-shrink-0 ${activeCategory === cat.id ? "bg-[#0f5132] text-white" : "bg-white border border-zinc-200 text-zinc-600"}`}
+                  className={`whitespace-nowrap px-4 py-2.5 rounded-full text-xs font-semibold transition-all flex-shrink-0 ${activeCategory === cat.id ? "bg-[#0f5132] text-white shadow-sm" : "bg-white border border-zinc-200 text-zinc-600 hover:border-[#198754] hover:text-[#0f5132]}"}`}
                 >
                   {cat.label}
                 </button>
@@ -238,7 +238,7 @@ export default function MarketplacePage() {
               placeholder="Harga min"
               value={minPrice}
               onChange={(e) => setMinPrice(e.target.value)}
-              className="flex-1 min-w-0 border border-zinc-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white text-zinc-700"
+              className="flex-1 min-w-0 border border-zinc-200 rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white text-zinc-700"
             />
             <span className="text-zinc-400 text-xs">-</span>
             <input
@@ -246,13 +246,13 @@ export default function MarketplacePage() {
               placeholder="Harga max"
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
-              className="flex-1 min-w-0 border border-zinc-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white text-zinc-700"
+              className="flex-1 min-w-0 border border-zinc-200 rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#198754]/30 focus:border-[#198754] bg-white text-zinc-700"
             />
           </div>
         </div>
 
         <div className="flex gap-8">
-          <aside className="w-52 flex-shrink-0 hidden md:block">
+          <aside className="w-56 sm:w-60 flex-shrink-0 hidden md:block">
             <div className="mb-8">
               <p className="text-[10px] font-bold tracking-widest text-zinc-400 uppercase mb-3">
                 Kategori
@@ -425,7 +425,7 @@ export default function MarketplacePage() {
                           <span className="text-sm font-bold text-zinc-900">
                             {formatPrice(product.price)}
                           </span>
-                          <button className="w-8 h-8 bg-[#e8f5e9] text-[#0f5132] rounded-xl flex items-center justify-center hover:bg-[#0f5132] hover:text-white transition-colors flex-shrink-0">
+                          <button className="w-9 h-9 sm:w-8 sm:h-8 bg-[#e8f5e9] text-[#0f5132] rounded-xl flex items-center justify-center hover:bg-[#0f5132] hover:text-white transition-colors flex-shrink-0">
                             <svg
                               className="w-4 h-4"
                               fill="none"
@@ -526,7 +526,7 @@ function HeroCollage({
       ];
 
   return (
-    <div className="relative h-[420px] sm:h-[480px] lg:h-[520px]">
+    <div className="relative h-[320px] sm:h-[400px] lg:h-[520px]">
       {/* Foto utama */}
       <div className="absolute top-0 right-2 sm:right-6 w-[58%] h-[68%] rotate-[2deg] rounded-2xl shadow-xl border border-zinc-200/60 overflow-hidden bg-white">
         <Image

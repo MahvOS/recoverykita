@@ -106,7 +106,9 @@ export interface Quiz {
 }
 
 export const supabase =
-  typeof supabaseUrl === "string" && typeof supabaseKey === "string"
+  typeof window === "undefined" &&
+  typeof supabaseUrl === "string" &&
+  typeof supabaseKey === "string"
     ? createClient(supabaseUrl, supabaseKey)
     : null;
 
@@ -140,6 +142,10 @@ export function getSupabaseAuthClient() {
 }
 
 export function getSupabaseClient() {
+  if (typeof window !== "undefined") {
+    return getSupabaseAuthClient();
+  }
+
   if (!supabase) {
     throw new Error(
       "Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY di Vercel.",

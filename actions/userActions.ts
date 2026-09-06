@@ -45,7 +45,7 @@ export async function getUserReports(userId: string): Promise<UserReport[]> {
     console.warn("[getUserReports] Blocked:", guard.message);
     return [];
   }
-  const client = getSupabaseClient();
+  const client = getSupabaseAdminClient();
 
   const { data: profile, error: profileError } = await client
     .from("profiles")
@@ -122,9 +122,9 @@ export async function getUserReportCount(userId: string): Promise<number> {
     console.warn("[getUserReportCount] Blocked:", guard.message);
     return 0;
   }
-  const client = getSupabaseClient();
+  const admin = getSupabaseAdminClient();
 
-  const { data: profile, error: profileError } = await client
+  const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("full_name, phone_number")
     .eq("id", userId)
@@ -147,7 +147,7 @@ export async function getUserReportCount(userId: string): Promise<number> {
     return 0;
   }
 
-  const { count, error } = await client
+  const { count, error } = await admin
     .from("locations")
     .select("*", { count: "exact", head: true })
     .or(filters.join(","));
@@ -158,6 +158,71 @@ export async function getUserReportCount(userId: string): Promise<number> {
   }
 
   return count ?? 0;
+}
+
+export async function getUserReportCounts(
+  userIds: string[],
+): Promise<Record<string, number>> {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    console.warn("[getUserReportCounts] Blocked:", guard.message);
+    return Object.fromEntries(userIds.map((id) => [id, 0]));
+  }
+  const admin = getSupabaseAdminClient();
+
+  if (userIds.length === 0) return {};
+
+  const { data: profiles, error: profileError } = await admin
+    .from("profiles")
+    .select("id, full_name, phone_number")
+    .in("id", userIds);
+
+  if (profileError) {
+    console.error("Failed to fetch profiles for batch count:", profileError);
+    return Object.fromEntries(userIds.map((id) => [id, 0]));
+  }
+
+  const profileMap = new Map(
+    (profiles || []).map((p) => [
+      p.id,
+      { full_name: p.full_name, phone_number: p.phone_number },
+    ]),
+  );
+
+  const results = await Promise.all(
+    userIds.map(async (userId) => {
+      const profile = profileMap.get(userId);
+      if (!profile?.full_name && !profile?.phone_number) {
+        return [userId, 0] as const;
+      }
+
+      const filters: string[] = [];
+      if (profile?.full_name) {
+        filters.push(`reporter_name.eq.${profile.full_name}`);
+      }
+      if (profile?.phone_number) {
+        filters.push(`reporter_phone.eq.${profile.phone_number}`);
+      }
+
+      if (filters.length === 0) {
+        return [userId, 0] as const;
+      }
+
+      const { count, error } = await admin
+        .from("locations")
+        .select("*", { count: "exact", head: true })
+        .or(filters.join(","));
+
+      if (error) {
+        console.error(`Failed to count reports for user ${userId}:`, error);
+        return [userId, 0] as const;
+      }
+
+      return [userId, count ?? 0] as const;
+    }),
+  );
+
+  return Object.fromEntries(results);
 }
 
 export async function toggleBanUser(userId: string, currentStatus: boolean) {

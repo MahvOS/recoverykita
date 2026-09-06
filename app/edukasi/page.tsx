@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { RemoteImage } from "@/components/remote-image";
 import {
-  supabase,
+  hasSupabaseConfig,
   getSupabaseClient,
   Article,
   CarbonFactor,
@@ -198,7 +198,7 @@ export default function EdukasiPage() {
     const fetchData = async () => {
       setLoading(true);
 
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setArticles([]);
         setPopularArticles([]);
         setCarbonFactors([]);
@@ -360,7 +360,7 @@ export default function EdukasiPage() {
                     <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black leading-tight max-w-3xl mb-2 sm:mb-3 line-clamp-2">
                       {featuredArticle.title}
                     </h2>
-                    <p className="text-xs sm:text-sm md:text-base text-white/85 leading-relaxed max-w-2xl line-clamp-2 hidden sm:block">
+                    <p className="text-xs sm:text-sm md:text-base text-white/85 leading-relaxed max-w-2xl line-clamp-2">
                       {featuredArticle.summary}
                     </p>
                     <div className="mt-3 sm:mt-5 inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-white group-hover:gap-3 transition-all">
@@ -392,13 +392,13 @@ export default function EdukasiPage() {
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0f5132] mb-3 tracking-tight leading-tight">
                 Bacaan, panduan, dan kuis untuk gaya hidup sirkular.
               </h1>
-              <p className="text-zinc-500 text-sm md:text-base leading-relaxed mb-5">
+              <p className="text-sm text-zinc-500 md:text-base leading-relaxed mb-5">
                 Pelajari cara mengelola sampah secara berkelanjutan. Semua
                 materi edukasi tersedia gratis untuk semua.
               </p>
 
               {featuredArticle && (
-                <div className="hidden lg:flex flex-col gap-2 pt-4 border-t border-zinc-200">
+                <div className="hidden sm:flex flex-col gap-2 pt-4 border-t border-zinc-200">
                   <p className="text-[10px] font-bold tracking-widest text-zinc-400 uppercase">
                     Sedang dibaca
                   </p>
@@ -690,7 +690,7 @@ export default function EdukasiPage() {
               Pilih kategori untuk melihat instruksi pembuangan.
             </p>
 
-            <div className="grid grid-cols-3 gap-2.5 sm:gap-3 md:gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 md:gap-4 mb-6">
               {wasteGuides.map((guide) => {
                 const isActive = selectedGuide?.id === guide.id;
                 const isB3 = guide.category_name.toLowerCase().includes("b3");
@@ -722,7 +722,7 @@ export default function EdukasiPage() {
                         name={guide.icon_name ?? guide.category_name}
                       />
                     </div>
-                    <span className="text-[10px] font-bold leading-tight sm:text-xs">
+                    <span className="text-xs font-bold leading-tight">
                       {guide.category_name}
                     </span>
                   </button>

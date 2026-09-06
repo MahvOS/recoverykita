@@ -1,21 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase";
+import {
+  fetchMapReports,
+  updateReportStatus,
+  deleteReportServer,
+} from "@/actions/reportActions";
 import type { MapReport, Priority, ReportStatus } from "@/types/admin";
 
-const VALID_STATUS = new Set<ReportStatus>([
-  "pending",
-  "in_progress",
-  "completed",
-  "rejected",
-]);
-
-const LOCATION_STATUS_MAP: Record<ReportStatus, string> = {
-  pending: "pending",
-  in_progress: "in_progress",
-  completed: "cleaned",
-  rejected: "rejected",
-};
+export type { MapReport, Priority, ReportStatus };
 
 type Filters = {
   category: string;
@@ -29,258 +21,83 @@ export function useMapReports() {
   const [reports, setReports] = useState<MapReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  const normalizeStatus = (value: unknown): ReportStatus => {
-    const str = String(value ?? "")
-      .toLowerCase()
-      .trim();
-    if (str === "cleaned") return "completed";
-    if (VALID_STATUS.has(str as ReportStatus)) return str as ReportStatus;
-    return "pending";
-  };
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    if (!hasSupabaseConfig) {
-      setAuthenticated(false);
-      setError("Supabase belum dikonfigurasi.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const client = getSupabaseClient();
-      try {
-        const { data: userData } = await client.auth.getUser();
-        if (userData?.user) {
-          setAuthenticated(true);
-          setUserId(userData.user.id);
-        } else {
-          setAuthenticated(false);
-          setUserId(null);
-        }
-      } catch {
-        setAuthenticated(false);
-        setUserId(null);
-      }
-
-      let query = client
-        .from("locations")
-        .select(
-          `
-          id, title, description, category, waste_type, priority, status, 
-          latitude, longitude, photo_urls, photo_url, reporter_name, reporter_phone, 
-          address_notes, created_at, updated_at
-        `,
-        )
-        .order("created_at", { ascending: false });
-
-      if (filters.category !== "all") {
-        query = query.eq("category", filters.category);
-      }
-
-      if (filters.priority !== "all") {
-        query = query.eq("priority", filters.priority);
-      }
-
-      if (filters.date) {
-        const start = new Date(filters.date);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(start);
-        end.setDate(end.getDate() + 1);
-        query = query
-          .gte("created_at", start.toISOString())
-          .lt("created_at", end.toISOString());
-      }
-
-      const { data, error: queryError } = await query;
-
-      if (queryError) throw queryError;
-
-      const rows = (data ?? []) as unknown as Record<string, unknown>[];
-      const mapped: MapReport[] = rows.map((row) => {
-        const pUrls = Array.isArray(row.photo_urls)
-          ? (row.photo_urls.filter(
-              (v): v is string => typeof v === "string",
-            ) as string[])
-          : typeof row.photo_url === "string" && row.photo_url.trim()
-            ? [row.photo_url.trim()]
-            : null;
-
-        const primaryPhoto =
-          typeof row.photo_url === "string" && row.photo_url.trim()
-            ? row.photo_url.trim()
-            : pUrls && pUrls.length > 0
-              ? pUrls[0]
-              : null;
-
-        return {
-          id: String(row.id),
-          location_name:
-            typeof row.address_notes === "string" && row.address_notes.trim()
-              ? row.address_notes.trim()
-              : typeof row.title === "string" && row.title.trim()
-                ? row.title.trim()
-                : null,
-          description:
-            typeof row.description === "string" ? row.description : null,
-          category: typeof row.category === "string" ? row.category : null,
-          latitude: row.latitude == null ? null : Number(row.latitude),
-          longitude: row.longitude == null ? null : Number(row.longitude),
-          status: normalizeStatus(row.status),
-          priority:
-            row.priority === "rendah" ||
-            row.priority === "sedang" ||
-            row.priority === "tinggi"
-              ? (row.priority as Priority)
-              : null,
-          photo_url: primaryPhoto,
-          photo_urls: pUrls,
-          waste_type:
-            typeof row.waste_type === "string"
-              ? row.waste_type
-              : Array.isArray(row.waste_type)
-                ? (row.waste_type.filter(
-                    (v): v is string => typeof v === "string",
-                  ) as string[])
-                : null,
-          reporter_name:
-            typeof row.reporter_name === "string" ? row.reporter_name : null,
-          reporter_phone:
-            typeof row.reporter_phone === "string" ? row.reporter_phone : null,
-          created_at:
-            typeof row.created_at === "string" ? row.created_at : null,
-          updated_at:
-            typeof row.updated_at === "string" ? row.updated_at : null,
-        };
+      const data = await fetchMapReports({
+        category: filters.category,
+        priority: filters.priority,
+        date: filters.date,
       });
-
-      setReports(mapped);
-    } catch (caught) {
+      setReports(data);
+    } catch (err: unknown) {
       setReports([]);
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "Gagal memuat laporan dari Supabase.",
-      );
+      setError(err instanceof Error ? err.message : "Gagal memuat laporan.");
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
-  const updateStatus = useCallback(
-    async (id: string, status: ReportStatus) => {
-      setUpdatingId(id);
-      setError(null);
+  const updateStatus = useCallback(async (id: string, status: ReportStatus) => {
+    setUpdatingId(id);
+    setError(null);
 
-      const currentReport = reports.find((r) => r.id === id);
-      const previousStatus = currentReport?.status ?? status;
+    try {
+      const result = await updateReportStatus(id, status);
 
-      try {
-        const client = getSupabaseClient() as unknown as {
-          from: (table: string) => {
-            update: (values: Record<string, unknown>) => {
-              eq: (
-                column: string,
-                value: string,
-              ) => Promise<{
-                error: Error | null;
-              }>;
-            };
-            insert: (
-              values: Record<string, unknown>,
-            ) => Promise<{ error: Error | null }>;
-            delete: () => {
-              eq: (
-                column: string,
-                value: string,
-              ) => Promise<{
-                error: Error | null;
-              }>;
-            };
-          };
-        };
-
-        if (status === "rejected") {
-          await client.from("report_logs").insert({
-            location_id: id,
-            previous_status: previousStatus,
-            new_status: "rejected",
-            notes: "Laporan ditolak dan dihapus oleh admin.",
-            updated_by: userId,
-            created_at: new Date().toISOString(),
-          });
-
-          const { error: deleteError } = await client
-            .from("locations")
-            .delete()
-            .eq("id", id);
-
-          if (deleteError) throw deleteError;
-
-          setReports((current) => current.filter((r) => r.id !== id));
-          return true;
-        }
-
-        const targetStatus = LOCATION_STATUS_MAP[status] ?? status;
-
-        const { error: updateError } = await client
-          .from("locations")
-          .update({
-            status: targetStatus,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", id);
-
-        if (updateError) throw updateError;
-        const { error: logError } = await client.from("report_logs").insert({
-          location_id: id,
-          previous_status: previousStatus,
-          new_status: status,
-          notes: `Status diubah dari ${previousStatus} ke ${status} oleh admin.`,
-          updated_by: userId ? String(userId) : "Admin",
-          created_at: new Date().toISOString(),
-        });
-
-        if (logError) {
-          console.warn("Log warning (Non-blocking):", logError.message);
-        }
-
+      if (result.success) {
         setReports((current) =>
           current.map((r) =>
             r.id === id
-              ? { ...r, status, updated_at: new Date().toISOString() }
+              ? {
+                  ...r,
+                  status,
+                  updated_at: new Date().toISOString(),
+                }
               : r,
           ),
         );
-
         return true;
-      } catch (caught) {
-        setError(
-          caught instanceof Error
-            ? caught.message
-            : "Gagal memperbarui status.",
-        );
-        return false;
-      } finally {
-        setUpdatingId(null);
       }
-    },
-    [reports, userId],
-  );
 
-  const deleteReport = useCallback(
-    async (id: string) => {
-      return updateStatus(id, "rejected");
-    },
-    [updateStatus],
-  );
+      setError(result.error || "Gagal memperbarui status.");
+      return false;
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Gagal memperbarui status.",
+      );
+      return false;
+    } finally {
+      setUpdatingId(null);
+    }
+  }, []);
+
+  const deleteReport = useCallback(async (id: string) => {
+    setUpdatingId(id);
+    setError(null);
+
+    try {
+      const result = await deleteReportServer(id);
+
+      if (result.success) {
+        setReports((current) => current.filter((r) => r.id !== id));
+        return true;
+      }
+
+      setError(result.error || "Gagal menghapus laporan.");
+      return false;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Gagal menghapus laporan.");
+      return false;
+    } finally {
+      setUpdatingId(null);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void fetchReports(), 0);
@@ -310,7 +127,7 @@ export function useMapReports() {
     reports,
     loading,
     error,
-    authenticated,
+    authenticated: true,
     updatingId,
     refetch: fetchReports,
     updateStatus,

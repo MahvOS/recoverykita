@@ -653,6 +653,7 @@ function AdminDashboardContent() {
                                 });
                             }
                           }}
+                          onDelete={() => setDeleteConfirm(selected)}
                         />
                       ) : (
                         <div className="divide-y divide-zinc-100 max-h-[600px] overflow-y-auto">
@@ -793,10 +794,12 @@ function ReportDetail({
   report,
   updating,
   onStatus,
+  onDelete,
 }: {
   report: MapReport;
   updating: boolean;
   onStatus: (s: ReportStatus) => Promise<void>;
+  onDelete: () => void;
 }) {
   const [photoIndex, setPhotoIndex] = useState(0);
   const photos =
@@ -945,6 +948,15 @@ function ReportDetail({
           <Loader2 className="h-3 w-3 animate-spin" />
           Menyimpan perubahan...
         </p>
+      )}
+      {report.status === "completed" && (
+        <button
+          type="button"
+          onClick={onDelete}
+          className="mt-3 w-full rounded-lg bg-rose-50 border border-rose-200 px-4 py-2.5 text-sm font-bold text-rose-700 hover:bg-rose-100 transition-colors"
+        >
+          Hapus Laporan Selesai
+        </button>
       )}
     </div>
   );

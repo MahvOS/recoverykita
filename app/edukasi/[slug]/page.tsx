@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { useParams, useRouter } from "next/navigation";
 import { RemoteImage } from "@/components/remote-image";
-import { supabase, getSupabaseClient, Article } from "@/lib/supabase";
+import { hasSupabaseConfig, getSupabaseClient, Article } from "@/lib/supabase";
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "";
@@ -40,7 +40,7 @@ export default function ArticleDetailPage() {
     const fetchArticle = async () => {
       setLoading(true);
 
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setNotFound(true);
         setLoading(false);
         return;

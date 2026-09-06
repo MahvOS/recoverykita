@@ -5,7 +5,7 @@ import { Search, ShieldAlert, ShieldCheck, X, RefreshCw } from "lucide-react";
 import {
   getAdminUsers,
   getUserReports,
-  getUserReportCount,
+  getUserReportCounts,
   toggleBanUser,
 } from "@/actions/userActions";
 import type { AdminUser, UserReport } from "@/types/admin";
@@ -250,12 +250,8 @@ export default function UserManagement() {
       setUsers(data);
       if (data.length > 0) {
         setCountsLoading(true);
-        const counts = await Promise.all(
-          data.map(
-            async (u) => [u.id, await getUserReportCount(u.id)] as const,
-          ),
-        );
-        setReportCounts(Object.fromEntries(counts));
+        const counts = await getUserReportCounts(data.map((u) => u.id));
+        setReportCounts(counts);
         setCountsLoading(false);
       } else {
         setReportCounts({});
@@ -266,7 +262,8 @@ export default function UserManagement() {
   }, []);
 
   useEffect(() => {
-    refreshUsers();
+    const timer = window.setTimeout(() => void refreshUsers(), 0);
+    return () => window.clearTimeout(timer);
   }, [refreshUsers]);
 
   const filtered = useMemo(() => {

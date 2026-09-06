@@ -6,10 +6,43 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { RemoteImage } from "@/components/remote-image";
 import {
+  hasSupabaseConfig,
   getSupabaseClient,
   MarketplaceProduct,
-  supabase,
 } from "@/lib/supabase";
+
+const HERO_PHRASES = [
+  "Lebih Baik.",
+  "Lebih Hijau.",
+  "Menghidupi Kita.",
+  "Lebih Bersih.",
+  "Berkelanjutan.",
+];
+
+function RotatingText({ phrases }: { phrases: string[] }) {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setVisible(false);
+      const switchTimer = setTimeout(() => {
+        setIndex((prev) => (prev + 1) % phrases.length);
+        setVisible(true);
+      }, 300);
+      return () => clearTimeout(switchTimer);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [phrases]);
+
+  return (
+    <span
+      className={`inline-block transition-all duration-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
+    >
+      {phrases[index]}
+    </span>
+  );
+}
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,7 +61,7 @@ export default function Home() {
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setProductsLoading(false);
         return;
       }
@@ -56,7 +89,7 @@ export default function Home() {
 
   useEffect(() => {
     const fetchMapStats = async () => {
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         setMapStatsLoading(false);
         return;
       }
@@ -247,9 +280,16 @@ export default function Home() {
 
           {/* Hero Content Centered */}
           <div className="z-10 flex flex-col items-center gap-4 sm:gap-6 max-w-3xl">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-black text-[#0f5132] leading-tight tracking-tight w-full max-w-3xl text-center">
-              Langkah Kecil Kita untuk <br className="hidden sm:block"></br>{" "}
-              Bumi yang Bersih
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl  text-[#0f5132] leading-tight tracking-tight w-full max-w-3xl text-center">
+              <b>
+                Langkah Kecil Kita untuk <br className="hidden sm:block"></br>{" "}
+                Bumi yang{" "}
+              </b>
+              <i>
+                <u>
+                  <RotatingText phrases={HERO_PHRASES} />
+                </u>
+              </i>
             </h1>
             <p className="text-zinc-600 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl px-2">
               Mulai langkah kecilmu untuk lingkungan. Sampahmu masuk kategori

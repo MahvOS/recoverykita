@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Plus, Trash2, X } from "lucide-react";
-import { supabase, getSupabaseClient, Article } from "@/lib/supabase";
+import type { Article } from "@/lib/supabase";
 import type { ArticlePayload, QuizPayload } from "@/hooks/useEdukasiData";
 import { uploadArticleThumbnail } from "@/actions/edukasiActions";
 

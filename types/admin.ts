@@ -22,7 +22,7 @@ export interface Location {
   created_at: string;
   updated_at: string;
   priority: Priority | null;
-  waste_type: string | null;
+  waste_type: string | string[] | null;
   photo_urls: string[] | null;
 }
 

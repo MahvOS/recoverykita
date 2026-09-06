@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/navbar";
-import { supabase, getSupabaseAuthClient } from "@/lib/supabase";
+import { hasSupabaseConfig, getSupabaseAuthClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 type Priority = "rendah" | "sedang" | "tinggi";
@@ -76,7 +76,7 @@ function LaporPageInner() {
   const mapInstanceRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!supabase) {
+    if (!hasSupabaseConfig) {
       setAuthChecked(true);
       return;
     }
@@ -348,7 +348,7 @@ function LaporPageInner() {
     setError("");
 
     try {
-      if (!supabase) {
+      if (!hasSupabaseConfig) {
         throw new Error(
           "Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY di Vercel.",
         );
@@ -582,7 +582,7 @@ function LaporPageInner() {
                     />
                     <button
                       type="submit"
-                      disabled={authLoading || !supabase}
+                      disabled={authLoading || !hasSupabaseConfig}
                       className="w-full bg-[#198754] hover:bg-[#0f5132] disabled:bg-zinc-300 text-white font-semibold py-3 rounded-xl transition"
                     >
                       {authLoading
