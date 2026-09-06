@@ -247,6 +247,14 @@ export async function deleteProductServer(
   const admin = getSupabaseAdminClient();
 
   try {
+    const { data: product, error: fetchError } = await admin
+      .from("products")
+      .select("thumbnail_url")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
     const { data, error: dbError } = await admin
       .from("products")
       .delete()
@@ -256,6 +264,24 @@ export async function deleteProductServer(
     if (dbError) throw dbError;
     if (!data || data.length === 0) {
       throw new Error("Produk tidak ditemukan atau gagal dihapus.");
+    }
+
+    const thumbnailUrl =
+      typeof product?.thumbnail_url === "string" ? product.thumbnail_url : "";
+    const marker = "/storage/v1/object/public/marketplace-bucket/";
+    const markerIndex = thumbnailUrl.indexOf(marker);
+    const thumbnailPath =
+      markerIndex >= 0
+        ? decodeURIComponent(thumbnailUrl.slice(markerIndex + marker.length))
+        : null;
+
+    if (thumbnailPath) {
+      const { error: storageError } = await admin.storage
+        .from("marketplace-bucket")
+        .remove([thumbnailPath]);
+      if (storageError) {
+        console.error("deleteProduct thumbnail error:", storageError);
+      }
     }
 
     revalidatePath("/admin");

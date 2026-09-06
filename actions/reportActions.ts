@@ -45,6 +45,49 @@ const LOCATION_CATEGORIES = [
   "community_action",
 ] as const;
 
+type ReportPhotoRow = {
+  photo_url?: unknown;
+  photo_urls?: unknown;
+};
+
+function getReportPhotoPaths(row: ReportPhotoRow): string[] {
+  const urls = [
+    ...(typeof row.photo_url === "string" ? [row.photo_url] : []),
+    ...(Array.isArray(row.photo_urls)
+      ? row.photo_urls.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : []),
+  ];
+
+  return Array.from(
+    new Set(
+      urls
+        .map((url) => {
+          const marker = "/storage/v1/object/public/report-photos/";
+          const index = url.indexOf(marker);
+          return index >= 0
+            ? decodeURIComponent(url.slice(index + marker.length))
+            : null;
+        })
+        .filter((path): path is string => Boolean(path)),
+    ),
+  );
+}
+
+export async function removeReportPhotos(
+  admin: ReturnType<typeof getSupabaseAdminClient>,
+  rows: ReportPhotoRow[],
+): Promise<void> {
+  const paths = Array.from(new Set(rows.flatMap(getReportPhotoPaths)));
+  if (paths.length === 0) return;
+
+  const { error } = await admin.storage.from("report-photos").remove(paths);
+  if (error) {
+    console.error("Gagal menghapus foto laporan dari Storage:", error);
+  }
+}
+
 export async function createAdminReport(formData: FormData): Promise<{
   success: boolean;
   error?: string;
@@ -273,6 +316,12 @@ export async function updateReportStatus(
     );
 
     if (status === "rejected") {
+      const { data: reportToDelete } = await admin
+        .from("locations")
+        .select("photo_url, photo_urls")
+        .eq("id", id)
+        .maybeSingle();
+
       await admin.from("report_logs").insert({
         location_id: id,
         previous_status: currentStatus,
@@ -288,6 +337,10 @@ export async function updateReportStatus(
         .eq("id", id);
 
       if (deleteError) throw deleteError;
+
+      if (reportToDelete) {
+        await removeReportPhotos(admin, [reportToDelete]);
+      }
 
       revalidatePath("/admin");
       revalidatePath("/peta");

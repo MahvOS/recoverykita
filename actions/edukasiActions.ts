@@ -6,6 +6,15 @@ import { requireAdmin } from "@/lib/auth";
 
 const ARTICLE_BUCKET = "educational-assets";
 
+function getStoragePath(publicUrl: string | null | undefined): string | null {
+  if (!publicUrl) return null;
+  const marker = `/storage/v1/object/public/${ARTICLE_BUCKET}/`;
+  const index = publicUrl.indexOf(marker);
+  return index >= 0
+    ? decodeURIComponent(publicUrl.slice(index + marker.length))
+    : null;
+}
+
 async function ensureUniqueSlug(
   baseSlug: string,
   excludeId?: string,
@@ -264,11 +273,25 @@ export async function deleteArticle(id: string): Promise<boolean> {
       return false;
     }
     const admin = getSupabaseAdminClient();
+    const { data: article } = await admin
+      .from("articles")
+      .select("thumbnail_url")
+      .eq("id", id)
+      .maybeSingle();
     await removeQuizForArticle(id);
     const { error } = await admin.from("articles").delete().eq("id", id);
     if (error) {
       console.error("deleteArticle error:", error);
       return false;
+    }
+    const thumbnailPath = getStoragePath(article?.thumbnail_url);
+    if (thumbnailPath) {
+      const { error: storageError } = await admin.storage
+        .from(ARTICLE_BUCKET)
+        .remove([thumbnailPath]);
+      if (storageError) {
+        console.error("deleteArticle thumbnail error:", storageError);
+      }
     }
     revalidatePath("/edukasi");
     revalidatePath("/admin/edukasi");

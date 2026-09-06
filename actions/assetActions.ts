@@ -101,17 +101,6 @@ export async function deleteAsset(assetId: string) {
     return { success: false, error: "Aset tidak ditemukan." };
   }
 
-  const filePath = (asset.file_url as string).split("/").pop();
-  if (filePath) {
-    const { error: removeError } = await client.storage
-      .from("educational-assets")
-      .remove([filePath]);
-
-    if (removeError) {
-      console.error("Gagal menghapus file dari storage:", removeError);
-    }
-  }
-
   const { data: deleted, error: dbError } = await client
     .from("downloadable_assets")
     .delete()
@@ -121,6 +110,23 @@ export async function deleteAsset(assetId: string) {
   if (dbError || !deleted || deleted.length === 0) {
     console.error("Gagal menghapus record aset:", dbError);
     return { success: false, error: "Gagal menghapus aset." };
+  }
+
+  const marker = "/storage/v1/object/public/educational-assets/";
+  const fileUrl = typeof asset.file_url === "string" ? asset.file_url : "";
+  const markerIndex = fileUrl.indexOf(marker);
+  const filePath =
+    markerIndex >= 0
+      ? decodeURIComponent(fileUrl.slice(markerIndex + marker.length))
+      : null;
+  if (filePath) {
+    const { error: removeError } = await client.storage
+      .from("educational-assets")
+      .remove([filePath]);
+
+    if (removeError) {
+      console.error("Gagal menghapus file dari storage:", removeError);
+    }
   }
 
   revalidatePath("/admin/edukasi");

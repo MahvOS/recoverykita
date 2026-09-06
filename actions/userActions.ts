@@ -4,6 +4,7 @@ import { getSupabaseClient, getSupabaseAdminClient } from "@/lib/supabase";
 import type { AdminUser, UserReport } from "@/types/admin";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
+import { removeReportPhotos } from "@/actions/reportActions";
 
 export async function getAdminUsers(): Promise<AdminUser[]> {
   const guard = await requireAdmin();
@@ -242,6 +243,18 @@ export async function toggleBanUser(userId: string, currentStatus: boolean) {
       `created_by.eq.${userId}`,
     ];
 
+    const { data: reportsToDelete, error: reportsFetchError } = await admin
+      .from("locations")
+      .select("id, photo_url, photo_urls")
+      .or(orFilters.join(","));
+
+    if (reportsFetchError) {
+      console.error(
+        "Gagal mengambil foto laporan pengguna:",
+        reportsFetchError,
+      );
+    }
+
     const { data: deletedReports, error: deleteReportsError } = await admin
       .from("locations")
       .delete()
@@ -254,6 +267,8 @@ export async function toggleBanUser(userId: string, currentStatus: boolean) {
         deleteReportsError,
       );
     }
+
+    await removeReportPhotos(admin, reportsToDelete ?? []);
 
     // 2. Fallback: hapus berdasarkan reporter_name & reporter_phone dari profile
     const { data: profile, error: profileError } = await admin
@@ -272,6 +287,12 @@ export async function toggleBanUser(userId: string, currentStatus: boolean) {
       }
 
       if (fallbackFilters.length > 0) {
+        const { data: reportsToDeleteByName, error: reportsByNameFetchError } =
+          await admin
+            .from("locations")
+            .select("id, photo_url, photo_urls")
+            .or(fallbackFilters.join(","));
+
         const { data: deletedByName, error: deleteByNameError } = await admin
           .from("locations")
           .delete()
@@ -284,6 +305,14 @@ export async function toggleBanUser(userId: string, currentStatus: boolean) {
             deleteByNameError,
           );
         }
+
+        if (reportsByNameFetchError) {
+          console.error(
+            "Gagal mengambil foto laporan fallback pengguna:",
+            reportsByNameFetchError,
+          );
+        }
+        await removeReportPhotos(admin, reportsToDeleteByName ?? []);
 
         if (Array.isArray(deletedByName)) {
           deletedReports?.push(...deletedByName);
