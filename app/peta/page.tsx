@@ -5,6 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import {
+  claimLegacyOwnReports,
+  completeOwnReport,
+  deleteOwnReport,
+} from "@/actions/reportActions";
+import {
   hasSupabaseConfig,
   getSupabaseClient,
   Location,
@@ -53,14 +58,20 @@ interface MapProps {
   locations: Location[];
   activeFilters: Set<MapLocationCategory>;
   selectedLocation: Location | null;
+  currentUserId: string | null;
   onSelectLocation: (loc: Location | null) => void;
+  onCompleteOwnReport: (id: string) => void;
+  onDeleteOwnReport: (id: string) => void;
 }
 
 function LeafletMap({
   locations,
   activeFilters,
   selectedLocation,
+  currentUserId,
   onSelectLocation,
+  onCompleteOwnReport,
+  onDeleteOwnReport,
 }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
@@ -192,6 +203,14 @@ function LeafletMap({
           popupHtml += `<p style="font-size:11px;color:#555;margin:0 0 2px"><span style="font-weight:700">Jenis Sampah:</span> ${wt}</p>`;
         }
         popupHtml += `<p style="font-size:10px;color:#999;margin:4px 0 0"><span style="font-weight:700">Tanggal:</span> ${new Date(loc.created_at).toLocaleDateString("id-ID")}</p>`;
+        if (loc.reporter_id === currentUserId) {
+          popupHtml += `<div style="display:flex;gap:6px;margin-top:10px;border-top:1px solid #e5e7eb;padding-top:8px">`;
+          if (loc.status !== "cleaned") {
+            popupHtml += `<button data-report-action="complete" style="flex:1;border:0;border-radius:6px;background:#059669;color:white;padding:7px 6px;font-size:11px;font-weight:700;cursor:pointer">Tandai Selesai</button>`;
+          }
+          popupHtml += `<button data-report-action="delete" style="flex:1;border:0;border-radius:6px;background:#e11d48;color:white;padding:7px 6px;font-size:11px;font-weight:700;cursor:pointer">Hapus Laporan</button>`;
+          popupHtml += `</div>`;
+        }
         popupHtml += `</div>`;
 
         marker.bindPopup(popupHtml, {
@@ -201,6 +220,17 @@ function LeafletMap({
           closeOnClick: true,
         });
 
+        marker.on("popupopen", (event: import("leaflet").PopupEvent) => {
+          const popupElement = event.popup.getElement();
+          if (!popupElement || loc.reporter_id !== currentUserId) return;
+          popupElement
+            .querySelector('[data-report-action="complete"]')
+            ?.addEventListener("click", () => onCompleteOwnReport(loc.id));
+          popupElement
+            .querySelector('[data-report-action="delete"]')
+            ?.addEventListener("click", () => onDeleteOwnReport(loc.id));
+        });
+
         marker.on("click", () => onSelectLocation(loc));
         marker.addTo(map);
         markersRef.current.push(marker);
@@ -208,7 +238,14 @@ function LeafletMap({
     };
 
     updateMarkers();
-  }, [locations, activeFilters, onSelectLocation]);
+  }, [
+    locations,
+    activeFilters,
+    currentUserId,
+    onSelectLocation,
+    onCompleteOwnReport,
+    onDeleteOwnReport,
+  ]);
 
   useEffect(() => {
     if (!mapInstanceRef.current || !selectedLocation) return;
@@ -235,6 +272,7 @@ export default function PetaPage() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -251,6 +289,12 @@ export default function PetaPage() {
 
       try {
         const client = getSupabaseClient();
+        const { data: authData } = await client.auth.getUser();
+        setCurrentUserId(authData.user?.id ?? null);
+
+        if (authData.user) {
+          await claimLegacyOwnReports();
+        }
 
         const { data: locData, error: locError } = await client
           .from("locations")
@@ -289,6 +333,46 @@ export default function PetaPage() {
 
   const handleSelectLocation = useCallback((loc: Location | null) => {
     setSelectedLocation(loc);
+  }, []);
+
+  const completeReportFromPopup = useCallback(
+    (id: string) => {
+      const report = locations.find((location) => location.id === id);
+      if (!report) return;
+      setSelectedLocation(report);
+      void completeOwnReport(id).then((result) => {
+        if (!result.success) {
+          window.alert(result.error ?? "Gagal menandai laporan selesai.");
+          return;
+        }
+        setLocations((current) =>
+          current.map((location) =>
+            location.id === id ? { ...location, status: "cleaned" } : location,
+          ),
+        );
+        setSelectedLocation((current) =>
+          current?.id === id ? { ...current, status: "cleaned" } : current,
+        );
+      });
+    },
+    [locations],
+  );
+
+  const deleteReportFromPopup = useCallback((id: string) => {
+    if (
+      !window.confirm("Hapus laporan ini? Data dan foto akan dihapus permanen.")
+    )
+      return;
+    void deleteOwnReport(id).then((result) => {
+      if (!result.success) {
+        window.alert(result.error ?? "Gagal menghapus laporan.");
+        return;
+      }
+      setLocations((current) =>
+        current.filter((location) => location.id !== id),
+      );
+      setSelectedLocation(null);
+    });
   }, []);
 
   const searchResults = searchQuery.trim()
@@ -814,7 +898,10 @@ export default function PetaPage() {
             locations={locations}
             activeFilters={activeFilters}
             selectedLocation={selectedLocation}
+            currentUserId={currentUserId}
             onSelectLocation={handleSelectLocation}
+            onCompleteOwnReport={completeReportFromPopup}
+            onDeleteOwnReport={deleteReportFromPopup}
           />
         </div>
       </div>

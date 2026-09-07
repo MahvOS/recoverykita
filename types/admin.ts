@@ -7,6 +7,7 @@ export type LocationStatus = string;
 
 export interface Location {
   id: string;
+  reporter_id?: string | null;
   title: string;
   description: string | null;
   category: LocationCategory;

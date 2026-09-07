@@ -409,6 +409,7 @@ function LaporPageInner() {
         title: formData.location,
         description: formData.description,
         category: "trash_dump",
+        reporter_id: currentUser.id,
         latitude: formData.latitude,
         longitude: formData.longitude,
         photo_urls: photoUrls,

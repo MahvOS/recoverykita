@@ -10,6 +10,39 @@ export type AdminGuardResult =
       message: string;
     };
 
+export async function requireAuthenticatedUser(): Promise<
+  { ok: true; userId: string } | { ok: false; message: string }
+> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    return { ok: false, message: "Supabase env belum dikonfigurasi." };
+  }
+
+  const cookieStore = await cookies();
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          for (const { name, value, options } of cookiesToSet) {
+            cookieStore.set(name, value, options);
+          }
+        } catch {}
+      },
+    },
+  });
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user
+    ? { ok: true, userId: user.id }
+    : { ok: false, message: "Anda harus login untuk melakukan aksi ini." };
+}
+
 export async function requireAdmin(): Promise<AdminGuardResult> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;

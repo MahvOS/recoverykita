@@ -63,15 +63,16 @@ Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memilik
 
 ### Fitur Utama
 
-| Fitur                           | Deskripsi                                                                             | Keunggulan                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| **Pelaporan Berbasis Peta**     | Warga dapat menandai titik lokasi sampah secara presisi beserta bukti foto.           | Otomatis membaca koordinat geografis dari lokasi pengguna.             |
-| **Analitik Red Zone / Hotspot** | Mengelompokkan titik-titik laporan berdekatan ke dalam kategori risikonya.            | Area dengan ≥ 3 laporan aktif otomatis memicu status _Red Zone_.       |
-| **Dashboard Admin**             | Panel kontrol untuk memantau daftar pengguna, laporan masuk, serta status penanganan. | Dilengkapi kontrol verifikasi dan aksi cepat penanganan sampah.        |
-| **Peta Interaktif**             | Visualisasi spasial berbasis Leaflet & CartoDB yang ringan dan responsif.             | Mendukung heatmap dan marker kluster tanpa beban bandwidth tinggi.     |
-| **Pasar Barang Bekas**          | Marketplace untuk barang bekas layak pakai yang mendukung ekonomi sirkular.           | Memudahkan warga jual beli barang bekas secara daring.                 |
-| **Edukasi Lingkungan**          | Katalog artikel dan kuis edukasi tentang daur ulang, kompos, dan zero waste.          | Meningkatkan kesadaran masyarakat seputar pengelolaan sampah.          |
-| **Download Panduan & Poster**   | Materi edukasi siap cetak dalam format DOCX, JPEG, dan XLSX.                          | Dapat diunduh langsung untuk kebutuhan RT/RW, sekolah, atau komunitas. |
+| Fitur                           | Deskripsi                                                                                   | Keunggulan                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Pelaporan Berbasis Peta**     | Warga dapat menandai titik lokasi sampah secara presisi beserta bukti foto.                 | Otomatis membaca koordinat geografis dari lokasi pengguna.             |
+| **Kontrol Laporan Pribadi**     | User dapat menandai laporannya sendiri sebagai selesai atau menghapusnya dari popup marker. | Aksi dibatasi dengan `reporter_id` dan konfirmasi sebelum penghapusan. |
+| **Analitik Red Zone / Hotspot** | Mengelompokkan titik-titik laporan berdekatan ke dalam kategori risikonya.                  | Area dengan ≥ 3 laporan aktif otomatis memicu status _Red Zone_.       |
+| **Dashboard Admin**             | Panel kontrol untuk memantau daftar pengguna, laporan masuk, serta status penanganan.       | Dilengkapi kontrol verifikasi dan aksi cepat penanganan sampah.        |
+| **Peta Interaktif**             | Visualisasi spasial berbasis Leaflet & CartoDB yang ringan dan responsif.                   | Mendukung heatmap dan marker kluster tanpa beban bandwidth tinggi.     |
+| **Pasar Barang Bekas**          | Marketplace untuk barang bekas layak pakai yang mendukung ekonomi sirkular.                 | Memudahkan warga jual beli barang bekas secara daring.                 |
+| **Edukasi Lingkungan**          | Katalog artikel dan kuis edukasi tentang daur ulang, kompos, dan zero waste.                | Meningkatkan kesadaran masyarakat seputar pengelolaan sampah.          |
+| **Download Panduan & Poster**   | Materi edukasi siap cetak dalam format DOCX, JPEG, dan XLSX.                                | Dapat diunduh langsung untuk kebutuhan RT/RW, sekolah, atau komunitas. |
 
 ---
 
@@ -84,8 +85,6 @@ Menurut laporan resmi World Bank, 40% warga perkotaan di Indonesia tidak memilik
 
 https://github.com/user-attachments/assets/90339ec6-9eae-4b74-94b4-be1b52b4d656
 
-
-
 ## 🎥 Video Demo & Showcase
 
 [![RecoveryKita Website Short Demo](https://img.youtube.com/vi/kG0JGNdoSvs/maxresdefault.jpg)](https://youtu.be/kG0JGNdoSvs)
@@ -94,14 +93,15 @@ https://github.com/user-attachments/assets/90339ec6-9eae-4b74-94b4-be1b52b4d656
 
 Dalam video demo di atas, dipresentasikan beberapa fitur utama platform **RecoveryKita**:
 
-* 🗺️ **Fitur Peta**: Pemetaan interaktif sebaran titik sampah liar, bank sampah, dan aksi komunitas.
-* 📝 **Fitur Lapor**: Pelaporan lokasi titik sampah baru secara langsung ke peta.
-* 🛍️ **Fitur Marketplace Sirkular**: Produk daur ulang buatan pengrajin lokal lengkap dengan indikator *kilogram limbah yang diselamatkan*.
-* 📚 **Fitur Edukasi**: Artikel isu lingkungan, panduan interaktif pemilahan sampah, dan kalkulator emisi karbon.
-* 💡 **Fitur Kuis Interaktif**: Uji pemahaman langsung dari materi artikel edukasi yang dibaca.
+- 🗺️ **Fitur Peta**: Pemetaan interaktif sebaran titik sampah liar, bank sampah, dan aksi komunitas.
+- 📝 **Fitur Lapor**: Pelaporan lokasi titik sampah baru secara langsung ke peta.
+- 🛍️ **Fitur Marketplace Sirkular**: Produk daur ulang buatan pengrajin lokal lengkap dengan indikator _kilogram limbah yang diselamatkan_.
+- 📚 **Fitur Edukasi**: Artikel isu lingkungan, panduan interaktif pemilahan sampah, dan kalkulator emisi karbon.
+- 💡 **Fitur Kuis Interaktif**: Uji pemahaman langsung dari materi artikel edukasi yang dibaca.
 
 ---
-🌐 *Untuk mencoba langsung dan menjelajahi fitur selengkapnya, kunjungi platform kami di:* **[recoverykita.vercel.app](https://recoverykita.vercel.app) * atau bisa dengan instalasi projek ini*
+
+🌐 _Untuk mencoba langsung dan menjelajahi fitur selengkapnya, kunjungi platform kami di:_ *_[recoverykita.vercel.app](https://recoverykita.vercel.app) * atau bisa dengan instalasi projek ini_
 
 ### Screenshot Aplikasi
 
@@ -460,6 +460,26 @@ registrasi tanpa menunggu email verifikasi. Username tetap harus terdiri dari
 
 Jalankan `supabase/schema.sql` di **Supabase SQL Editor**. File ini membuat tabel, enum, relasi, dan policy database yang diperlukan aplikasi.
 
+Kolom `locations.reporter_id` digunakan untuk memastikan user hanya dapat
+menandai selesai atau menghapus laporan miliknya sendiri. Jika database sudah
+pernah dibuat sebelum fitur ini ditambahkan, jalankan migrasi berikut:
+
+```sql
+alter table public.locations
+  add column if not exists reporter_id uuid references auth.users(id) on delete set null;
+```
+
+> **Catatan migrasi:**
+>
+> - Instalasi baru: cukup jalankan `supabase/schema.sql`, karena kolom
+>   `reporter_id` sudah termasuk di dalam schema.
+> - Database existing: jalankan SQL migrasi di atas satu kali di **Supabase SQL
+>   Editor**, lalu refresh aplikasi.
+> - `reporter_id` menyimpan UUID user Supabase yang membuat laporan. Relasi
+>   `on delete set null` menjaga laporan tetap aman jika akun user dihapus.
+> - Laporan lama yang belum memiliki `reporter_id` hanya dapat dikaitkan
+>   otomatis jika nomor teleponnya cocok dengan profil user yang sedang login.
+
 #### 6️. Setup Storage Buckets dan Policies
 
 Aplikasi membutuhkan tiga bucket Storage dengan nama persis berikut:
@@ -539,9 +559,10 @@ npm run lint
 #### Untuk Pengguna Umum
 
 1. **Pelaporan Sampah**: Buka halaman **Lapor**, login/register, klik peta untuk menentukan lokasi, upload foto bukti, pilih jenis sampah, dan kirim laporan.
-2. **Peta Interaktif**: Buka halaman **Peta** untuk melihat semua laporan, filter berdasarkan jenis/prioritas, dan lihat detail laporan.
-3. **Edukasi**: Buka halaman **Edukasi** untuk membaca artikel, mengerjakan kuis, dan mengunduh panduan/poster siap cetak.
-4. **Marketplace**: Buka halaman **Marketplace** untuk menjual atau membeli barang bekas layak pakai.
+2. **Kelola Laporan Sendiri**: Buka halaman **Peta**, klik marker laporan milik sendiri, lalu pilih **Tandai Selesai** atau **Hapus Laporan**. Penghapusan meminta konfirmasi dan foto laporan ikut dihapus dari Storage.
+3. **Peta Interaktif**: Buka halaman **Peta** untuk melihat semua laporan, filter berdasarkan jenis/prioritas, dan lihat detail laporan.
+4. **Edukasi**: Buka halaman **Edukasi** untuk membaca artikel, mengerjakan kuis, dan mengunduh panduan/poster siap cetak.
+5. **Marketplace**: Buka halaman **Marketplace** untuk menjual atau membeli barang bekas layak pakai.
 
 #### Untuk Admin
 
@@ -654,6 +675,15 @@ RecoveryKita menggunakan **3 lapis proteksi** untuk route admin dan operasi sens
    - Service role key hanya dipakai di Server Action yang sudah melewati `requireAdmin()`
 
 ### Fungsi yang Dilindungi
+
+#### Kontrol Laporan Milik User
+
+User yang sudah login dapat menandai laporan miliknya sebagai selesai atau
+menghapus laporan tersebut melalui popup marker di halaman `/peta`. Sistem
+memeriksa `reporter_id` di server sebelum menjalankan aksi, sehingga user tidak
+dapat mengubah atau menghapus laporan milik akun lain. Penghapusan laporan juga
+menghapus foto terkait dari bucket `report-photos` setelah row database berhasil
+dihapus.
 
 | Server Action            | Guard             |
 | ------------------------ | ----------------- |

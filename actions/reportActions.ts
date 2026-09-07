@@ -3,7 +3,7 @@
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { MapReport, ReportStatus, Priority } from "@/types/admin";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, requireAuthenticatedUser } from "@/lib/auth";
 
 const LOCATION_STATUS_MAP: Record<ReportStatus, string> = {
   pending: "pending",
@@ -172,6 +172,7 @@ export async function createAdminReport(formData: FormData): Promise<{
       address_notes: addressNotes || null,
       photo_url: photoUrls[0] ?? null,
       photo_urls: photoUrls.length > 0 ? photoUrls : null,
+      reporter_id: guard.userId,
       status: "pending",
       reporter_name: reporterName || "Admin",
       reporter_phone: reporterPhone || null,
@@ -193,6 +194,104 @@ export async function createAdminReport(formData: FormData): Promise<{
       error: error instanceof Error ? error.message : "Gagal membuat laporan.",
     };
   }
+}
+
+export async function completeOwnReport(id: string) {
+  const guard = await requireAuthenticatedUser();
+  if (!guard.ok) return { success: false, error: guard.message };
+  const admin = getSupabaseAdminClient();
+
+  const { data, error } = await admin
+    .from("locations")
+    .update({ status: "cleaned", updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("reporter_id", guard.userId)
+    .in("status", ["pending", "in_progress"])
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) {
+    return {
+      success: false,
+      error: error?.message ?? "Laporan bukan milik Anda atau sudah selesai.",
+    };
+  }
+  revalidatePath("/peta");
+  return { success: true };
+}
+
+export async function claimLegacyOwnReports() {
+  const guard = await requireAuthenticatedUser();
+  if (!guard.ok) return { success: false, error: guard.message };
+  const admin = getSupabaseAdminClient();
+
+  const { data: profile, error: profileError } = await admin
+    .from("profiles")
+    .select("full_name, phone_number")
+    .eq("id", guard.userId)
+    .maybeSingle();
+  if (profileError || !profile) {
+    return {
+      success: false,
+      error: profileError?.message ?? "Profil tidak ditemukan.",
+    };
+  }
+
+  if (!profile.phone_number) return { success: true };
+
+  const { data: legacyReports, error: reportsError } = await admin
+    .from("locations")
+    .select("id")
+    .is("reporter_id", null)
+    .eq("reporter_phone", profile.phone_number);
+  if (reportsError) return { success: false, error: reportsError.message };
+
+  for (const report of legacyReports ?? []) {
+    await admin
+      .from("locations")
+      .update({ reporter_id: guard.userId })
+      .eq("id", report.id)
+      .is("reporter_id", null);
+  }
+
+  return { success: true };
+}
+
+export async function deleteOwnReport(id: string) {
+  const guard = await requireAuthenticatedUser();
+  if (!guard.ok) return { success: false, error: guard.message };
+  const admin = getSupabaseAdminClient();
+
+  const { data: report, error: fetchError } = await admin
+    .from("locations")
+    .select("photo_url, photo_urls")
+    .eq("id", id)
+    .eq("reporter_id", guard.userId)
+    .maybeSingle();
+  if (fetchError || !report) {
+    return {
+      success: false,
+      error: fetchError?.message ?? "Laporan bukan milik Anda.",
+    };
+  }
+
+  const { data, error } = await admin
+    .from("locations")
+    .delete()
+    .eq("id", id)
+    .eq("reporter_id", guard.userId)
+    .select("id")
+    .maybeSingle();
+  if (error || !data) {
+    return {
+      success: false,
+      error: error?.message ?? "Gagal menghapus laporan.",
+    };
+  }
+
+  await removeReportPhotos(admin, [report]);
+  revalidatePath("/peta");
+  return { success: true };
 }
 
 export async function fetchMapReports(

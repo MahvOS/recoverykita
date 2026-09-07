@@ -429,6 +429,7 @@ CREATE TABLE IF NOT EXISTS "public"."locations" (
     "status" "public"."report_status" DEFAULT 'pending'::"public"."report_status" NOT NULL,
     "reporter_name" character varying(100) DEFAULT 'Warga Anonim'::character varying,
     "reporter_phone" character varying(20),
+    "reporter_id" "uuid",
     "created_at" timestamp with time zone DEFAULT "now"(),
     "updated_at" timestamp with time zone DEFAULT "now"(),
     "priority" "public"."report_priority" DEFAULT 'sedang'::"public"."report_priority",
@@ -438,6 +439,23 @@ CREATE TABLE IF NOT EXISTS "public"."locations" (
 
 
 ALTER TABLE "public"."locations" OWNER TO "postgres";
+
+ALTER TABLE "public"."locations"
+    ADD COLUMN IF NOT EXISTS "reporter_id" "uuid";
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'locations_reporter_id_fkey'
+    ) THEN
+        ALTER TABLE ONLY "public"."locations"
+            ADD CONSTRAINT "locations_reporter_id_fkey"
+            FOREIGN KEY ("reporter_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
+    END IF;
+END
+$$;
 
 
 CREATE TABLE IF NOT EXISTS "public"."products" (
